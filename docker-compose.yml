@@ -141,8 +141,6 @@ services:
   # Redis Service for Celery (Development)
   dev-redis:
     image: redis:7-alpine
-    ports:
-      - "6380:6379"
     restart: unless-stopped
     volumes:
       - dev_redis_data:/data
@@ -165,8 +163,6 @@ services:
     volumes:
       - dev_mysql_data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
-    ports:
-      - "3308:3306"
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
@@ -183,9 +179,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    ports:
-      - "8001:8000"
-      - "5678:5678"
     volumes:
       - ./docker-site:/app
       - dev_static_volume:/app/static

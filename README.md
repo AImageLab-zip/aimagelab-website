@@ -48,10 +48,31 @@ sudo docker compose up -d dev-django-app dev-mysql-db dev-redis dev-celery-worke
 sudo docker compose up -d certbot-renew
 ```
 
-### Option 2: Start Only Development
+### Option 2: Start Development Stack
 
+**Single development stack:**
 ```bash
+# Start
 sudo docker compose up -d dev-django-app dev-mysql-db dev-redis dev-celery-worker dev-celery-beat apache-dev
+
+# Stop
+sudo docker compose down dev-django-app dev-mysql-db dev-redis dev-celery-worker dev-celery-beat apache-dev
+```
+
+**Multiple isolated development stacks** (recommended):
+```bash
+# Start stack with auto-assigned port
+./dev-stack.sh feature1 up
+
+# Start stack on specific port
+./dev-stack.sh feature2 up 8090
+
+# Start another stack
+./dev-stack.sh user1 up 8091
+
+# Stop specific stack
+./dev-stack.sh feature1 down
+./dev-stack.sh feature2 down
 ```
 
 ### Option 3: Start Only Production
@@ -300,7 +321,52 @@ sudo docker compose exec -T dev-mysql-db mysql -u aimagelab_user -p aimagelab_db
 | **Debug Mode** | `DEBUG=0` | `DEBUG=1` |
 | **Database** | `aimagelab_db` (port 3307) | `aimagelab_db_dev` (port 3308) |
 | **Redis** | Port 6379 | Port 6380 |
-| **Multiple Instances** | Single production instance | Multiple dev stacks via port config |
+| **Multiple Instances** | Single production instance | Multiple dev stacks via `dev-stack.sh` |
+
+## Managing Multiple Development Stacks
+
+The `dev-stack.sh` script allows you to run multiple isolated development environments simultaneously:
+
+**Start a new stack:**
+```bash
+./dev-stack.sh myfeature up          # Auto-assigns port
+./dev-stack.sh myfeature up 8090     # Use specific port 8090
+```
+
+**Common operations:**
+```bash
+# View logs
+./dev-stack.sh myfeature logs
+
+# Django shell
+./dev-stack.sh myfeature shell
+
+# Run migrations
+./dev-stack.sh myfeature migrate
+
+# Execute custom command
+./dev-stack.sh myfeature exec dev-django-app python manage.py createsuperuser
+
+# Check running containers
+./dev-stack.sh myfeature ps
+
+# Restart services
+./dev-stack.sh myfeature restart
+
+# Stop and remove stack
+./dev-stack.sh myfeature down
+```
+
+**List all your dev stacks:**
+```bash
+sudo docker ps --filter "name=aimagelab-dev-"
+```
+
+Each stack gets:
+- Unique container names (`aimagelab-dev-myfeature-*`)
+- Isolated database and Redis instances
+- Separate volumes
+- Independent Apache port
 
 ## Technologies Used
 
