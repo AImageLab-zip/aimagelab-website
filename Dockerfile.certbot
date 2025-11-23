@@ -1,0 +1,15 @@
+FROM certbot/certbot:latest
+
+# Install additional tools for the scripts
+RUN apk add --no-cache curl bash openssl
+
+# Copy certbot scripts
+COPY certbot-scripts/ /usr/local/bin/
+RUN chmod +x /usr/local/bin/*.sh
+
+# Create webroot directory
+RUN mkdir -p /var/www/html/.well-known/acme-challenge
+
+# Keep certbot as entrypoint for renewal commands
+ENTRYPOINT ["bash"]
+CMD ["/usr/local/bin/auto-renew.sh"]

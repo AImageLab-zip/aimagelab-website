@@ -1,0 +1,56 @@
+FROM ubuntu:22.04
+
+# Avoid prompts from apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install necessary packages
+RUN apt-get update && apt-get install -y \
+    apache2 \
+    libapache2-mod-shib \
+    shibboleth-sp-common \
+    shibboleth-sp-utils \
+    supervisor \
+    openssl \
+    curl \
+    netcat \
+    && rm -rf /var/lib/apt/lists/*
+
+# Enable required Apache modules
+RUN a2enmod ssl
+RUN a2enmod rewrite
+RUN a2enmod proxy
+RUN a2enmod proxy_http
+RUN a2enmod headers
+RUN a2enmod expires
+RUN a2enmod shib
+
+# Copy the unified Apache configuration
+COPY apache-aimagelab-unified.conf /etc/apache2/sites-available/aimagelab.conf
+
+# Copy Shibboleth configuration files (if they exist)
+COPY shibboleth/* /etc/shibboleth/ 2>/dev/null || true
+
+# Set proper permissions for Shibboleth files
+RUN chown -R _shibd:_shibd /etc/shibboleth || true
+RUN chmod 600 /etc/shibboleth/sp-key.pem 2>/dev/null || true
+
+# Disable default site and enable our site
+RUN a2dissite 000-default
+RUN a2ensite aimagelab.conf
+
+# Copy custom ports configuration to support both 443 and 8443
+COPY ports.conf /etc/apache2/ports.conf
+
+# Create necessary directories
+RUN mkdir -p /var/www/html/static
+RUN mkdir -p /var/www/html/static-dev
+RUN mkdir -p /var/www/html/.well-known/acme-challenge
+
+# Copy entrypoint script
+COPY docker-entrypoint-apache-unified.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint-apache-unified.sh
+
+EXPOSE 80 443 8443
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint-apache-unified.sh"]
+CMD ["apache2ctl", "-D", "FOREGROUND"]

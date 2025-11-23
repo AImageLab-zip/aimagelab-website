@@ -1,0 +1,36 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Home - AImageLab{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Welcome to AImageLab Application</h1>
+    <p style="font-size: 1.1rem; color: #555; margin-top: 1rem;">
+        This is a Docker-based Django application with separate development and production environments.
+    </p>
+    
+    {% if user.is_authenticated %}
+        <p style="margin-top: 1.5rem; color: #27ae60; font-weight: bold;">
+            You are logged in as {{ user.username }}
+        </p>
+        <p style="margin-top: 0.5rem;">
+            <a href="{% url 'dashboard' %}" style="color: #3498db; text-decoration: none;">Go to Dashboard →</a>
+        </p>
+    {% else %}
+        <p style="margin-top: 1.5rem;">
+            <a href="{% url 'login' %}" style="color: #3498db; text-decoration: none;">Please login to continue →</a>
+        </p>
+    {% endif %}
+    
+    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+        <h2>System Information</h2>
+        <ul style="list-style: none; padding-left: 0; margin-top: 1rem;">
+            <li style="margin-bottom: 0.5rem;">✓ Django Application Server</li>
+            <li style="margin-bottom: 0.5rem;">✓ MySQL Database</li>
+            <li style="margin-bottom: 0.5rem;">✓ Redis Cache & Celery</li>
+            <li style="margin-bottom: 0.5rem;">✓ Apache with SSL</li>
+            <li style="margin-bottom: 0.5rem;">✓ Certbot SSL Management</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

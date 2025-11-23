@@ -1,0 +1,53 @@
+FROM ubuntu:22.04
+
+# Avoid prompts from apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install necessary packages including certbot
+RUN apt-get update && apt-get install -y \
+    apache2 \
+    libapache2-mod-shib \
+    shibboleth-sp-common \
+    shibboleth-sp-utils \
+    supervisor \
+    openssl \
+    curl \
+    netcat \
+    certbot \
+    && rm -rf /var/lib/apt/lists/*
+
+# Enable required Apache modules
+RUN a2enmod ssl \
+    && a2enmod rewrite \
+    && a2enmod proxy \
+    && a2enmod proxy_http \
+    && a2enmod headers \
+    && a2enmod expires \
+    && a2enmod shib
+
+# Copy the production Apache configuration
+COPY apache-prod.conf /etc/apache2/sites-available/aimagelab.conf
+
+# Ensure Shibboleth directories exist even if configs are mounted at runtime
+RUN mkdir -p /etc/shibboleth \
+    && chown -R _shibd:_shibd /etc/shibboleth || true
+
+# Disable default site and enable our site
+RUN a2dissite 000-default \
+    && a2ensite aimagelab.conf
+
+# Copy custom ports configuration (80 + 443)
+COPY ports.prod.conf /etc/apache2/ports.conf
+
+# Create necessary directories
+RUN mkdir -p /var/www/html/static \
+    && mkdir -p /var/www/html/.well-known/acme-challenge
+
+# Copy entrypoint script
+COPY docker-entrypoint-apache-prod.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint-apache-prod.sh
+
+EXPOSE 80 443
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint-apache-prod.sh"]
+CMD ["apache2ctl", "-D", "FOREGROUND"]

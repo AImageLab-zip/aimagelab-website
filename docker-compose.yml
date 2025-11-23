@@ -1,0 +1,346 @@
+services:
+  # ============================================
+  # PRODUCTION SERVICES
+  # ============================================
+  
+  # Redis Service for Celery (Production)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - prod-network
+
+  # MySQL Database Service (Production)
+  mysql-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    ports:
+      - "3307:3306"
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - prod-network
+
+  # Django Application Service (Production with Gunicorn)
+  django-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./docker-site:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    environment:
+      - DEBUG=0
+      - DB_HOST=mysql-db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - TZ=${TZ}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - prod-network
+      - shared-network
+
+  # Celery Worker Service (Production)
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    volumes:
+      - ./docker-site:/app
+      - media_volume:/app/media
+    environment:
+      - DEBUG=0
+      - DB_HOST=mysql-db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - SECRET_KEY=${SECRET_KEY}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - TZ=${TZ}
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+    networks:
+      - prod-network
+
+  # Celery Beat Service (Production)
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.beat
+    volumes:
+      - ./docker-site:/app
+      - media_volume:/app/media
+    environment:
+      - DEBUG=0
+      - DB_HOST=mysql-db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - SECRET_KEY=${SECRET_KEY}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - TZ=${TZ}
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - prod-network
+
+  # ============================================
+  # DEVELOPMENT SERVICES
+  # ============================================
+  
+  # Redis Service for Celery (Development)
+  dev-redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    restart: unless-stopped
+    volumes:
+      - dev_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - dev-network
+
+  # MySQL Database Service (Development)
+  dev-mysql-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}_dev
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - dev_mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    ports:
+      - "3308:3306"
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - dev-network
+
+  # Django Application Service (Development with runserver)
+  dev-django-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8001:8000"
+      - "5678:5678"
+    volumes:
+      - ./docker-site:/app
+      - dev_static_volume:/app/static
+    environment:
+      - DEBUG=1
+      - DB_HOST=dev-mysql-db
+      - DB_NAME=${DB_NAME}_dev
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - TZ=${TZ}
+      - CELERY_BROKER_URL=redis://dev-redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://dev-redis:6379/1
+    depends_on:
+      dev-mysql-db:
+        condition: service_healthy
+      dev-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - dev-network
+      - shared-network
+
+  # Celery Worker Service (Development)
+  dev-celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    volumes:
+      - ./docker-site:/app
+    environment:
+      - DEBUG=1
+      - DB_HOST=dev-mysql-db
+      - DB_NAME=${DB_NAME}_dev
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - SECRET_KEY=${SECRET_KEY}
+      - CELERY_BROKER_URL=redis://dev-redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://dev-redis:6379/1
+      - TZ=${TZ}
+    depends_on:
+      dev-mysql-db:
+        condition: service_healthy
+      dev-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+    networks:
+      - dev-network
+
+  # Celery Beat Service (Development)
+  dev-celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.beat
+    volumes:
+      - ./docker-site:/app
+    environment:
+      - DEBUG=1
+      - DB_HOST=dev-mysql-db
+      - DB_NAME=${DB_NAME}_dev
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - SECRET_KEY=${SECRET_KEY}
+      - CELERY_BROKER_URL=redis://dev-redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://dev-redis:6379/1
+      - TZ=${TZ}
+    depends_on:
+      dev-mysql-db:
+        condition: service_healthy
+      dev-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - dev-network
+
+  # ============================================
+  # SHARED SERVICES
+  # ============================================
+
+  # Production Apache (HTTPS + Let's Encrypt)
+  apache-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.apache.prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - static_volume:/var/www/html/static
+      - letsencrypt_data:/etc/letsencrypt
+      - letsencrypt_webroot:/var/www/html
+    environment:
+      - DOMAIN=aimagelab-app.ing.unimore.it
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
+    depends_on:
+      - django-app
+    restart: unless-stopped
+    networks:
+      - shared-network
+
+  # Development Apache (HTTP only, configurable host port)
+  apache-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.apache.dev
+    ports:
+      - "${DEV_APACHE_PORT:-8080}:80"
+    volumes:
+      - dev_static_volume:/var/www/html/static-dev
+    depends_on:
+      - dev-django-app
+    restart: unless-stopped
+    networks:
+      - shared-network
+
+  # Certificate renewal service (runs every 12 hours)
+  certbot-renew:
+    build:
+      context: .
+      dockerfile: Dockerfile.certbot
+    volumes:
+      - letsencrypt_data:/etc/letsencrypt
+      - letsencrypt_webroot:/var/www/html
+    environment:
+      - DOMAIN=aimagelab-app.ing.unimore.it
+      - EMAIL=${CERTBOT_EMAIL}
+      - WEBROOT=/var/www/html
+    depends_on:
+      - apache-prod
+    networks:
+      - shared-network
+    command: ["/usr/local/bin/auto-renew.sh"]
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:
+  static_volume:
+  media_volume:
+  dev_mysql_data:
+  dev_redis_data:
+  dev_static_volume:
+  letsencrypt_data:
+  letsencrypt_webroot:
+
+networks:
+  prod-network:
+    driver: bridge
+  dev-network:
+    driver: bridge
+  shared-network:
+    driver: bridge

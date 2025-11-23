@@ -1,0 +1,127 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Login - AImageLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        max-width: 500px;
+        margin: 3rem auto;
+    }
+    
+    .login-card {
+        background: white;
+        padding: 3rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .hello-world {
+        font-size: 2.5rem;
+        color: #3498db;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .hello-subtitle {
+        color: #7f8c8d;
+        font-size: 1.1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+        font-weight: 500;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: #3498db;
+    }
+    
+    .btn-login {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-login:hover {
+        background-color: #2980b9;
+    }
+    
+    .login-footer {
+        text-align: center;
+        margin-top: 2rem;
+        color: #7f8c8d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="hello-world">Hello World!</div>
+            <div class="hello-subtitle">Welcome to AImageLab</div>
+        </div>
+        
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    required 
+                    placeholder="Enter your username"
+                    autofocus
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    required 
+                    placeholder="Enter your password"
+                >
+            </div>
+            
+            <button type="submit" class="btn-login">Login</button>
+        </form>
+        
+        <div class="login-footer">
+            <p>Please use your credentials to access the system</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

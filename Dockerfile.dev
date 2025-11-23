@@ -1,0 +1,46 @@
+# Development Dockerfile - Uses Django runserver
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    build-essential \
+    default-libmysqlclient-dev \
+    pkg-config \
+    git \
+    vim \
+    curl \
+    netcat \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python dependencies
+COPY docker-site/requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Install debugging tools for VS Code
+RUN pip install debugpy
+
+# Copy wait scripts
+COPY wait-for-db.py /app/wait-for-db.py
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Expose ports (Django dev server and debugpy)
+EXPOSE 8000 5678
+
+# Use entrypoint and Django development server
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

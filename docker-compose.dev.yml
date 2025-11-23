@@ -1,0 +1,142 @@
+services:
+  # Redis Service for Celery (Development)
+  dev-redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"  # Use port 6380 for development to avoid conflicts
+    restart: unless-stopped
+    volumes:
+      - dev_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - dev-network
+
+  # MySQL Database Service (Development)
+  dev-mysql-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}_dev
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - dev_mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    ports:
+      - "0.0.0.0:3308:3306"  # Use port 3308 for development to avoid conflicts
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - dev-network
+
+  # Django Application Service (Development)
+  dev-django-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8001:8000"  # Use port 8001 for development to avoid conflicts
+      - "5678:5678"  # Debugpy port for VS Code debugging
+    volumes:
+      # Mount the entire project directory for development - live code reloading
+      - ./docker-site:/app
+      # Mount static volume so Apache can serve static files
+      - dev_static_volume:/app/static
+    environment:
+      - DEBUG=${DEBUG}
+      - DB_HOST=dev-mysql-db
+      - DB_NAME=${DB_NAME}_dev
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - TZ=${TZ}
+      - CELERY_BROKER_URL=redis://dev-redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://dev-redis:6379/1
+    depends_on:
+      dev-mysql-db:
+        condition: service_healthy
+      dev-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - dev-network
+      - shared-network
+
+  # Celery Worker Service (Development)
+  dev-celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    volumes:
+      - ./docker-site:/app
+    environment:
+      - DEBUG=${DEBUG}
+      - DB_HOST=dev-mysql-db
+      - DB_NAME=${DB_NAME}_dev
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - SECRET_KEY=${SECRET_KEY}
+      - CELERY_BROKER_URL=redis://dev-redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://dev-redis:6379/1
+      - TZ=${TZ}
+    depends_on:
+      dev-mysql-db:
+        condition: service_healthy
+      dev-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+    networks:
+      - dev-network
+
+  # Celery Beat Service (Development)
+  dev-celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.beat
+    volumes:
+      - ./docker-site:/app
+    environment:
+      - DEBUG=${DEBUG}
+      - DB_HOST=dev-mysql-db
+      - DB_NAME=${DB_NAME}_dev
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - SECRET_KEY=${SECRET_KEY}
+      - CELERY_BROKER_URL=redis://dev-redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://dev-redis:6379/1
+      - TZ=${TZ}
+    depends_on:
+      dev-mysql-db:
+        condition: service_healthy
+      dev-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - dev-network
+
+volumes:
+  dev_mysql_data:
+  dev_redis_data:
+  dev_static_volume:
+
+networks:
+  dev-network:
+    driver: bridge
+  shared-network:
+    driver: bridge
