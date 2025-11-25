@@ -1,0 +1,206 @@
+{% extends "main/base.html" %}
+
+{% block title %}Meet the Team - AImageLab{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Meet the Team</h1>
+    </div>
+
+    {% if grouped_profiles.professors %}
+    <section class="mb-5">
+        <h2 class="h4 mb-4">Principal Investigator</h2>
+        <div class="row g-4 justify-content-center">
+            {% for profile in grouped_profiles.professors %}
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <div class="text-center">
+                    {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" alt="{{ profile.get_full_name }}" 
+                         style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 150px; height: 150px; font-size: 48px;">
+                        {{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}
+                    </div>
+                    {% endif %}
+                    
+                    <h5 class="mb-1">{{ profile.get_full_name }}</h5>
+                    <p class="text-muted small mb-2">{{ profile.get_role_display }}</p>
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        {% if profile.website %}
+                        <a href="{{ profile.website }}" class="text-decoration-none" target="_blank" rel="noopener">
+                            <i class="fas fa-globe"></i>
+                        </a>
+                        {% endif %}
+                        {% if profile.google_scholar %}
+                        <a href="{{ profile.google_scholar }}" class="text-decoration-none" target="_blank" rel="noopener">
+                            <i class="fas fa-graduation-cap"></i>
+                        </a>
+                        {% endif %}
+                        {% if profile.github %}
+                        <a href="{{ profile.github }}" class="text-decoration-none" target="_blank" rel="noopener">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        {% endif %}
+                        {% if profile.linkedin %}
+                        <a href="{{ profile.linkedin }}" class="text-decoration-none" target="_blank" rel="noopener">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if grouped_profiles.postdocs %}
+    <section class="mb-5">
+        <h2 class="h4 mb-4">Postdocs</h2>
+        <div class="row g-4 justify-content-center">
+            {% for profile in grouped_profiles.postdocs %}
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <div class="text-center">
+                    {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" alt="{{ profile.get_full_name }}" 
+                         style="width: 120px; height: 120px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 120px; height: 120px; font-size: 40px;">
+                        {{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}
+                    </div>
+                    {% endif %}
+                    
+                    <h6 class="mb-1">{{ profile.get_full_name }}</h6>
+                    <p class="text-muted small mb-2">{{ profile.get_role_display }}</p>
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        {% if profile.website %}<a href="{{ profile.website }}" class="text-decoration-none" target="_blank"><i class="fas fa-globe"></i></a>{% endif %}
+                        {% if profile.google_scholar %}<a href="{{ profile.google_scholar }}" class="text-decoration-none" target="_blank"><i class="fas fa-graduation-cap"></i></a>{% endif %}
+                        {% if profile.github %}<a href="{{ profile.github }}" class="text-decoration-none" target="_blank"><i class="fab fa-github"></i></a>{% endif %}
+                        {% if profile.linkedin %}<a href="{{ profile.linkedin }}" class="text-decoration-none" target="_blank"><i class="fab fa-linkedin"></i></a>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if grouped_profiles.phd_students %}
+    <section class="mb-5">
+        <h2 class="h4 mb-4">PhD Students</h2>
+        <div class="row g-4 justify-content-center">
+            {% for profile in grouped_profiles.phd_students %}
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <div class="text-center">
+                    {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" alt="{{ profile.get_full_name }}" 
+                         style="width: 120px; height: 120px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 120px; height: 120px; font-size: 40px;">
+                        {{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}
+                    </div>
+                    {% endif %}
+                    
+                    <h6 class="mb-1">{{ profile.get_full_name }}</h6>
+                    <p class="text-muted small mb-2">{{ profile.get_role_display }}</p>
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        {% if profile.website %}<a href="{{ profile.website }}" class="text-decoration-none" target="_blank"><i class="fas fa-globe"></i></a>{% endif %}
+                        {% if profile.google_scholar %}<a href="{{ profile.google_scholar }}" class="text-decoration-none" target="_blank"><i class="fas fa-graduation-cap"></i></a>{% endif %}
+                        {% if profile.github %}<a href="{{ profile.github }}" class="text-decoration-none" target="_blank"><i class="fab fa-github"></i></a>{% endif %}
+                        {% if profile.linkedin %}<a href="{{ profile.linkedin }}" class="text-decoration-none" target="_blank"><i class="fab fa-linkedin"></i></a>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if grouped_profiles.interns %}
+    <section class="mb-5">
+        <h2 class="h4 mb-4">Intern</h2>
+        <div class="row g-4 justify-content-center">
+            {% for profile in grouped_profiles.interns %}
+            <div class="col-4 col-sm-3 col-md-2 col-lg-2">
+                <div class="text-center">
+                    {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" alt="{{ profile.get_full_name }}" 
+                         style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 100px; height: 100px; font-size: 32px;">
+                        {{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}
+                    </div>
+                    {% endif %}
+                    
+                    <h6 class="mb-1 small">{{ profile.get_full_name }}</h6>
+                    <p class="text-muted small mb-2">{{ profile.get_role_display }}</p>
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        {% if profile.website %}<a href="{{ profile.website }}" class="text-decoration-none" target="_blank"><i class="fas fa-globe"></i></a>{% endif %}
+                        {% if profile.google_scholar %}<a href="{{ profile.google_scholar }}" class="text-decoration-none" target="_blank"><i class="fas fa-graduation-cap"></i></a>{% endif %}
+                        {% if profile.github %}<a href="{{ profile.github }}" class="text-decoration-none" target="_blank"><i class="fab fa-github"></i></a>{% endif %}
+                        {% if profile.linkedin %}<a href="{{ profile.linkedin }}" class="text-decoration-none" target="_blank"><i class="fab fa-linkedin"></i></a>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if grouped_profiles.alumni %}
+    <section class="mb-5">
+        <h2 class="h4 mb-4">Alumni</h2>
+        <div class="row g-4 justify-content-center">
+            {% for profile in grouped_profiles.alumni %}
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <div class="text-center">
+                    {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" alt="{{ profile.get_full_name }}" 
+                         style="width: 110px; height: 110px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 110px; height: 110px; font-size: 36px;">
+                        {{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}
+                    </div>
+                    {% endif %}
+                    
+                    <h6 class="mb-1">{{ profile.get_full_name }}</h6>
+                    {% if profile.current_position %}
+                    <p class="text-muted small mb-2">{{ profile.current_position }}</p>
+                    {% else %}
+                    <p class="text-muted small mb-2">{{ profile.get_role_display }}</p>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        {% if profile.website %}<a href="{{ profile.website }}" class="text-decoration-none" target="_blank"><i class="fas fa-globe"></i></a>{% endif %}
+                        {% if profile.linkedin %}<a href="{{ profile.linkedin }}" class="text-decoration-none" target="_blank"><i class="fab fa-linkedin"></i></a>{% endif %}
+                        {% if profile.github %}<a href="{{ profile.github }}" class="text-decoration-none" target="_blank"><i class="fab fa-github"></i></a>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+<style>
+a i {
+    color: #6c757d;
+    font-size: 1.1rem;
+    transition: color 0.2s;
+}
+a:hover i {
+    color: #0d6efd;
+}
+</style>
+{% endblock %}
