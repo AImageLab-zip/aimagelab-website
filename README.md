@@ -60,6 +60,9 @@ sudo docker compose down dev-django-app dev-mysql-db dev-redis dev-celery-worker
 ```
 
 **Multiple isolated development stacks** (recommended):
+
+**Note**: First create `.env` from `.env.example` in your project folder.
+
 ```bash
 # Start stack with auto-assigned port
 ./dev-stack.sh feature1 up
