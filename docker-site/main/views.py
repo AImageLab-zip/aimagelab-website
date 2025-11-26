@@ -2,11 +2,29 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from .models import UserProfile
 
 
 def home(request):
     """Home page view."""
     return render(request, 'main/home.html')
+
+
+def people(request):
+    """People/Team page view."""
+    # Get visible profiles grouped by role
+    profiles = UserProfile.objects.filter(is_visible=True).select_related('user')
+    
+    # Group by role
+    grouped_profiles = {
+        'professors': profiles.filter(role__in=['professor', 'assoc_professor', 'asst_professor']),
+        'postdocs': profiles.filter(role='postdoc'),
+        'phd_students': profiles.filter(role='phd'),
+        'interns': profiles.filter(role='intern'),
+        'alumni': profiles.filter(role='alumni'),
+    }
+    
+    return render(request, 'main/people.html', {'grouped_profiles': grouped_profiles})
 
 
 def login_view(request):

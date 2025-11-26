@@ -147,6 +147,7 @@
             <a href="{% url 'home' %}" class="nav-brand">AImageLab</a>
             <ul class="nav-links">
                 <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="{% url 'people' %}">People</a></li>
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
                     <li><span style="color: #ecf0f1;">Welcome, {{ user.username }}</span></li>
