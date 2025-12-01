@@ -2,13 +2,18 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import UserProfile
+from .models import UserProfile, Post
+
 
 
 def home(request):
     """Home page view."""
     return render(request, 'main/home.html')
 
+def news(request):
+    """News/Blog page view."""
+    posts = Post.objects.filter(is_published=True).order_by('-published_at')
+    return render(request, 'main/news.html', {'posts': posts})
 
 def people(request):
     """People/Team page view."""
