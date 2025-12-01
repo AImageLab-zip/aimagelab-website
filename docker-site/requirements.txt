@@ -11,4 +11,4 @@ pytz>=2023.3
 debugpy>=1.8.16
 requests>=2.31.0
 Pillow>=10.0.0
-
+django-phonenumber-field[phonenumbers]>=7.0.0
