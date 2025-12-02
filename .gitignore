@@ -45,3 +45,5 @@ Thumbs.db
 *.bak
 *.backup
 *.sql
+
+docker-site/media/
