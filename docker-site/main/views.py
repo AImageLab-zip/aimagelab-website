@@ -15,6 +15,29 @@ def news(request):
     posts = Post.objects.filter(is_published=True).order_by('-published_at')
     return render(request, 'main/news.html', {'posts': posts})
 
+@login_required
+def add_post(request):
+    """Add a new post."""
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        slug = request.POST.get('slug')
+        description = request.POST.get('description', '')
+        content = request.POST.get('content')
+        is_published = request.POST.get('is_published') == 'true'
+        cover = request.FILES.get('cover')
+        
+        post = Post.objects.create(
+            title=title,
+            slug=slug,
+            description=description,
+            content=content,
+            is_published=is_published,
+            cover=cover
+        )
+        messages.success(request, 'Post added successfully!')
+        return redirect('news')
+    return redirect('news')
+
 def people(request):
     """People/Team page view."""
     # Get visible profiles grouped by role

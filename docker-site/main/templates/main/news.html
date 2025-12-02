@@ -3,8 +3,45 @@
 {% block title %}News - AImageLab{% endblock %}
 
 {% block content %}
+
+
 <div class="card">
     <h1>News</h1>
+ {% if user.is_authenticated %}
+    <div style="margin-top: 2rem; padding: 1.5rem; background-color: #ecf0f1; border-radius: 4px;">
+    <h2>Add a new post</h2>
+    <form method="post" action="{% url 'add_post' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div>
+            <label>Title:</label><br>
+            <input type="text" name="title" required style="width: 100%; padding: 0.5rem;">
+        </div>
+        <div style="margin-top: 1rem;">
+            <label>Slug:</label><br>
+            <input type="text" name="slug" required style="width: 100%; padding: 0.5rem;">
+        </div>
+        <div style="margin-top: 1rem;">
+            <label>Description:</label><br>
+            <textarea name="description" rows="3" style="width: 100%; padding: 0.5rem;"></textarea>
+        </div>
+        <div style="margin-top: 1rem;">
+            <label>Content:</label><br>
+            <textarea name="content" rows="5" required style="width: 100%; padding: 0.5rem;"></textarea>
+        </div>
+        <div style="margin-top: 1rem;">
+            <label>Cover Image:</label><br>
+            <input type="file" name="cover" accept="image/*">
+        </div>
+        <div style="margin-top: 1rem;">
+            <label>
+                <input type="checkbox" name="is_published" value="true">
+                Publish immediately
+            </label>
+        </div>
+        <button type="submit" style="margin-top: 1rem; padding: 0.5rem 1rem; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">Add Post</button>
+    </form>
+    </div>
+ {% endif %}
     {% for post in posts %}
     <article>
         <h2>{{ post.title }}</h2>
@@ -12,8 +49,6 @@
         {% if post.description %}
         <p>{{ post.description }}</p>
         {% endif %}
-        <p>{{ post.content }}</p>
-        <hr>
     </article>
     {% empty %}
     <p>No news available.</p>
