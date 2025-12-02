@@ -15,8 +15,13 @@ def news(request):
     posts = Post.objects.filter(is_published=True).order_by('-published_at')
     return render(request, 'main/news.html', {'posts': posts})
 
+def post_single(request, slug):
+    """Single post detail view."""
+    post = Post.objects.get(slug=slug, is_published=True)
+    return render(request, 'main/single.html', {'post': post})
+
 @login_required
-def add_post(request):
+def post_add(request):
     """Add a new post."""
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -37,6 +42,23 @@ def add_post(request):
         messages.success(request, 'Post added successfully!')
         return redirect('news')
     return redirect('news')
+
+@login_required
+def post_edit(request, slug):
+    """Edit an existing post."""
+    post = Post.objects.get(slug=slug)
+    if request.method == 'POST':
+        post.title = request.POST.get('title')
+        post.slug = request.POST.get('slug')
+        post.description = request.POST.get('description', '')
+        post.content = request.POST.get('content')
+        post.is_published = request.POST.get('is_published') == 'true'
+        if request.FILES.get('cover'):
+            post.cover = request.FILES.get('cover')
+        post.save()
+        messages.success(request, 'Post updated successfully!')
+        return redirect('single', slug=post.slug)
+    return render(request, 'main/post_edit.html', {'post': post})
 
 def people(request):
     """People/Team page view."""

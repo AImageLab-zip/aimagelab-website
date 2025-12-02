@@ -1,0 +1,26 @@
+{% extends 'main/base.html' %}
+
+{% block title %}{{ post.title }} - AImageLab{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>{{ post.title }}</h1>
+    <p><small>{{ post.published_at|date:"F d, Y" }}</small></p>
+    {% if post.cover %}
+    <img src="{{ post.cover.url }}" alt="{{ post.title }}" style="max-width: 100%; height: auto; margin: 1rem 0;">
+    {% endif %}
+    {% if post.description %}
+    <p><strong>{{ post.description }}</strong></p>
+    {% endif %}
+    <div style="margin-top: 1rem;">
+        {{ post.content|linebreaks }}
+    </div>
+    {% if user.is_authenticated %}
+    <div style="margin-top: 1rem; padding: 1rem; background-color: #ecf0f1; border-radius: 4px;">
+        <a href="{% url 'post_edit' post.slug %}" style="padding: 0.5rem 1rem; background-color: #f39c12; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">Edit Post</a>
+    </div>
+    {% endif %}
+    <hr>
+    <a href="{% url 'news' %}">\u2190 Back to News</a>
+</div>
+{% endblock %}
