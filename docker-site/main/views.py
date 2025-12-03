@@ -12,53 +12,64 @@ def home(request):
 
 def news(request):
     """News/Blog page view."""
-    posts = Post.objects.filter(is_published=True).order_by('-created_at')
+    if request.user.is_authenticated:
+        posts = Post.objects.order_by('-created_at')
+    else:
+        posts = Post.objects.filter(is_published=True).order_by('-created_at')
     return render(request, 'main/news.html', {'posts': posts})
 
 def post_single(request, slug):
     """Single post detail view."""
-    post = Post.objects.get(slug=slug, is_published=True)
+    post = Post.objects.get(slug=slug)
     return render(request, 'main/single.html', {'post': post})
 
 @login_required
-def post_add(request):
-    """Add a new post."""
+def post_form(request, slug=None):
+    """Add or edit a post."""
+    post = Post.objects.get(slug=slug) if slug else None
+    
     if request.method == 'POST':
+        action = request.POST.get('action')
         title = request.POST.get('title')
-        slug = request.POST.get('slug')
+        new_slug = request.POST.get('slug')
         description = request.POST.get('description', '')
         content = request.POST.get('content')
-        is_published = request.POST.get('is_published') == 'true'
         cover = request.FILES.get('cover')
+        is_published = action == 'publish'
         
-        post = Post.objects.create(
-            title=title,
-            slug=slug,
-            description=description,
-            content=content,
-            is_published=is_published,
-            cover=cover
-        )
-        messages.success(request, 'Post added successfully!')
-        return redirect('news')
-    return redirect('news')
-
-@login_required
-def post_edit(request, slug):
-    """Edit an existing post."""
-    post = Post.objects.get(slug=slug)
-    if request.method == 'POST':
-        post.title = request.POST.get('title')
-        post.slug = request.POST.get('slug')
-        post.description = request.POST.get('description', '')
-        post.content = request.POST.get('content')
-        post.is_published = request.POST.get('is_published') == 'true'
-        if request.FILES.get('cover'):
-            post.cover = request.FILES.get('cover')
-        post.save()
-        messages.success(request, 'Post updated successfully!')
+        if post:
+            # Edit existing post
+            post.title = title
+            post.slug = new_slug
+            post.description = description
+            post.content = content
+            if cover:
+                post.cover = cover
+            if action in ['publish', 'draft']:
+                post.is_published = is_published
+            post.save()
+        else:
+            # Create new post
+            post = Post.objects.create(
+                title=title,
+                slug=new_slug,
+                description=description,
+                content=content,
+                is_published=is_published,
+                cover=cover
+            )
+        
+        if action == 'publish':
+            messages.success(request, 'Post published successfully!')
+        elif action == 'draft':
+            messages.success(request, 'Post saved as draft!')
+        else:
+            messages.success(request, 'Post updated successfully!')
+        
         return redirect('single', slug=post.slug)
-    return render(request, 'main/post_edit.html', {'post': post})
+    
+    template = 'main/post_edit.html' if post else 'main/post_edit.html'
+    return render(request, template, {'post': post} if post else {})
 
 def people(request):
     """People/Team page view."""

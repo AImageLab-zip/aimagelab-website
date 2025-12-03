@@ -4,45 +4,11 @@
 
 {% block content %}
 
-
-<div class="card">
+<div class="flex flex-col gap-2">
     <h1>News</h1>
- {% if user.is_authenticated %}
-    <div style="margin-top: 2rem; padding: 1.5rem; background-color: #ecf0f1; border-radius: 4px;">
-    <h2>Add a new post</h2>
-    <form method="post" action="{% url 'post_add' %}" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div>
-            <label>Title:</label><br>
-            <input type="text" name="title" required style="width: 100%; padding: 0.5rem;">
-        </div>
-        <div style="margin-top: 1rem;">
-            <label>Slug:</label><br>
-            <input type="text" name="slug" required style="width: 100%; padding: 0.5rem;">
-        </div>
-        <div style="margin-top: 1rem;">
-            <label>Description:</label><br>
-            <textarea name="description" rows="3" style="width: 100%; padding: 0.5rem;"></textarea>
-        </div>
-        <div style="margin-top: 1rem;">
-            <label>Content:</label><br>
-            <textarea name="content" rows="5" required style="width: 100%; padding: 0.5rem;"></textarea>
-        </div>
-        <div style="margin-top: 1rem;">
-            <label>Cover Image:</label><br>
-            <input type="file" name="cover" accept="image/*">
-        </div>
-        <div style="margin-top: 1rem;">
-            <label>
-                <input type="checkbox" name="is_published" value="true">
-                Publish immediately
-            </label>
-        </div>
-        <button type="submit" style="margin-top: 1rem; padding: 0.5rem 1rem; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">Add Post</button>
-    </form>
-    </div>
- {% endif %}
     {% for post in posts %}
+
+<div class="card mb-3">
     <article>
         <h2><a href="{% url 'single' post.slug %}" style="text-decoration: none; color: #2c3e50;">{{ post.title }}</a></h2>
         <p><small>{{ post.created_at|date:"F d, Y" }}</small></p>
@@ -51,8 +17,9 @@
         {% endif %}
         <a href="{% url 'single' post.slug %}">Read more →</a>
     </article>
+</div>
     {% empty %}
     <p>No news available.</p>
     {% endfor %}
-</div>
+ </div>
 {% endblock %}
