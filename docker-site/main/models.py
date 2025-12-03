@@ -71,12 +71,14 @@ class Post(models.Model):
     
     #author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     content = models.TextField()
-    published_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_published = models.BooleanField(default=False)
+    event_date = models.DateTimeField(blank=True, null=True)
+    is_published = models.BooleanField(default=True)
+    is_pinned = models.BooleanField(default=False)
     
     class Meta:
-        ordering = ['-published_at']
+        ordering = ['-created_at']
     
     def __str__(self):
         return self.title

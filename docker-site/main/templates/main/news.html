@@ -45,7 +45,7 @@
     {% for post in posts %}
     <article>
         <h2><a href="{% url 'single' post.slug %}" style="text-decoration: none; color: #2c3e50;">{{ post.title }}</a></h2>
-        <p><small>{{ post.published_at|date:"F d, Y" }}</small></p>
+        <p><small>{{ post.created_at|date:"F d, Y" }}</small></p>
         {% if post.description %}
         <p>{{ post.description }}</p>
         {% endif %}

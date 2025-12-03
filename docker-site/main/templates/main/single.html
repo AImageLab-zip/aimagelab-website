@@ -5,7 +5,7 @@
 {% block content %}
 <div class="card">
     <h1>{{ post.title }}</h1>
-    <p><small>{{ post.published_at|date:"F d, Y" }}</small></p>
+    <p><small>{{ post.created_at|date:"F d, Y" }}</small></p>
     {% if post.cover %}
     <img src="{{ post.cover.url }}" alt="{{ post.title }}" style="max-width: 100%; height: auto; margin: 1rem 0;">
     {% endif %}

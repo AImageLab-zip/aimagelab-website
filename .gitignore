@@ -12,6 +12,8 @@ ENV/
 .eggs/
 dist/
 build/
+notes.txt
+media/
 
 # Django
 *.log

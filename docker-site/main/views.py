@@ -12,7 +12,7 @@ def home(request):
 
 def news(request):
     """News/Blog page view."""
-    posts = Post.objects.filter(is_published=True).order_by('-published_at')
+    posts = Post.objects.filter(is_published=True).order_by('-created_at')
     return render(request, 'main/news.html', {'posts': posts})
 
 def post_single(request, slug):
