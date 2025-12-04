@@ -2,6 +2,9 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import FileResponse, Http404
+from django.conf import settings
+import os
 from .models import UserProfile
 
 
@@ -55,3 +58,33 @@ def logout_view(request):
 def dashboard(request):
     """Dashboard view (requires login)."""
     return render(request, 'main/dashboard.html')
+
+
+def serve_media(request, path):
+    """
+    Serve media files with access control.
+    
+    You can add authentication/authorization checks here:
+    - Check if user is authenticated
+    - Check if user has permission to access specific files
+    - Log file access
+    - etc.
+    """
+    # TODO: Add your access control logic here
+    # Example: if not request.user.is_authenticated:
+    #     raise Http404("File not found")
+    
+    file_path = os.path.join(settings.MEDIA_ROOT, path)
+    
+    # Security check: ensure the file is within MEDIA_ROOT
+    if not os.path.abspath(file_path).startswith(os.path.abspath(settings.MEDIA_ROOT)):
+        raise Http404("Invalid file path")
+    
+    if not os.path.exists(file_path):
+        raise Http404("File not found")
+    
+    if not os.path.isfile(file_path):
+        raise Http404("Not a file")
+    
+    # Serve the file
+    return FileResponse(open(file_path, 'rb'))
