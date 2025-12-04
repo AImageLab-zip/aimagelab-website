@@ -3,23 +3,24 @@
 {% block title %}News - AImageLab{% endblock %}
 
 {% block content %}
-
-<div class="flex flex-col gap-2">
+<div class="card">
     <h1>News</h1>
-    {% for post in posts %}
+</div>
 
-<div class="card mb-3">
+{% for post in posts %}
+<div class="card">
     <article>
-        <h2><a href="{% url 'single' post.slug %}" style="text-decoration: none; color: #2c3e50;">{{ post.title }}</a></h2>
-        <p><small>{{ post.created_at|date:"F d, Y" }}</small></p>
+        <h2><a href="{% url 'single' post.slug %}">{{ post.title }}</a></h2>
+        <p class="post-meta">{{ post.created_at|date:"F d, Y" }}</p>
         {% if post.description %}
-        <p>{{ post.description }}</p>
+        <p class="post-description">{{ post.description }}</p>
         {% endif %}
-        <a href="{% url 'single' post.slug %}">Read more →</a>
+        <a href="{% url 'single' post.slug %}" class="btn btn-primary">Read more →</a>
     </article>
 </div>
-    {% empty %}
+{% empty %}
+<div class="card">
     <p>No news available.</p>
-    {% endfor %}
- </div>
+</div>
+{% endfor %}
 {% endblock %}

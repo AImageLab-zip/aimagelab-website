@@ -7,44 +7,46 @@
     <h1>{% if post %}Edit Post{% else %}Add New Post{% endif %}</h1>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <div>
-            <label>Title:</label><br>
-            <input type="text" name="title" value="{{ post.title|default:'' }}" required style="width: 100%; padding: 0.5rem;">
+        <div class="form-group">
+            <label class="form-label">Title:</label>
+            <input type="text" name="title" value="{{ post.title|default:'' }}" required class="form-input">
         </div>
-        <div style="margin-top: 1rem;">
-            <label>Slug:</label><br>
-            <input type="text" name="slug" value="{{ post.slug|default:'' }}" required style="width: 100%; padding: 0.5rem;">
+        <div class="form-group">
+            <label class="form-label">Slug:</label>
+            <input type="text" name="slug" value="{{ post.slug|default:'' }}" required class="form-input">
         </div>
-        <div style="margin-top: 1rem;">
-            <label>Description:</label><br>
-            <textarea name="description" rows="3" style="width: 100%; padding: 0.5rem;">{{ post.description|default:'' }}</textarea>
+        <div class="form-group">
+            <label class="form-label">Description:</label>
+            <textarea name="description" rows="3" class="form-textarea">{{ post.description|default:'' }}</textarea>
         </div>
-        <div style="margin-top: 1rem;">
-            <label>Content:</label><br>
-            <textarea name="content" rows="10" required style="width: 100%; padding: 0.5rem;">{{ post.content|default:'' }}</textarea>
+        <div class="form-group">
+            <label class="form-label">Content:</label>
+            <textarea name="content" rows="10" required class="form-textarea">{{ post.content|default:'' }}</textarea>
         </div>
-        <div style="margin-top: 1rem;">
-            <label>Cover Image:</label><br>
+        <div class="form-group">
+            <label class="form-label">Cover Image:</label>
             {% if post.cover %}
-            <img src="{{ post.cover.url }}" alt="Current cover" style="max-width: 200px; display: block; margin-bottom: 0.5rem;">
+            <img src="{{ post.cover.url }}" alt="Current cover" class="cover-preview">
             {% endif %}
-            <input type="file" name="cover" accept="image/*">
+            <input type="file" name="cover" accept="image/*" class="form-file">
         </div>
-        <div style="margin-top: 1rem;">
-            {% if post %}
-                {% if post.is_published %}
-                <button type="submit" name="action" value="publish" style="padding: 0.5rem 1rem; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">Save</button>
-                <button type="submit" name="action" value="draft" style="padding: 0.5rem 1rem; background-color: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 0.5rem;">Turn to Draft</button>
+        <div class="form-group">
+            <div class="btn-group">
+                {% if post %}
+                    {% if post.is_published %}
+                    <button type="submit" name="action" value="publish" class="btn btn-primary">Save</button>
+                    <button type="submit" name="action" value="draft" class="btn btn-secondary">Turn to Draft</button>
+                    {% else %}
+                    <button type="submit" name="action" value="draft" class="btn btn-secondary">Save Draft</button>
+                    <button type="submit" name="action" value="publish" class="btn btn-success">Publish</button>
+                    {% endif %}
+                    <a href="{% url 'single' post.slug %}" class="btn btn-danger">Cancel</a>
                 {% else %}
-                <button type="submit" name="action" value="draft" style="padding: 0.5rem 1rem; background-color: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Draft</button>
-                <button type="submit" name="action" value="publish" style="padding: 0.5rem 1rem; background-color: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 0.5rem;">Publish</button>
+                    <button type="submit" name="action" value="draft" class="btn btn-secondary">Create Draft</button>
+                    <button type="submit" name="action" value="publish" class="btn btn-success">Publish</button>
+                    <a href="{% url 'news' %}" class="btn btn-danger">Cancel</a>
                 {% endif %}
-                <a href="{% url 'single' post.slug %}" style="margin-left: 1rem; padding: 0.5rem 1rem; background-color: #e74c3c; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">Cancel</a>
-            {% else %}
-                <button type="submit" name="action" value="draft" style="padding: 0.5rem 1rem; background-color: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer;">Create Draft</button>
-                <button type="submit" name="action" value="publish" style="padding: 0.5rem 1rem; background-color: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 0.5rem;">Publish</button>
-                <a href="{% url 'news' %}" style="margin-left: 1rem; padding: 0.5rem 1rem; background-color: #e74c3c; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">Cancel</a>
-            {% endif %}
+            </div>
         </div>
     </form>
 </div>
