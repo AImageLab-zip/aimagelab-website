@@ -17,11 +17,11 @@
                 <div class="text-center">
                     {% if profile.avatar %}
                     <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" alt="{{ profile.get_full_name }}" 
-                         style="width: 150px; height: 150px; object-fit: cover;">
+                         width="150" height="150" style="object-fit: cover;">
                     {% else %}
                     <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-3" 
-                         style="width: 150px; height: 150px; font-size: 48px;">
-                        {{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}
+                         style="width: 150px; height: 150px;">
+                        <span style="font-size: 48px;">{{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}</span>
                     </div>
                     {% endif %}
                     
@@ -66,11 +66,11 @@
                 <div class="text-center">
                     {% if profile.avatar %}
                     <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" alt="{{ profile.get_full_name }}" 
-                         style="width: 120px; height: 120px; object-fit: cover;">
+                         width="120" height="120" style="object-fit: cover;">
                     {% else %}
                     <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-3" 
-                         style="width: 120px; height: 120px; font-size: 40px;">
-                        {{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}
+                         style="width: 120px; height: 120px;">
+                        <span style="font-size: 40px;">{{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}</span>
                     </div>
                     {% endif %}
                     
@@ -99,11 +99,11 @@
                 <div class="text-center">
                     {% if profile.avatar %}
                     <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" alt="{{ profile.get_full_name }}" 
-                         style="width: 120px; height: 120px; object-fit: cover;">
+                         width="120" height="120" style="object-fit: cover;">
                     {% else %}
                     <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-3" 
-                         style="width: 120px; height: 120px; font-size: 40px;">
-                        {{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}
+                         style="width: 120px; height: 120px;">
+                        <span style="font-size: 40px;">{{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}</span>
                     </div>
                     {% endif %}
                     
@@ -132,11 +132,11 @@
                 <div class="text-center">
                     {% if profile.avatar %}
                     <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" alt="{{ profile.get_full_name }}" 
-                         style="width: 100px; height: 100px; object-fit: cover;">
+                         width="100" height="100" style="object-fit: cover;">
                     {% else %}
                     <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-3" 
-                         style="width: 100px; height: 100px; font-size: 32px;">
-                        {{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}
+                         style="width: 100px; height: 100px;">
+                        <span style="font-size: 32px;">{{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}</span>
                     </div>
                     {% endif %}
                     
@@ -165,11 +165,11 @@
                 <div class="text-center">
                     {% if profile.avatar %}
                     <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" alt="{{ profile.get_full_name }}" 
-                         style="width: 110px; height: 110px; object-fit: cover;">
+                         width="110" height="110" style="object-fit: cover;">
                     {% else %}
                     <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-3" 
-                         style="width: 110px; height: 110px; font-size: 36px;">
-                        {{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}
+                         style="width: 110px; height: 110px;">
+                        <span style="font-size: 36px;">{{ profile.user.first_name.0 }}{{ profile.user.last_name.0 }}</span>
                     </div>
                     {% endif %}
                     
@@ -192,15 +192,4 @@
     </section>
     {% endif %}
 </div>
-
-<style>
-a i {
-    color: #6c757d;
-    font-size: 1.1rem;
-    transition: color 0.2s;
-}
-a:hover i {
-    color: #0d6efd;
-}
-</style>
 {% endblock %}

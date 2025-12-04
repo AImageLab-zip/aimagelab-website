@@ -3,24 +3,24 @@
 {% block title %}{{ post.title }} - AImageLab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>{{ post.title }}</h1>
-    <p class="post-meta">{{ post.created_at|date:"F d, Y" }}</p>
+<div class="card card-body">
+    <h1 class="mb-3">{{ post.title }}</h1>
+    <p class="small text-muted mb-3">{{ post.created_at|date:"F d, Y" }}</p>
     {% if post.cover %}
-    <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="post-cover">
+    <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="img-fluid rounded mb-3" style="max-width: 100%;">
     {% endif %}
     {% if post.description %}
-    <p class="post-description"><strong>{{ post.description }}</strong></p>
+    <p class="mb-3"><strong>{{ post.description }}</strong></p>
     {% endif %}
-    <div class="post-content">
+    <div class="mb-4">
         {{ post.content|linebreaks }}
     </div>
     {% if user.is_authenticated %}
-    <div class="post-actions">
+    <div class="mb-3">
         <a href="{% url 'post_edit' post.slug %}" class="btn btn-warning">Edit Post</a>
     </div>
     {% endif %}
-    <hr>
+    <hr class="my-3">
     <a href="{% url 'news' %}" class="btn btn-secondary">← Back to News</a>
 </div>
 {% endblock %}

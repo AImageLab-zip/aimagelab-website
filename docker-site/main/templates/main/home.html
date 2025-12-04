@@ -3,33 +3,33 @@
 {% block title %}Home - AImageLab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>Welcome to AImageLab Application</h1>
-    <p style="font-size: 1.1rem; color: #555; margin-top: 1rem;">
+<div class="card card-body">
+    <h1 class="mb-3">Welcome to AImageLab Application</h1>
+    <p class="fs-5 text-muted">
         This is a Docker-based Django application with separate development and production environments.
     </p>
     
     {% if user.is_authenticated %}
-        <p style="margin-top: 1.5rem; color: #27ae60; font-weight: bold;">
+        <p class="mt-4 fw-bold text-success">
             You are logged in as {{ user.username }}
         </p>
-        <p style="margin-top: 0.5rem;">
-            <a href="{% url 'dashboard' %}" style="color: #3498db; text-decoration: none;">Go to Dashboard →</a>
+        <p class="mt-2">
+            <a href="{% url 'dashboard' %}" class="link-primary">Go to Dashboard →</a>
         </p>
     {% else %}
-        <p style="margin-top: 1.5rem;">
-            <a href="{% url 'login' %}" style="color: #3498db; text-decoration: none;">Please login to continue →</a>
+        <p class="mt-4">
+            <a href="{% url 'login' %}" class="link-primary">Please login to continue →</a>
         </p>
     {% endif %}
     
-    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+    <div class="mt-5 pt-4 border-top">
         <h2>System Information</h2>
-        <ul style="list-style: none; padding-left: 0; margin-top: 1rem;">
-            <li style="margin-bottom: 0.5rem;">✓ Django Application Server</li>
-            <li style="margin-bottom: 0.5rem;">✓ MySQL Database</li>
-            <li style="margin-bottom: 0.5rem;">✓ Redis Cache & Celery</li>
-            <li style="margin-bottom: 0.5rem;">✓ Apache with SSL</li>
-            <li style="margin-bottom: 0.5rem;">✓ Certbot SSL Management</li>
+        <ul class="list-unstyled mt-3">
+            <li class="mb-2">✓ Django Application Server</li>
+            <li class="mb-2">✓ MySQL Database</li>
+            <li class="mb-2">✓ Redis Cache & Celery</li>
+            <li class="mb-2">✓ Apache with SSL</li>
+            <li class="mb-2">✓ Certbot SSL Management</li>
         </ul>
     </div>
 </div>

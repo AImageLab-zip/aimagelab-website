@@ -3,28 +3,28 @@
 {% block title %}Dashboard - AImageLab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>Dashboard</h1>
-    <p style="margin-top: 1rem; color: #555;">
-        Welcome to your dashboard, <strong>{{ user.username }}</strong>!
+<div class="card card-body">
+    <h1 class="mb-3">Dashboard</h1>
+    <p class="mt-3 text-muted">
+        Welcome to your dashboard, <strong class="text-dark">{{ user.username }}</strong>!
     </p>
     
-    <div style="margin-top: 2rem; padding: 1.5rem; background-color: #ecf0f1; border-radius: 4px;">
-        <h2 style="margin-bottom: 1rem;">Your Information</h2>
+    <div class="mt-4 p-4 bg-light rounded">
+        <h2 class="mb-3">Your Information</h2>
         <p><strong>Username:</strong> {{ user.username }}</p>
         <p><strong>Email:</strong> {{ user.email|default:"Not set" }}</p>
         <p><strong>Last Login:</strong> {{ user.last_login|date:"F d, Y H:i" }}</p>
-        <p><strong>Account Status:</strong> <span style="color: #27ae60;">Active</span></p>
+        <p><strong>Account Status:</strong> <span class="text-success">Active</span></p>
     </div>
     
-    <div style="margin-top: 2rem;">
+    <div class="mt-5">
         <h2>Quick Links</h2>
-        <ul style="margin-top: 1rem; list-style: none; padding-left: 0;">
-            <li style="margin-bottom: 0.5rem;">
-                <a href="{% url 'home' %}" style="color: #3498db; text-decoration: none;">← Back to Home</a>
+        <ul class="list-unstyled mt-3">
+            <li class="mb-2">
+                <a href="{% url 'home' %}" class="link-primary">← Back to Home</a>
             </li>
-            <li style="margin-bottom: 0.5rem;">
-                <a href="/admin/" style="color: #3498db; text-decoration: none;">Admin Panel →</a>
+            <li class="mb-2">
+                <a href="/admin/" class="link-primary">Admin Panel →</a>
             </li>
         </ul>
     </div>

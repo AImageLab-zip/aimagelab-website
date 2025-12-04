@@ -3,24 +3,24 @@
 {% block title %}News - AImageLab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>News</h1>
+<div class="card card-body mb-4">
+    <h1 class="mb-0">News</h1>
 </div>
 
 {% for post in posts %}
-<div class="card">
+<div class="card card-body mb-3">
     <article>
-        <h2><a href="{% url 'single' post.slug %}">{{ post.title }}</a></h2>
-        <p class="post-meta">{{ post.created_at|date:"F d, Y" }}</p>
+        <h2 class="card-title"><a href="{% url 'single' post.slug %}" class="link-primary">{{ post.title }}</a></h2>
+        <p class="small text-muted mb-2">{{ post.created_at|date:"F d, Y" }}</p>
         {% if post.description %}
-        <p class="post-description">{{ post.description }}</p>
+        <p class="card-text">{{ post.description }}</p>
         {% endif %}
-        <a href="{% url 'single' post.slug %}" class="btn btn-primary">Read more →</a>
+        <a href="{% url 'single' post.slug %}" class="btn btn-primary btn-sm">Read more →</a>
     </article>
 </div>
 {% empty %}
-<div class="card">
-    <p>No news available.</p>
+<div class="card card-body">
+    <p class="text-muted">No news available.</p>
 </div>
 {% endfor %}
 {% endblock %}
