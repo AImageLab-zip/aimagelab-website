@@ -3,28 +3,31 @@
 {% block title %}Home - AImageLab{% endblock %}
 
 {% block content %}
-<div class="card card-body">
-    <h1 class="mb-3">Welcome to AImageLab Application</h1>
-    <p class="fs-5 text-muted">
-        This is a Docker-based Django application with separate development and production environments.
-    </p>
-    
-    {% if user.is_authenticated %}
-        <p class="mt-4 fw-bold text-success">
-            You are logged in as {{ user.username }}
-        </p>
-        <p class="mt-2">
-            <a href="{% url 'dashboard' %}" class="link-primary">Go to Dashboard →</a>
-        </p>
-    {% else %}
-        <p class="mt-4">
-            <a href="{% url 'login' %}" class="link-primary">Please login to continue →</a>
-        </p>
-    {% endif %}
-    
-    <div class="mt-5 pt-4 border-top">
-        <h2>System Information</h2>
-        <ul class="list-unstyled mt-3">
+<section class="it-hero-wrapper">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="title-bordeaux mb-3">AImageLab Research Group</h1>
+            <p class="fs-5 title-black">
+                AImageLab is a research laboratory of the Dipartimento di Ingegneria "Enzo Ferrari" at the University of Modena and Reggio Emilia, Italy. AImageLab is also part of the Artificial Intelligence Research and Innovation Center (AIRI) of the Modena Technopole.
+            </p>
+            
+            {% if user.is_authenticated %}
+                <p class="mt-4 fw-bold title-red">
+                    You are logged in as {{ user.username }}
+                </p>
+                <a href="{% url 'dashboard' %}" class="red-btn mt-3 d-inline-block">Go to Dashboard →</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="red-btn mt-3 d-inline-block">Please login to continue →</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- System Information Section -->
+<section class="container my-5">
+    <div class="custom-card p-4">
+        <h2 class="title-bordeaux">System Information</h2>
+        <ul class="list-unstyled mt-3 title-black">
             <li class="mb-2">✓ Django Application Server</li>
             <li class="mb-2">✓ MySQL Database</li>
             <li class="mb-2">✓ Redis Cache & Celery</li>
@@ -32,5 +35,5 @@
             <li class="mb-2">✓ Certbot SSL Management</li>
         </ul>
     </div>
-</div>
+</section>
 {% endblock %}

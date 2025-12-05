@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_celery_beat",
     "main.apps.MainConfig",
+    "django_sass", #https://pypi.org/project/django-sass/
 ]
 
 MIDDLEWARE = [

@@ -8,36 +8,40 @@
     <link rel="stylesheet" href="{% static 'main/css/styles.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg bg-primary">
-        <div class="container-fluid">
-            <a href="{% url 'home' %}" class="navbar-brand fw-bold">AImageLab</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a href="{% url 'home' %}" class="nav-link">Home</a></li>
-                    <li class="nav-item"><a href="{% url 'people' %}" class="nav-link">People</a></li>
-                    <li class="nav-item"><a href="{% url 'news' %}" class="nav-link">News</a></li>
-                    {% if user.is_authenticated %}
-                        <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a></li>
-                        <li class="nav-item"><span class="nav-link text-white">Welcome, {{ user.username }}</span></li>
-                        <li class="nav-item"><a href="{% url 'logout' %}" class="btn btn-danger btn-sm ms-2">Logout</a></li>
-                    {% else %}
-                        <li class="nav-item"><a href="{% url 'login' %}" class="nav-link">Login</a></li>
-                    {% endif %}
-                </ul>
+<body class="main-body">
+    <!-- Header & Navigation -->
+    <header class="it-header-navbar-wrapper">
+        <nav class="navbar navbar-expand-lg custom-nav">
+            <div class="container-fluid">
+                <a href="{% url 'home' %}" class="navbar-brand">
+                    <img src="{% static 'main/assets/logo.png' %}" alt="AImageLab" class="logo">
+                    <span>AImageLab</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a href="{% url 'home' %}" class="nav-link"><span>Home</span></a></li>
+                        <li class="nav-item"><a href="{% url 'people' %}" class="nav-link"><span>People</span></a></li>
+                        <li class="nav-item"><a href="{% url 'news' %}" class="nav-link"><span>News</span></a></li>
+                        {% if user.is_authenticated %}
+                            <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span>Dashboard</span></a></li>
+                            <li class="nav-item"><a href="{% url 'logout' %}" class="red-btn ms-2">Logout</a></li>
+                        {% else %}
+                            <li class="nav-item"><a href="{% url 'login' %}" class="red-btn ms-2">Login</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
     
     <!-- Messages -->
     {% if messages %}
-        <div class="messages mt-3">
+        <div class="container mt-3">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-object" role="alert">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -46,10 +50,20 @@
     {% endif %}
     
     <!-- Main Content -->
-    <div class="container my-5">
+    <main>
         {% block content %}{% endblock %}
-    </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="it-footer">
+        <div class="it-footer-main">
+            <div class="container py-4">
+                <p class="title-white mb-0 text-center">&copy; {% now "Y" %} AImageLab - All rights reserved</p>
+            </div>
+        </div>
+    </footer>
     
     {% block extra_js %}{% endblock %}
+    <script src="{% static 'main/js/bootstrap-italia.bundle.min.js' %}"></script>
 </body>
 </html>

@@ -1,0 +1,306 @@
+// === 1. VARIABLES ===
+$primary-h: 353;
+$primary-s: 91;
+$primary-b: 54;
+
+$bordeaux-color: #8A0C1A;
+$red-color: #DA3D47;
+$porcelain-color: #FDEDEC;
+$white-color: #fff;
+$espresso-color: #240805;
+
+$body-color: $espresso-color;
+$mark-bg: $red-color;
+
+$all-border-radius: 25px 25px 0 25px;
+
+// === Bootstrap Variable Overrides ===
+:root {
+    --bs-primary: #8A0C1A !important; // $bordeaux-color
+    --bs-secondary: #8A0C1A !important; // $bordeaux-color
+    --bs-success: #DA3D47 !important; // $red-color
+    --bs-info: #FDEDEC !important; // $porcelain-color
+    --bs-warning: #240805 !important; // $espresso-color
+    --bs-danger: #DA3D47 !important; // $red-color
+    --bs-light: #fff !important; // $white-color
+    --bs-dark: #240805 !important; // $espresso-color
+}
+
+// === 2. FONT IMPORTS ===
+@font-face {
+    font-family: 'Plus Jakarta Sans';
+    src: url('../fonts/Plus Jakarta Sans/PlusJakartaSans-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+$font-family-sans-serif: 'Plus Jakarta Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+
+
+// === 3. IMPORT LIBRARIES ===
+@import 'bootstrap-italia.min.css';
+
+
+
+// === 4. GLOBAL STYLES ===
+.main-body {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+// === 5. HEADER & NAVIGATION ===
+
+.it-header-navbar-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    background-color: transparent;
+}
+
+.custom-nav {
+    padding: 1rem 2rem;
+    background-color: $white-color;
+
+    @media (max-width: 991px) {
+        width: 100%;
+        padding: 0 1.5rem;
+    }
+}
+
+.navbar-brand {
+    margin-right: 5rem;
+    margin-top: -4px; // to align with menu items
+
+    @media (max-width: 1400px) {
+        margin-right: 3rem;
+        margin-top: -8px;
+    }
+
+    @media (max-width: 991px) {
+        flex: 1;
+        margin-right: 1rem;
+        margin-left: 1rem;
+        order: 2;
+    }
+}
+
+.navbar-brand span {
+    font-size: 1.67rem;
+    color: $bordeaux-color;
+    font-weight: bold;
+}
+
+.nav-link span {
+    color: #000;
+    font-weight: 500;
+}
+
+.nav-link.active span,
+.nav-link span:hover {
+    color: $bordeaux-color;
+    font-weight: bold;
+}
+
+
+.nav-tabs {
+    border: 0;
+    background-color: transparent;
+    margin-top: -57px
+}
+
+.nav-tabs .nav-link {
+    border: 0;
+    background-color: transparent;
+    color: $white-color;
+
+    &.active,
+    &:focus {
+        border: 0;
+        color: $bordeaux-color;
+        border-radius: 25px 25px 0 0;
+    }
+
+    &:hover:not(.active) {
+        border: 0;
+        color: $white-color;
+    }
+}
+
+
+// === 6. HERO SECTION ===
+.it-hero-wrapper {
+    width: 100%;
+    height: 100vh;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background-color: $white-color;
+    background-image: url('../assets/background.jpg');
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+
+    @media (max-width: 991px) {
+        height: auto;
+        background-size: 130% auto;
+        background-position: center 4rem;
+    }
+}
+
+.inner-page {
+    background-color: $bordeaux-color;
+    background-size: cover;
+    height: 60vh;
+}
+
+.hero-content {
+    z-index: 1;
+    position: relative;
+    float: right;
+    max-width: 29rem;
+    padding: 1.5rem;
+    background-color: $white-color;
+    border-radius: $all-border-radius;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    margin-top: 10rem;
+
+    @media (max-width: 991px) {
+        max-height: 40%;
+        width: auto;
+        margin-top: 15rem;
+        margin-bottom: 1rem;
+    }
+}
+
+// === 7. FOOTER ===
+.it-footer {
+    position: relative;
+    flex-shrink: 0;
+    height: 10vh;
+}
+
+.it-footer-main {
+    background-color: $bordeaux-color;
+    background-size: cover;
+}
+
+// === 8. BUTTONS ===
+.white-btn {
+    background: $white-color;
+    color: $bordeaux-color;
+    border-radius: $all-border-radius;
+    border: $bordeaux-color 1px solid;
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+        box-shadow: 0 5px 15px rgba(140, 0, 33, 0.4);
+        transform: translateY(-2px);
+        color: $bordeaux-color;
+        background: $white-color;
+    }
+}
+
+.red-btn {
+    background: $bordeaux-color;
+    background: linear-gradient(90deg, rgba(140, 0, 33, 1) 0%, rgba(237, 38, 64, 1) 120%);
+    color: $white-color;
+    border-radius: $all-border-radius;
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+        box-shadow: 0 5px 15px rgba(140, 0, 33, 0.4);
+        transform: translateY(-2px);
+        color: $white-color;
+    }
+}
+
+.custom-card {
+    background-color: $porcelain-color;
+    border-radius: $all-border-radius;
+}
+
+.bordered-div {
+    border: 1px solid $bordeaux-color;
+    border-radius: $all-border-radius;
+}
+
+.bordered-div .custom-card {
+    border-radius: 25px 0 0 25px;
+
+    @media (max-width: 991px) {
+        border-radius: 25px 25px 0 0;
+    }
+}
+
+// === 9. TYPOGRAPHY & UTILITIES ===
+.title-red {
+    color: $red-color;
+}
+
+.title-bordeaux {
+    color: $bordeaux-color;
+}
+
+.title-black {
+    color: $espresso-color;
+}
+
+.title-white {
+    color: $white-color;
+}
+
+.text-justify {
+    text-align: justify;
+}
+
+mark {
+    background-color: $porcelain-color;
+}
+
+// === 10. OTHER ELEMENTS ===
+.logo {
+    max-height: 2.75rem;
+    margin-right: 0.82rem;
+
+    @media (max-width: 576px) {
+        max-height: 3rem;
+    }
+}
+
+.rounded-object {
+    border-radius: $all-border-radius;
+}
+
+.home-carousel {
+    background-color: $red-color;
+}
+
+.it-carousel-wrapper .splide__pagination button {
+    background-color: $white-color;
+}
+
+.cookiebar {
+    background-color: $bordeaux-color;
+}
+
+.splide__pagination {
+    display: block;
+
+    @media (min-width: 576px) {
+        display: flex;
+    }
+}
+

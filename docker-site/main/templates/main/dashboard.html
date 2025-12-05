@@ -3,30 +3,38 @@
 {% block title %}Dashboard - AImageLab{% endblock %}
 
 {% block content %}
-<div class="card card-body">
-    <h1 class="mb-3">Dashboard</h1>
-    <p class="mt-3 text-muted">
-        Welcome to your dashboard, <strong class="text-dark">{{ user.username }}</strong>!
-    </p>
-    
-    <div class="mt-4 p-4 bg-light rounded">
-        <h2 class="mb-3">Your Information</h2>
-        <p><strong>Username:</strong> {{ user.username }}</p>
-        <p><strong>Email:</strong> {{ user.email|default:"Not set" }}</p>
-        <p><strong>Last Login:</strong> {{ user.last_login|date:"F d, Y H:i" }}</p>
-        <p><strong>Account Status:</strong> <span class="text-success">Active</span></p>
+<!-- Inner Page Hero -->
+<section class="inner-page d-flex align-items-end">
+    <div class="container pb-5">
+        <h1 class="title-white">Dashboard</h1>
     </div>
-    
-    <div class="mt-5">
-        <h2>Quick Links</h2>
-        <ul class="list-unstyled mt-3">
-            <li class="mb-2">
-                <a href="{% url 'home' %}" class="link-primary">← Back to Home</a>
-            </li>
-            <li class="mb-2">
-                <a href="/admin/" class="link-primary">Admin Panel →</a>
-            </li>
-        </ul>
+</section>
+
+<div class="container my-5">
+    <div class="custom-card p-4">
+        <p class="mt-3 title-black">
+            Welcome to your dashboard, <strong class="title-bordeaux">{{ user.username }}</strong>!
+        </p>
+        
+        <div class="bordered-div mt-4 p-4">
+            <h2 class="mb-3 title-bordeaux">Your Information</h2>
+            <p class="title-black"><strong>Username:</strong> {{ user.username }}</p>
+            <p class="title-black"><strong>Email:</strong> {{ user.email|default:"Not set" }}</p>
+            <p class="title-black"><strong>Last Login:</strong> {{ user.last_login|date:"F d, Y H:i" }}</p>
+            <p class="title-black"><strong>Account Status:</strong> <span class="title-red">Active</span></p>
+        </div>
+        
+        <div class="mt-5">
+            <h2 class="title-bordeaux">Quick Links</h2>
+            <ul class="list-unstyled mt-3">
+                <li class="mb-2">
+                    <a href="{% url 'home' %}" class="white-btn">← Back to Home</a>
+                </li>
+                <li class="mb-2 mt-3">
+                    <a href="/admin/" class="red-btn">Admin Panel →</a>
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
 {% endblock %}

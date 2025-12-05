@@ -3,24 +3,29 @@
 {% block title %}News - AImageLab{% endblock %}
 
 {% block content %}
-<div class="card card-body mb-4">
-    <h1 class="mb-0">News</h1>
-</div>
+<!-- Inner Page Hero -->
+<section class="inner-page d-flex align-items-end">
+    <div class="container pb-5">
+        <h1 class="title-white">News</h1>
+    </div>
+</section>
 
-{% for post in posts %}
-<div class="card card-body mb-3">
-    <article>
-        <h2 class="card-title"><a href="{% url 'single' post.slug %}" class="link-primary">{{ post.title }}</a></h2>
-        <p class="small text-muted mb-2">{{ post.created_at|date:"F d, Y" }}</p>
-        {% if post.description %}
-        <p class="card-text">{{ post.description }}</p>
-        {% endif %}
-        <a href="{% url 'single' post.slug %}" class="btn btn-primary btn-sm">Read more →</a>
-    </article>
+<div class="container my-5">
+    {% for post in posts %}
+    <div class="custom-card p-4 mb-4">
+        <article>
+            <h2 class="title-bordeaux"><a href="{% url 'single' post.slug %}" class="title-bordeaux text-decoration-none">{{ post.title }}</a></h2>
+            <p class="small title-red mb-2">{{ post.created_at|date:"F d, Y" }}</p>
+            {% if post.description %}
+            <p class="title-black text-justify">{{ post.description }}</p>
+            {% endif %}
+            <a href="{% url 'single' post.slug %}" class="red-btn d-inline-block mt-2">Read more →</a>
+        </article>
+    </div>
+    {% empty %}
+    <div class="custom-card p-4">
+        <p class="title-black">No news available.</p>
+    </div>
+    {% endfor %}
 </div>
-{% empty %}
-<div class="card card-body">
-    <p class="text-muted">No news available.</p>
-</div>
-{% endfor %}
 {% endblock %}
