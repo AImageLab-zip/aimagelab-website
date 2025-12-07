@@ -3,24 +3,56 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import UserProfile, Post
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
 
 from django.http import FileResponse, Http404
 from django.conf import settings
 import os
 from .models import UserProfile
 
+POST_PER_PAGE = 5
 
 def home(request):
     """Home page view."""
     return render(request, 'main/home.html')
 
 def news(request):
-    """News/Blog page view."""
+    """News/Blog page view with pagination and search."""
+    search_query = request.GET.get('search', '')
+    
+    # Filter posts based on authentication
     if request.user.is_authenticated:
-        posts = Post.objects.order_by('-created_at')
+        posts = Post.objects.all()
     else:
-        posts = Post.objects.filter(is_published=True).order_by('-created_at')
-    return render(request, 'main/news.html', {'posts': posts})
+        posts = Post.objects.filter(is_published=True)
+    
+    # Apply search filter if query exists
+    if search_query:
+        posts = posts.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(content__icontains=search_query)
+        )
+    
+    # Order by creation date
+    posts = posts.order_by('-created_at')
+    
+    # Paginate results
+    paginator = Paginator(posts, POST_PER_PAGE)
+    page = request.GET.get('page', 1)
+    
+    try:
+        posts_page = paginator.page(page)
+    except PageNotAnInteger:
+        posts_page = paginator.page(1)
+    except EmptyPage:
+        posts_page = paginator.page(paginator.num_pages)
+    
+    return render(request, 'main/news.html', {
+        'posts': posts_page,
+        'search_query': search_query,
+    })
 
 def post_single(request, slug):
     """Single post detail view."""

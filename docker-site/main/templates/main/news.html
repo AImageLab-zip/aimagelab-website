@@ -11,6 +11,33 @@
 </section>
 
 <div class="container my-5">
+    <!-- Search Bar -->
+    <div class="custom-card p-4 mb-4">
+        <form method="get" action="{% url 'news' %}" class="row g-3">
+            <div class="col-md-10">
+                <input 
+                    type="text" 
+                    name="search" 
+                    class="form-control rounded-object" 
+                    placeholder="Search news by title, description, or content..."
+                    value="{{ search_query }}"
+                >
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="red-btn w-100">Search</button>
+            </div>
+            {% if search_query %}
+            <div class="col-12">
+                <p class="mb-0 title-black">
+                    Showing results for: <strong class="title-bordeaux">"{{ search_query }}"</strong>
+                    <a href="{% url 'news' %}" class="title-red ms-2">Clear search</a>
+                </p>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- News Posts -->
     {% for post in posts %}
     <div class="custom-card p-4 mb-4">
         <article>
@@ -24,8 +51,60 @@
     </div>
     {% empty %}
     <div class="custom-card p-4">
-        <p class="title-black">No news available.</p>
+        <p class="title-black">
+            {% if search_query %}
+                No news found matching your search.
+            {% else %}
+                No news available.
+            {% endif %}
+        </p>
     </div>
     {% endfor %}
+
+    <!-- Pagination -->
+    {% if posts.has_other_pages %}
+    <nav aria-label="News pagination" class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if posts.has_previous %}
+            <li class="page-item">
+                <a class="page-link rounded-object me-2" href="?page={{ posts.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo; Previous</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link rounded-object me-2">&laquo; Previous</span>
+            </li>
+            {% endif %}
+
+            {% for num in posts.paginator.page_range %}
+                {% if posts.number == num %}
+                <li class="page-item active">
+                    <span class="page-link rounded-object mx-1 bg-danger border-danger">{{ num }}</span>
+                </li>
+                {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link rounded-object mx-1" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if posts.has_next %}
+            <li class="page-item">
+                <a class="page-link rounded-object ms-2" href="?page={{ posts.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Next">
+                    <span aria-hidden="true">Next &raquo;</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link rounded-object ms-2">Next &raquo;</span>
+            </li>
+            {% endif %}
+        </ul>
+        <p class="text-center title-black mt-3">
+            Page {{ posts.number }} of {{ posts.paginator.num_pages }} | Total posts: {{ posts.paginator.count }}
+        </p>
+    </nav>
+    {% endif %}
 </div>
 {% endblock %}
