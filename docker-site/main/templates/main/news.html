@@ -39,15 +39,41 @@
 
     <!-- News Posts -->
     {% for post in posts %}
-    <div class="custom-card p-4 mb-4">
-        <article>
-            <h2 class="title-bordeaux"><a href="{% url 'single' post.slug %}" class="title-bordeaux text-decoration-none">{{ post.title }}</a></h2>
-            <p class="small title-red mb-2">{{ post.created_at|date:"F d, Y" }}</p>
-            {% if post.description %}
-            <p class="title-black text-justify">{{ post.description }}</p>
-            {% endif %}
-            <a href="{% url 'single' post.slug %}" class="red-btn d-inline-block mt-2">Read more →</a>
-        </article>
+    <div class="custom-card p-0 mb-4 news-card d-flex flex-column flex-md-row">
+        <div class="news-thumb" {% if post.cover %} style="background-image: url('{{ post.cover.url }}');"{% endif %}></div>
+        <div class="p-4 flex-grow-1">
+            <div class="d-flex flex-wrap align-items-center mb-2">
+               
+                {% if post.event_date %}
+                    <span class="badge bg-danger text-white rounded-pill mb-2">Event on {{ post.event_date|date:"F d, Y" }}!</span>
+                {% endif %}
+                {% if post.is_pinned %}
+                    <span class="badge bg-warning text-white rounded-pill ms-2 mb-2">Pinned</span>
+                {% endif %}
+                {% if not post.is_published %}
+                    <span class="badge bg-secondary text-white rounded-pill ms-2 mb-2">DRAFT</span>
+                {% endif %}
+
+            </div>
+            <article>
+                <h2 class="title-bordeaux"><a href="{% url 'single' post.slug %}" class="title-bordeaux text-decoration-none">{{ post.title }}</a></h2>
+                <p class="small title-red mb-2">Published on {{ post.created_at|date:"F d, Y" }}
+ {% if post.categories.all %}
+                    in 
+                    {% for category in post.categories.all %}
+                        <span>{{ category.name }}</span>{% if not forloop.last %},{% else %}.{% endif %}
+                    {% endfor %}
+                {% else %}
+                    .
+                {% endif %}
+
+                </p>
+                {% if post.description %}
+                <p class="title-black text-justify">{{ post.description }}</p>
+                {% endif %}
+                <a href="{% url 'single' post.slug %}" class="red-btn d-inline-block mt-2">Read more →</a>
+            </article>
+        </div>
     </div>
     {% empty %}
     <div class="custom-card p-4">

@@ -308,6 +308,29 @@ mark {
     }
 }
 
+// === 11. NEWS LIST ===
+.news-card {
+    overflow: hidden;
+}
+
+.news-thumb {
+    min-width: 220px;
+    max-width: 220px;
+    height: 180px;
+    background-color: $porcelain-color;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: $all-border-radius;
+
+    @media (max-width: 991px) {
+        width: 100%;
+        max-width: none;
+        height: 220px;
+        border-radius: 25px 25px 0 0;
+    }
+}
+
 
 input {
     border-radius: 10px ;

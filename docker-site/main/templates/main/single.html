@@ -16,6 +16,16 @@
         {% if post.cover %}
         <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="img-fluid rounded-object mb-4" style="max-width: 100%;">
         {% endif %}
+        <div class="d-flex flex-wrap align-items-center mb-3">
+            {% if post.categories.all %}
+                {% for category in post.categories.all %}
+                    <span class="badge bg-white text-danger rounded-pill me-2 mb-2">{{ category.name }}</span>
+                {% endfor %}
+            {% endif %}
+            {% if post.event_date %}
+                <span class="badge bg-danger text-white rounded-pill mb-2">Event on {{ post.event_date|date:"F d, Y" }}</span>
+            {% endif %}
+        </div>
         {% if post.description %}
         <p class="mb-3 title-bordeaux fs-5"><strong>{{ post.description }}</strong></p>
         {% endif %}
