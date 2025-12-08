@@ -186,10 +186,12 @@ $font-family-sans-serif: 'Plus Jakarta Sans', 'Helvetica Neue', Helvetica, Arial
     position: relative;
     flex-shrink: 0;
     height: 10vh;
+    margin-top: auto;
+    background-color: $bordeaux-color;
 }
 
 .it-footer-main {
-    background-color: $bordeaux-color;
+    background-color: unset;
     background-size: cover;
 }
 
@@ -219,12 +221,14 @@ $font-family-sans-serif: 'Plus Jakarta Sans', 'Helvetica Neue', Helvetica, Arial
     padding: 1rem 1.5rem;
     font-weight: 500;
     transition: all 0.3s ease;
-
+    text-decoration: none;
+    
     &:hover {
         box-shadow: 0 5px 15px rgba(140, 0, 33, 0.4);
         transform: translateY(-2px);
         color: $white-color;
     }
+
 }
 
 .custom-card {
@@ -304,3 +308,12 @@ mark {
     }
 }
 
+
+input {
+    border-radius: 10px ;
+    border: none !important;
+}
+
+.form-control{
+    border-radius: 10px !important;
+}

@@ -162,10 +162,12 @@
   position: relative;
   flex-shrink: 0;
   height: 10vh;
+  margin-top: auto;
+  background-color: #8A0C1A;
 }
 
 .it-footer-main {
-  background-color: #8A0C1A;
+  background-color: unset;
   background-size: cover;
 }
 
@@ -194,6 +196,7 @@
   padding: 1rem 1.5rem;
   font-weight: 500;
   transition: all 0.3s ease;
+  text-decoration: none;
 }
 
 .red-btn:hover {
@@ -281,4 +284,13 @@ mark {
   .splide__pagination {
     display: flex;
   }
+}
+
+input {
+  border-radius: 10px;
+  border: none !important;
+}
+
+.form-control {
+  border-radius: 10px !important;
 }

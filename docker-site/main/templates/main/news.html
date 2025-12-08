@@ -71,16 +71,12 @@
                     <span aria-hidden="true">&laquo; Previous</span>
                 </a>
             </li>
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link rounded-object me-2">&laquo; Previous</span>
-            </li>
             {% endif %}
 
             {% for num in posts.paginator.page_range %}
                 {% if posts.number == num %}
                 <li class="page-item active">
-                    <span class="page-link rounded-object mx-1 bg-danger border-danger">{{ num }}</span>
+                    <span class="page-link rounded-object mx-1 bg-danger text-white">{{ num }}</span>
                 </li>
                 {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %}
                 <li class="page-item">
@@ -94,10 +90,6 @@
                 <a class="page-link rounded-object ms-2" href="?page={{ posts.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Next">
                     <span aria-hidden="true">Next &raquo;</span>
                 </a>
-            </li>
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link rounded-object ms-2">Next &raquo;</span>
             </li>
             {% endif %}
         </ul>
