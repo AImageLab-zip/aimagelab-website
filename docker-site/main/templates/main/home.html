@@ -23,17 +23,70 @@
     </div>
 </section>
 
-<!-- System Information Section -->
+<!-- Upcoming Events Section -->
+{% if upcoming_events %}
 <section class="container my-5">
-    <div class="custom-card p-4">
-        <h2 class="title-bordeaux">System Information</h2>
-        <ul class="list-unstyled mt-3 title-black">
-            <li class="mb-2">✓ Django Application Server</li>
-            <li class="mb-2">✓ MySQL Database</li>
-            <li class="mb-2">✓ Redis Cache & Celery</li>
-            <li class="mb-2">✓ Apache with SSL</li>
-            <li class="mb-2">✓ Certbot SSL Management</li>
-        </ul>
+    <div class="mb-4">
+        <h2 class="title-bordeaux">Upcoming Events</h2>
+    </div>
+    <div class="row g-4">
+        {% for post in upcoming_events %}
+        <div class="col-md-6 col-lg-3">
+            <div class="custom-card p-0 h-100 d-flex flex-column">
+                {% if post.cover %}
+                <div class="event-thumb" style="background-image: url('{{ post.cover.url }}');"></div>
+                {% else %}
+                <div class="event-thumb" style="background-color: #FDEDEC;"></div>
+                {% endif %}
+                <div class="p-3 flex-grow-1 d-flex flex-column">
+                    <h3 class="title-bordeaux h6"><a href="{% url 'single' post.slug %}" class="title-bordeaux text-decoration-none">{{ post.title }}</a></h3>
+                    <p class="small title-red mb-2">📅 {{ post.event_date|date:"F d, Y" }}</p>
+                    {% if post.description %}
+                    <p class="title-black text-justify small mb-3 flex-grow-1">{{ post.description }}</p>
+                    {% endif %}
+                    <a href="{% url 'single' post.slug %}" class="red-btn d-inline-block align-self-start">Read more →</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="mt-4 text-center">
+        <a href="{% url 'news' %}" class="red-btn">View all events →</a>
     </div>
 </section>
+{% endif %}
+
+<!-- Latest Posts Section -->
+{% if latest_posts %}
+<section class="container my-5">
+    <div class="mb-4">
+        <h2 class="title-bordeaux">Latest News</h2>
+    </div>
+    <div class="row g-4">
+        {% for post in latest_posts %}
+        <div class="col-md-6 col-lg-3">
+            <div class="custom-card p-0 h-100 d-flex flex-column">
+                {% if post.cover %}
+                <div class="event-thumb" style="background-image: url('{{ post.cover.url }}');"></div>
+                {% else %}
+                <div class="event-thumb" style="background-color: #FDEDEC;"></div>
+                {% endif %}
+                <div class="p-3 flex-grow-1 d-flex flex-column">
+                    <h3 class="title-bordeaux h6"><a href="{% url 'single' post.slug %}" class="title-bordeaux text-decoration-none">{{ post.title }}</a></h3>
+                    <p class="small title-red mb-2">{{ post.created_at|date:"F d, Y" }}</p>
+                    {% if post.description %}
+                    <p class="title-black text-justify small mb-3 flex-grow-1">{{ post.description }}</p>
+                    {% endif %}
+                    <a href="{% url 'single' post.slug %}" class="red-btn d-inline-block align-self-start">Read more →</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="mt-4 text-center">
+        <a href="{% url 'news' %}" class="red-btn">View all news →</a>
+    </div>
+</section>
+{% endif %}
+
 {% endblock %}

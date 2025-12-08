@@ -331,6 +331,17 @@ mark {
     }
 }
 
+// === 12. EVENT CARDS (HOME) ===
+.event-thumb {
+    width: 100%;
+    height: 150px;
+    background-color: $porcelain-color;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 25px 25px 0 0;
+}
+
 
 input {
     border-radius: 10px ;

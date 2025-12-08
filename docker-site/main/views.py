@@ -16,7 +16,22 @@ POST_PER_PAGE = 5
 
 def home(request):
     """Home page view."""
-    return render(request, 'main/home.html')
+    # Get upcoming events (posts with event_date, ordered by event_date)
+    upcoming_events = Post.objects.filter(
+        is_published=True,
+        event_date__isnull=False
+    ).order_by('event_date')[:4]
+    
+    # Get latest posts without event_date
+    latest_posts = Post.objects.filter(
+        is_published=True,
+        event_date__isnull=True
+    ).order_by('-created_at')[:4]
+    
+    return render(request, 'main/home.html', {
+        'upcoming_events': upcoming_events,
+        'latest_posts': latest_posts,
+    })
 
 def news(request):
     """News/Blog page view with pagination and search."""
