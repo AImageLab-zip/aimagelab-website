@@ -148,6 +148,33 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 
+# LDAP Configuration
+LDAP_SERVER_URI = 'ldap://ailb-login-01.ing.unimore.it:389'
+LDAP_SEARCH_BASE = 'dc=aimagelab,dc=unimore,dc=it'
+LDAP_BIND_DN = None  # Anonymous bind
+LDAP_BIND_PASSWORD = None
+LDAP_ATTRIBUTES = ['uid', 'givenName', 'sn', 'mail']
+
+# Role mapping from LDAP organizational units to Django UserProfile roles
+LDAP_ROLE_MAPPING = {
+    'strutturati': 'professor', #provvisorio
+    'dottorandi': 'phd',
+    'tesisti': 'intern',
+    'studenti': 'alumni',
+    'past_members': 'past_member',
+    'ospiti': 'alumni',
+}
+
+# Role priority (higher number = higher priority when user in multiple groups)
+LDAP_ROLE_PRIORITY = {
+    'professor': 5,
+    'postdoc': 4,
+    'phd': 3,
+    'intern': 2,
+    'alumni': 1,
+    'past_member': 0,
+}
+
 # Logging
 LOGGING = {
     "version": 1,
