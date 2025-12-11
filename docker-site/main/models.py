@@ -16,6 +16,8 @@ class UserProfile(models.Model):
         ('phd', 'PhD Student'),
         ('intern', 'Research Intern'),
         ('alumni', 'Alumni'),
+        ('past_member', 'Past Member'),
+        ('guest', 'Visitor Researcher'), # ?
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
