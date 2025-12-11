@@ -141,13 +141,22 @@ class Command(BaseCommand):
                         self.stdout.write(f'Created user: {username}')
                         created_count += 1
                     elif update_existing:
-                        # Update user data
-                        user.first_name = first_name or user.first_name
-                        user.last_name = last_name or user.last_name
-                        user.email = email or user.email
-                        user.save()
-                        self.stdout.write(f'Updated user: {username}')
-                        updated_count += 1
+                        # Check if data has actually changed before updating
+                        data_changed = (
+                            (first_name and first_name != user.first_name) or
+                            (last_name and last_name != user.last_name) or
+                            (email and email != user.email)
+                        )
+
+                        if data_changed:
+                            user.first_name = first_name or user.first_name
+                            user.last_name = last_name or user.last_name
+                            user.email = email or user.email
+                            user.save()
+                            self.stdout.write(f'Updated user: {username}')
+                            updated_count += 1
+                        else:
+                            self.stdout.write(f'User {username} already up to date')
                     else:
                         self.stdout.write(f'Skipped existing user: {username}')
                         skipped_count += 1
