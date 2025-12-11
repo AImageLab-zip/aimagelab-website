@@ -97,6 +97,24 @@ def bulk_sync_users_task(users_data_list):
 
 
 @shared_task
+def populate_users_from_ldap():
+    """
+    Celery task to populate users from LDAP server daily.
+    """
+    from django.core.management import call_command
+    from django.utils import timezone
+
+    try:
+        logger.info(f"Starting LDAP user population at {timezone.now()}")
+        call_command('populate_from_ldap')
+        logger.info("LDAP user population completed successfully")
+        return {'success': True, 'message': 'LDAP population completed'}
+    except Exception as exc:
+        logger.error(f"LDAP population failed: {str(exc)}")
+        return {'success': False, 'error': str(exc)}
+
+
+@shared_task
 def sync_users_from_external_source(source_url=None, source_data=None):
     """
     Celery task to sync users from an external source (API, file, etc.).
