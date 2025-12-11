@@ -12,3 +12,4 @@ debugpy>=1.8.16
 requests>=2.31.0
 Pillow>=10.0.0
 django-phonenumber-field[phonenumbers]>=7.0.0
+python-ldap>=3.4.0
