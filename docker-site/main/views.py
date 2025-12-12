@@ -63,6 +63,50 @@ def dashboard(request):
 
 
 @login_required
+def edit_profile(request):
+    """Profile edit view for authenticated users."""
+    profile, created = UserProfile.objects.get_or_create(
+        user=request.user,
+        defaults={
+            'role': 'phd',  # default role for manually created profiles
+            'is_visible': True,
+            'display_order': 0,
+        }
+    )
+
+    if request.method == 'POST':
+        # Update profile fields
+        profile.bio = request.POST.get('bio', '').strip()
+        profile.website = request.POST.get('website', '').strip()
+        profile.google_scholar = request.POST.get('google_scholar', '').strip()
+        profile.github = request.POST.get('github', '').strip()
+        profile.linkedin = request.POST.get('linkedin', '').strip()
+        profile.phone_number = request.POST.get('phone_number', '').strip() or None
+
+        # Handle avatar upload
+        if 'avatar' in request.FILES and request.FILES['avatar']:
+            # Delete old avatar if exists
+            if profile.avatar:
+                profile.avatar.delete()
+            # Save new avatar
+            avatar_file = request.FILES['avatar']
+            profile.avatar.save(f"{request.user.username}_{avatar_file.name}", avatar_file)
+
+        # Handle avatar removal
+        if request.POST.get('remove_avatar') == 'on' and profile.avatar:
+            profile.avatar.delete()
+            profile.avatar = None
+
+        profile.save()
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('edit_profile')
+
+    return render(request, 'main/edit_profile.html', {
+        'profile': profile,
+    })
+
+
+@login_required
 def add_user(request):
     """View to add a new user using Celery task."""
     if request.method == 'POST':
