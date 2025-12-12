@@ -171,3 +171,29 @@ def add_user(request):
     # GET request - show form
     role_choices = UserProfile.ROLE_CHOICES
     return render(request, 'main/add_user.html', {'role_choices': role_choices})
+
+
+@login_required
+def sync_ldap(request):
+    """View to manually trigger LDAP synchronization."""
+    from .tasks import populate_users_from_ldap
+    
+    # Only allow staff members to trigger sync
+    if not request.user.is_staff:
+        messages.error(request, 'You do not have permission to perform this action.')
+        return redirect('home')
+    
+    if request.method == 'POST':
+        try:
+            # Launch LDAP sync task asynchronously
+            task = populate_users_from_ldap.delay()
+            
+            messages.success(
+                request,
+                f'LDAP synchronization started! Task ID: {task.id}. This may take a few moments.'
+            )
+        except Exception as e:
+            messages.error(request, f'Error starting LDAP sync: {str(e)}')
+    
+    # Redirect back to the previous page or home
+    return redirect(request.META.get('HTTP_REFERER', 'home'))

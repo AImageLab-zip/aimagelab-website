@@ -9,4 +9,5 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     path('add-user/', views.add_user, name='add_user'),
+    path('sync-ldap/', views.sync_ldap, name='sync_ldap'),
 ]

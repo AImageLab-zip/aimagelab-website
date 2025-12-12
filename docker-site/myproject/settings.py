@@ -148,6 +148,14 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 
+# Celery Beat Scheduler - Use database-backed scheduler
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# LDAP Sync Schedule Configuration
+# Time when the daily LDAP sync should run (24-hour format)
+LDAP_SYNC_HOUR = int(os.environ.get("LDAP_SYNC_HOUR", "2"))  # Default: 2 AM
+LDAP_SYNC_MINUTE = int(os.environ.get("LDAP_SYNC_MINUTE", "0"))  # Default: 00 minutes
+
 # LDAP Configuration
 LDAP_SERVER_URI = 'ldap://ailb-login-01.ing.unimore.it:389'
 LDAP_SEARCH_BASE = 'dc=aimagelab,dc=unimore,dc=it'
