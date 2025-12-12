@@ -151,6 +151,7 @@
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
                     <li><a href="{% url 'add_user' %}">Add User</a></li>
+                    <li><a href="{% url 'edit_profile' %}">Profile</a></li>
                     <li><span style="color: #ecf0f1;">Welcome, {{ user.username }}</span></li>
                     <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
                 {% else %}
