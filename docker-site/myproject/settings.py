@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "django_celery_beat",
+    "phonenumber_field",
     "main.apps.MainConfig",
     "django_sass", #https://pypi.org/project/django-sass/
 ]
@@ -147,6 +148,41 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
+
+# Celery Beat Scheduler - Use database-backed scheduler
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# LDAP Sync Schedule Configuration
+# Time when the daily LDAP sync should run (24-hour format)
+LDAP_SYNC_HOUR = int(os.environ.get("LDAP_SYNC_HOUR", "2"))  # Default: 2 AM
+LDAP_SYNC_MINUTE = int(os.environ.get("LDAP_SYNC_MINUTE", "0"))  # Default: 00 minutes
+
+# LDAP Configuration
+LDAP_SERVER_URI = 'ldap://ailb-login-01.ing.unimore.it:389'
+LDAP_SEARCH_BASE = 'dc=aimagelab,dc=unimore,dc=it'
+LDAP_BIND_DN = None  # Anonymous bind
+LDAP_BIND_PASSWORD = None
+LDAP_ATTRIBUTES = ['uid', 'givenName', 'sn', 'mail']
+
+# Role mapping from LDAP organizational units to Django UserProfile roles
+LDAP_ROLE_MAPPING = {
+    'strutturati': 'professor', #provvisorio
+    'dottorandi': 'phd',
+    'tesisti': 'intern',
+    'studenti': 'alumni',
+    'past_members': 'past_member',
+    'ospiti': 'alumni',
+}
+
+# Role priority (higher number = higher priority when user in multiple groups)
+LDAP_ROLE_PRIORITY = {
+    'professor': 5,
+    'postdoc': 4,
+    'phd': 3,
+    'intern': 2,
+    'alumni': 1,
+    'past_member': 0,
+}
 
 # Logging
 LOGGING = {

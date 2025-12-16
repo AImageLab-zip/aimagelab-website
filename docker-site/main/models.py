@@ -1,12 +1,14 @@
 # Main app models
 from django.db import models
 from django.contrib.auth.models import User
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class UserProfile(models.Model):
     """Extended user profile for team members"""
     
     ROLE_CHOICES = [
+        # ('professor_special', 'Full Professor (University Dean)'),
         ('professor', 'Full Professor'),
         ('assoc_professor', 'Associate Professor'),
         ('asst_professor', 'Assistant Professor'),
@@ -14,6 +16,8 @@ class UserProfile(models.Model):
         ('phd', 'PhD Student'),
         ('intern', 'Research Intern'),
         ('alumni', 'Alumni'),
+        ('past_member', 'Past Member'),
+        ('guest', 'Visitor Researcher'), # ?
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -31,6 +35,12 @@ class UserProfile(models.Model):
     google_scholar = models.URLField(blank=True)
     github = models.URLField(blank=True)
     linkedin = models.URLField(blank=True)
+    phone_number = PhoneNumberField(
+        blank=True,
+        null=True,
+        region='IT',
+        help_text="Contact phone number (international format)"
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

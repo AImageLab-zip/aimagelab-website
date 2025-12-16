@@ -1,0 +1,297 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Add User - AImageLab{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Add or Update User</h1>
+    <p class="subtitle">Create a new user or update an existing one using Celery background task</p>
+    
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="message {{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    <form method="post" enctype="multipart/form-data" class="user-form">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <h2>Basic Information</h2>
+            
+            <div class="form-group">
+                <label for="username">Username *</label>
+                <input type="text" id="username" name="username" required>
+                <small>Unique identifier for the user</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <input type="text" id="first_name" name="first_name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" name="last_name">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password">
+                <small>Leave empty when updating existing users</small>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h2>Profile Information</h2>
+            
+            <div class="form-group">
+                <label for="avatar">Profile Picture</label>
+                <input type="file" id="avatar" name="avatar" accept="image/*">
+                <small>Upload a profile picture (JPEG, PNG, etc.)</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="role">Role *</label>
+                <select id="role" name="role" required>
+                    {% for value, label in role_choices %}
+                        <option value="{{ value }}" {% if value == 'phd' %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="bio">Biography</label>
+                <textarea id="bio" name="bio" rows="4"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="website">Personal Website</label>
+                <input type="url" id="website" name="website" placeholder="https://example.com">
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h2>Social Links</h2>
+            
+            <div class="form-group">
+                <label for="google_scholar">Google Scholar</label>
+                <input type="url" id="google_scholar" name="google_scholar" placeholder="https://scholar.google.com/...">
+            </div>
+            
+            <div class="form-group">
+                <label for="github">GitHub</label>
+                <input type="url" id="github" name="github" placeholder="https://github.com/username">
+            </div>
+            
+            <div class="form-group">
+                <label for="linkedin">LinkedIn</label>
+                <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/username">
+            </div>
+            
+            <div class="form-group">
+                <label for="phone_number">Phone Number</label>
+                <input type="tel" id="phone_number" name="phone_number" placeholder="+39 123 456 7890">
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h2>Display Settings</h2>
+            
+            <div class="form-group">
+                <label for="display_order">Display Order</label>
+                <input type="number" id="display_order" name="display_order" value="0" min="0">
+                <small>Lower numbers appear first in the team listing</small>
+            </div>
+            
+            <div class="form-group checkbox-group">
+                <label>
+                    <input type="checkbox" id="is_visible" name="is_visible" checked>
+                    <span>Show on People page</span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add/Update User (Async)</button>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .form-container h1 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .subtitle {
+        color: #7f8c8d;
+        margin-bottom: 2rem;
+    }
+    
+    .messages {
+        margin-bottom: 2rem;
+    }
+    
+    .message {
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+    
+    .message.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .message.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .form-section:last-of-type {
+        border-bottom: none;
+    }
+    
+    .form-section h2 {
+        color: #34495e;
+        font-size: 1.3rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+        font-weight: 500;
+    }
+    
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group input[type="password"],
+    .form-group input[type="url"],
+    .form-group input[type="tel"],
+    .form-group input[type="number"],
+    .form-group input[type="file"],
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-family: inherit;
+    }
+    
+    .form-group textarea {
+        resize: vertical;
+    }
+    
+    .form-group small {
+        display: block;
+        margin-top: 0.25rem;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+    
+    .checkbox-group label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+        margin-right: 0.5rem;
+        width: auto;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-primary {
+        background-color: #3498db;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+    
+    .btn-secondary {
+        background-color: #95a5a6;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #7f8c8d;
+    }
+    
+    @media (max-width: 768px) {
+        .form-container {
+            margin: 1rem;
+            padding: 1rem;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}

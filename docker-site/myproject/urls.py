@@ -11,4 +11,6 @@ urlpatterns = [
     path('', include('main.urls')),
 ]
 
-# Media files are served through custom view in main.urls for access control
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
