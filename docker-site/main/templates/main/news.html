@@ -1,0 +1,128 @@
+{% extends 'main/base.html' %}
+
+{% block title %}News - AImageLab{% endblock %}
+
+{% block content %}
+<!-- Inner Page Hero -->
+<section class="inner-page d-flex align-items-end">
+    <div class="container pb-5">
+        <h1 class="title-white">News</h1>
+    </div>
+</section>
+
+<div class="container my-5">
+    <!-- Search Bar -->
+    <div class="custom-card p-4 mb-4">
+        <form method="get" action="{% url 'news' %}" class="row g-3">
+            <div class="col-md-10">
+                <input 
+                    type="text" 
+                    name="search" 
+                    class="form-control rounded-object" 
+                    placeholder="Search news by title, description, or content..."
+                    value="{{ search_query }}"
+                >
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="red-btn w-100">Search</button>
+            </div>
+            {% if search_query %}
+            <div class="col-12">
+                <p class="mb-0 title-black">
+                    Showing results for: <strong class="title-bordeaux">"{{ search_query }}"</strong>
+                    <a href="{% url 'news' %}" class="title-red ms-2">Clear search</a>
+                </p>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- News Posts -->
+    {% for post in posts %}
+    <div class="custom-card p-0 mb-4 news-card d-flex flex-column flex-md-row">
+        <div class="news-thumb" {% if post.cover %} style="background-image: url('{{ post.cover.url }}');"{% endif %}></div>
+        <div class="p-4 flex-grow-1">
+            <div class="d-flex flex-wrap align-items-center mb-2">
+               
+                {% if post.event_date %}
+                    <span class="badge bg-danger text-white rounded-pill mb-2">Event on {{ post.event_date|date:"F d, Y" }}!</span>
+                {% endif %}
+                {% if post.is_pinned %}
+                    <span class="badge bg-warning text-white rounded-pill ms-2 mb-2">Pinned</span>
+                {% endif %}
+                {% if not post.is_published %}
+                    <span class="badge bg-secondary text-white rounded-pill ms-2 mb-2">DRAFT</span>
+                {% endif %}
+
+            </div>
+            <article>
+                <h2 class="title-bordeaux"><a href="{% url 'single' post.slug %}" class="title-bordeaux text-decoration-none">{{ post.title }}</a></h2>
+                <p class="small title-red mb-2">Published on {{ post.created_at|date:"F d, Y" }}
+ {% if post.categories.all %}
+                    in 
+                    {% for category in post.categories.all %}
+                        <span>{{ category.name }}</span>{% if not forloop.last %},{% else %}.{% endif %}
+                    {% endfor %}
+                {% else %}
+                    .
+                {% endif %}
+
+                </p>
+                {% if post.description %}
+                <p class="title-black text-justify">{{ post.description }}</p>
+                {% endif %}
+                <a href="{% url 'single' post.slug %}" class="red-btn d-inline-block mt-2">Read more →</a>
+            </article>
+        </div>
+    </div>
+    {% empty %}
+    <div class="custom-card p-4">
+        <p class="title-black">
+            {% if search_query %}
+                No news found matching your search.
+            {% else %}
+                No news available.
+            {% endif %}
+        </p>
+    </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if posts.has_other_pages %}
+    <nav aria-label="News pagination" class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if posts.has_previous %}
+            <li class="page-item">
+                <a class="page-link rounded-object me-2" href="?page={{ posts.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo; Previous</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in posts.paginator.page_range %}
+                {% if posts.number == num %}
+                <li class="page-item active">
+                    <span class="page-link rounded-object mx-1 bg-danger text-white">{{ num }}</span>
+                </li>
+                {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link rounded-object mx-1" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if posts.has_next %}
+            <li class="page-item">
+                <a class="page-link rounded-object ms-2" href="?page={{ posts.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Next">
+                    <span aria-hidden="true">Next &raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+        <p class="text-center title-black mt-3">
+            Page {{ posts.number }} of {{ posts.paginator.num_pages }} | Total posts: {{ posts.paginator.count }}
+        </p>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

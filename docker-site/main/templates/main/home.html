@@ -3,34 +3,90 @@
 {% block title %}Home - AImageLab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>Welcome to AImageLab Application</h1>
-    <p style="font-size: 1.1rem; color: #555; margin-top: 1rem;">
-        This is a Docker-based Django application with separate development and production environments.
-    </p>
-    
-    {% if user.is_authenticated %}
-        <p style="margin-top: 1.5rem; color: #27ae60; font-weight: bold;">
-            You are logged in as {{ user.username }}
-        </p>
-        <p style="margin-top: 0.5rem;">
-            <a href="{% url 'dashboard' %}" style="color: #3498db; text-decoration: none;">Go to Dashboard →</a>
-        </p>
-    {% else %}
-        <p style="margin-top: 1.5rem;">
-            <a href="{% url 'login' %}" style="color: #3498db; text-decoration: none;">Please login to continue →</a>
-        </p>
-    {% endif %}
-    
-    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
-        <h2>System Information</h2>
-        <ul style="list-style: none; padding-left: 0; margin-top: 1rem;">
-            <li style="margin-bottom: 0.5rem;">✓ Django Application Server</li>
-            <li style="margin-bottom: 0.5rem;">✓ MySQL Database</li>
-            <li style="margin-bottom: 0.5rem;">✓ Redis Cache & Celery</li>
-            <li style="margin-bottom: 0.5rem;">✓ Apache with SSL</li>
-            <li style="margin-bottom: 0.5rem;">✓ Certbot SSL Management</li>
-        </ul>
+<section class="it-hero-wrapper">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="title-bordeaux mb-3">AImageLab Research Group</h1>
+            <p class="fs-5 title-black">
+                AImageLab is a research laboratory of the Dipartimento di Ingegneria "Enzo Ferrari" at the University of Modena and Reggio Emilia, Italy. AImageLab is also part of the Artificial Intelligence Research and Innovation Center (AIRI) of the Modena Technopole.
+            </p>
+            
+            {% if user.is_authenticated %}
+                <p class="mt-4 fw-bold title-red">
+                    You are logged in as {{ user.username }}
+                </p>
+                <a href="{% url 'dashboard' %}" class="red-btn mt-3 d-inline-block">Go to Dashboard →</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="red-btn mt-3 d-inline-block">Please login to continue →</a>
+            {% endif %}
+        </div>
     </div>
-</div>
+</section>
+
+<!-- Upcoming Events Section -->
+{% if upcoming_events %}
+<section class="container my-5">
+    <div class="mb-4">
+        <h2 class="title-bordeaux">Upcoming Events</h2>
+    </div>
+    <div class="row g-4">
+        {% for post in upcoming_events %}
+        <div class="col-md-6 col-lg-3">
+            <div class="custom-card p-0 h-100 d-flex flex-column">
+                {% if post.cover %}
+                <div class="event-thumb" style="background-image: url('{{ post.cover.url }}');"></div>
+                {% else %}
+                <div class="event-thumb" style="background-color: #FDEDEC;"></div>
+                {% endif %}
+                <div class="p-3 flex-grow-1 d-flex flex-column">
+                    <h3 class="title-bordeaux h6"><a href="{% url 'single' post.slug %}" class="title-bordeaux text-decoration-none">{{ post.title }}</a></h3>
+                    <p class="small title-red mb-2">📅 {{ post.event_date|date:"F d, Y" }}</p>
+                    {% if post.description %}
+                    <p class="title-black text-justify small mb-3 flex-grow-1">{{ post.description }}</p>
+                    {% endif %}
+                    <a href="{% url 'single' post.slug %}" class="red-btn d-inline-block align-self-start">Read more →</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="mt-4 text-center">
+        <a href="{% url 'news' %}" class="red-btn">View all events →</a>
+    </div>
+</section>
+{% endif %}
+
+<!-- Latest Posts Section -->
+{% if latest_posts %}
+<section class="container my-5">
+    <div class="mb-4">
+        <h2 class="title-bordeaux">Latest News</h2>
+    </div>
+    <div class="row g-4">
+        {% for post in latest_posts %}
+        <div class="col-md-6 col-lg-3">
+            <div class="custom-card p-0 h-100 d-flex flex-column">
+                {% if post.cover %}
+                <div class="event-thumb" style="background-image: url('{{ post.cover.url }}');"></div>
+                {% else %}
+                <div class="event-thumb" style="background-color: #FDEDEC;"></div>
+                {% endif %}
+                <div class="p-3 flex-grow-1 d-flex flex-column">
+                    <h3 class="title-bordeaux h6"><a href="{% url 'single' post.slug %}" class="title-bordeaux text-decoration-none">{{ post.title }}</a></h3>
+                    <p class="small title-red mb-2">{{ post.created_at|date:"F d, Y" }}</p>
+                    {% if post.description %}
+                    <p class="title-black text-justify small mb-3 flex-grow-1">{{ post.description }}</p>
+                    {% endif %}
+                    <a href="{% url 'single' post.slug %}" class="red-btn d-inline-block align-self-start">Read more →</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="mt-4 text-center">
+        <a href="{% url 'news' %}" class="red-btn">View all news →</a>
+    </div>
+</section>
+{% endif %}
+
 {% endblock %}

@@ -53,3 +53,42 @@ class UserProfile(models.Model):
     
     def get_full_name(self):
         return self.user.get_full_name() or self.user.username
+
+class Category(models.Model):
+    """Blog post category model"""
+    
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True)
+    
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = "Categories"
+    
+    def __str__(self):
+        return self.name
+
+
+class Post(models.Model):
+    """Blog post model"""
+    
+    title = models.CharField(max_length=300)
+    description = models.TextField(blank=True)
+    cover = models.ImageField(upload_to='blog_covers/', blank=True, null=True)
+    slug = models.SlugField(unique=True)
+    
+    
+    categories = models.ManyToManyField("Category", related_name="posts")
+    
+    #author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    event_date = models.DateTimeField(blank=True, null=True)
+    is_published = models.BooleanField(default=True)
+    is_pinned = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.title

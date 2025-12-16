@@ -4,187 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AImageLab Application{% endblock %}</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            background-color: #f5f5f5;
-        }
-        
-        /* Navigation Bar */
-        nav {
-            background-color: #2c3e50;
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .nav-brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-decoration: none;
-            color: white;
-        }
-        
-        .nav-links {
-            list-style: none;
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-        
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        
-        .nav-links a:hover {
-            background-color: #34495e;
-        }
-        
-        .nav-links .btn-logout {
-            background-color: #e74c3c;
-            padding: 0.5rem 1rem;
-            border: none;
-            color: white;
-            cursor: pointer;
-            border-radius: 4px;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .nav-links .btn-logout:hover {
-            background-color: #c0392b;
-        }
-        
-        /* Main Content */
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 20px;
-        }
-        
-        /* Messages */
-        .messages {
-            max-width: 1200px;
-            margin: 1rem auto;
-            padding: 0 20px;
-        }
-        
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 4px;
-            border-left: 4px solid;
-        }
-        
-        .alert-success {
-            background-color: #d4edda;
-            border-color: #28a745;
-            color: #155724;
-        }
-        
-        .alert-error {
-            background-color: #f8d7da;
-            border-color: #dc3545;
-            color: #721c24;
-        }
-        
-        .alert-info {
-            background-color: #d1ecf1;
-            border-color: #17a2b8;
-            color: #0c5460;
-        }
-        
-        .alert-warning {
-            background-color: #fff3cd;
-            border-color: #ffc107;
-            color: #856404;
-        }
-        
-        /* Content Card */
-        .card {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .card h1 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-        }
-        
-        .card h2 {
-            color: #34495e;
-            margin-bottom: 1rem;
-        }
-    </style>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'main/css/styles.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <!-- Navigation Bar -->
-    <nav>
-        <div class="nav-container">
-            <a href="{% url 'home' %}" class="nav-brand">AImageLab</a>
-            <ul class="nav-links">
-                <li><a href="{% url 'home' %}">Home</a></li>
-                <li><a href="{% url 'people' %}">People</a></li>
-                {% if user.is_authenticated %}
-                    <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li><a href="{% url 'add_user' %}">Add User</a></li>
-                    <li><a href="{% url 'edit_profile' %}">Profile</a></li>
-                    {% if user.is_staff %}
-                        <li>
-                            <form method="post" action="{% url 'sync_ldap' %}" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" style="background-color: #3498db; padding: 0.5rem 1rem; border: none; color: white; cursor: pointer; border-radius: 4px; font-family: inherit; font-size: inherit;">Sync LDAP</button>
-                            </form>
-                        </li>
-                    {% endif %}
-                    <li><span style="color: #ecf0f1;">Welcome, {{ user.username }}</span></li>
-                    <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
-                {% else %}
-                    <li><a href="{% url 'login' %}">Login</a></li>
-                {% endif %}
-            </ul>
-        </div>
-    </nav>
+<body class="main-body">
+    <!-- Header & Navigation -->
+    <header class="it-header-navbar-wrapper">
+        <nav class="navbar navbar-expand-lg custom-nav">
+            <div class="container-fluid">
+                <a href="{% url 'home' %}" class="navbar-brand">
+                    <img src="{% static 'main/assets/logo.png' %}" alt="AImageLab" class="logo">
+                    <span>AImageLab</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a href="{% url 'home' %}" class="nav-link"><span>Home</span></a></li>
+                        <li class="nav-item"><a href="{% url 'people' %}" class="nav-link"><span>People</span></a></li>
+                        <li class="nav-item"><a href="{% url 'news' %}" class="nav-link"><span>News</span></a></li>
+                        {% if user.is_authenticated %}
+                            <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span>Dashboard</span></a></li>
+                            <li class="nav-item"><a href="{% url 'logout' %}" class="red-btn ms-2">Logout</a></li>
+                        {% else %}
+                            <li class="nav-item"><a href="{% url 'login' %}" class="red-btn ms-2">Login</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
     
     <!-- Messages -->
     {% if messages %}
-        <div class="messages">
+        <div class="container mt-3">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-object" role="alert">
                     {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
         </div>
     {% endif %}
     
     <!-- Main Content -->
-    <div class="container">
+    <main>
         {% block content %}{% endblock %}
-    </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="it-footer">
+        <div class="it-footer-main">
+            <div class="container py-4">
+                <p class="title-white mb-0 text-center">&copy; {% now "Y" %} AImageLab - All rights reserved</p>
+            </div>
+        </div>
+    </footer>
     
     {% block extra_js %}{% endblock %}
+    <script src="{% static 'main/js/bootstrap-italia.bundle.min.js' %}"></script>
 </body>
 </html>

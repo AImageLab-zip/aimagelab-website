@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "phonenumber_field",
     "main.apps.MainConfig",
+    "django_sass", #https://pypi.org/project/django-sass/
 ]
 
 MIDDLEWARE = [

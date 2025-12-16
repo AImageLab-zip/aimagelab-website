@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile
+from .models import UserProfile, Category, Post
 
 
 @admin.register(UserProfile)
@@ -30,3 +30,13 @@ class UserProfileAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('created_at', 'updated_at')
 
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    pass
+
+class PostAdmin(admin.ModelAdmin):
+    pass
+
+admin.site.register(Category, CategoryAdmin)
+admin.site.register(Post, PostAdmin)

@@ -1,0 +1,44 @@
+{% extends 'main/base.html' %}
+
+{% block title %}{{ post.title }} - AImageLab{% endblock %}
+
+{% block content %}
+<!-- Inner Page Hero -->
+<section class="inner-page d-flex align-items-end">
+    <div class="container pb-5">
+        <h1 class="title-white">{{ post.title }}</h1>
+        <p class="small title-white mb-0">{{ post.created_at|date:"F d, Y" }}</p>
+    </div>
+</section>
+
+<div class="container my-5">
+    <div class="custom-card p-4">
+        {% if post.cover %}
+        <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="img-fluid rounded-object mb-4" style="max-width: 100%;">
+        {% endif %}
+        <div class="d-flex flex-wrap align-items-center mb-3">
+            {% if post.categories.all %}
+                {% for category in post.categories.all %}
+                    <span class="badge bg-white text-danger rounded-pill me-2 mb-2">{{ category.name }}</span>
+                {% endfor %}
+            {% endif %}
+            {% if post.event_date %}
+                <span class="badge bg-danger text-white rounded-pill mb-2">Event on {{ post.event_date|date:"F d, Y" }}</span>
+            {% endif %}
+        </div>
+        {% if post.description %}
+        <p class="mb-3 title-bordeaux fs-5"><strong>{{ post.description }}</strong></p>
+        {% endif %}
+        <div class="mb-4 title-black text-justify">
+            {{ post.content|linebreaks }}
+        </div>
+        {% if user.is_authenticated %}
+        <div class="mb-3">
+            <a href="{% url 'post_edit' post.slug %}" class="red-btn">Edit Post</a>
+        </div>
+        {% endif %}
+        <hr class="my-4">
+        <a href="{% url 'news' %}" class="white-btn">← Back to News</a>
+    </div>
+</div>
+{% endblock %}
