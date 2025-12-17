@@ -27,6 +27,7 @@ celerybeat-schedule.db
 # Environment
 .env
 .env.local
+.env.oidc
 secrets.yml
 
 # IDE
