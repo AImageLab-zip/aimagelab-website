@@ -9,6 +9,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def to_camel_case(s):
+    if not s:
+        return ''
+    return ' '.join(word.capitalize() for word in s.split())
+
 class Command(BaseCommand):
     help = 'Populate the database with users from LDAP server'
 
@@ -108,8 +113,8 @@ class Command(BaseCommand):
 
                     # Extract user data
                     username = self._get_attr_value(attrs, 'uid')
-                    first_name = self._get_attr_value(attrs, 'givenName')
-                    last_name = self._get_attr_value(attrs, 'sn')
+                    first_name = to_camel_case(self._get_attr_value(attrs, 'givenName'))
+                    last_name = to_camel_case(self._get_attr_value(attrs, 'sn'))
                     email = self._get_attr_value(attrs, 'mail')
 
                     if not username:
