@@ -1,9 +1,18 @@
 import ldap
+import ldap.filter
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from django.conf import settings
 from main.models import UserProfile
+import logging
 
+logger = logging.getLogger(__name__)
+
+
+def to_camel_case(s):
+    if not s:
+        return ''
+    return ' '.join(word.capitalize() for word in s.split())
 
 class Command(BaseCommand):
     help = 'Populate the database with users from LDAP server'
@@ -33,9 +42,15 @@ class Command(BaseCommand):
             self.stdout.write('Connecting to LDAP server...')
             ldap_client = ldap.initialize(settings.LDAP_SERVER_URI)
             ldap_client.set_option(ldap.OPT_REFERRALS, 0)
+            
+            # Set network timeout to prevent hanging connections
+            ldap_client.set_option(ldap.OPT_NETWORK_TIMEOUT, 10.0)
+            
+            logger.info(f"Connecting to LDAP server: {settings.LDAP_SERVER_URI}")
 
             # Anonymous bind
             ldap_client.simple_bind_s()
+            logger.info("LDAP bind successful")
 
             # Get members of ailb-srv group (POSIX group uses memberUid)
             self.stdout.write('Finding ailb-srv group members...')
@@ -63,11 +78,15 @@ class Command(BaseCommand):
                 try:
                     if isinstance(uid, bytes):
                         uid = uid.decode('utf-8')
+                    
+                    # Sanitize uid to prevent LDAP injection
+                    safe_uid = ldap.filter.escape_filter_chars(uid)
+                    logger.debug(f"Processing user with uid: {safe_uid}")
 
                     groups_result = ldap_client.search_s(
                         settings.LDAP_SEARCH_BASE,
                         ldap.SCOPE_SUBTREE,
-                        f"(&(objectClass=posixGroup)(memberUid={uid}))",
+                        f"(&(objectClass=posixGroup)(memberUid={safe_uid}))",
                         ["cn"]
                     )
 
@@ -77,11 +96,11 @@ class Command(BaseCommand):
                         skipped_count += 1
                         continue
 
-                    # Search for user by uid
+                    # Search for user by uid (using sanitized safe_uid)
                     user_result = ldap_client.search_s(
                         'ou=users,' + settings.LDAP_SEARCH_BASE,
                         ldap.SCOPE_SUBTREE,
-                        f'(uid={uid})',
+                        f'(uid={safe_uid})',
                         settings.LDAP_ATTRIBUTES
                     )
 
@@ -94,8 +113,8 @@ class Command(BaseCommand):
 
                     # Extract user data
                     username = self._get_attr_value(attrs, 'uid')
-                    first_name = self._get_attr_value(attrs, 'givenName')
-                    last_name = self._get_attr_value(attrs, 'sn')
+                    first_name = to_camel_case(self._get_attr_value(attrs, 'givenName'))
+                    last_name = to_camel_case(self._get_attr_value(attrs, 'sn'))
                     email = self._get_attr_value(attrs, 'mail')
 
                     if not username:

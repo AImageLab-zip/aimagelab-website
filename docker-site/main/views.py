@@ -174,7 +174,10 @@ def login_view(request):
         else:
             messages.error(request, 'Invalid username or password.')
     
-    return render(request, 'main/login.html')
+    context = {
+        'OIDC_PROVIDER_NAME': getattr(settings, 'OIDC_PROVIDER_NAME', 'OIDC Provider')
+    }
+    return render(request, 'main/login.html', context)
 
 
 def logout_view(request):
@@ -192,15 +195,23 @@ def dashboard(request):
 
 @login_required
 def edit_profile(request):
-    """Profile edit view for authenticated users."""
+    """Profile edit view for authenticated users with visible profiles."""
     profile, created = UserProfile.objects.get_or_create(
         user=request.user,
         defaults={
             'role': 'phd',  # default role for manually created profiles
-            'is_visible': True,
+            'is_visible': False,  # New profiles are hidden by default
             'display_order': 0,
         }
     )
+    
+    # Check if user profile is visible - only visible users can edit their profile
+    if not profile.is_visible:
+        messages.error(
+            request,
+            'Your profile is not yet visible. Please contact an administrator to activate your account.'
+        )
+        return redirect('dashboard')
 
     if request.method == 'POST':
         # Update profile fields

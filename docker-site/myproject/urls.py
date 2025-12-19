@@ -8,6 +8,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('oidc/', include('mozilla_django_oidc.urls')),  # OIDC authentication URLs
     path('', include('main.urls')),
 ]
 

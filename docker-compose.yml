@@ -54,6 +54,9 @@ services:
       - ./docker-site:/app
       - static_volume:/app/static
       - media_volume:/app/media
+    env_file:
+      - .env
+      - .env.oidc
     environment:
       - DEBUG=0
       - DB_HOST=mysql-db
@@ -182,6 +185,9 @@ services:
     volumes:
       - ./docker-site:/app
       - dev_static_volume:/app/static
+    env_file:
+      - .env
+      - .env.oidc
     environment:
       - DEBUG=1
       - DB_HOST=dev-mysql-db
