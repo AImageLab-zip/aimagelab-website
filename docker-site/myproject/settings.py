@@ -60,7 +60,6 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "mozilla_django_oidc",  # OIDC authentication
     "main.apps.MainConfig",
-    "django_sass", #https://pypi.org/project/django-sass/
 ]
 
 MIDDLEWARE = [
