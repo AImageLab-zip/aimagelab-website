@@ -1,92 +1,477 @@
 {% extends 'main/base.html' %}
+{% load static %}
 
-{% block title %}Home - AImageLab{% endblock %}
+{% block title %}AImageLab - AI Vision Research Laboratory{% endblock %}
 
 {% block content %}
-<section class="it-hero-wrapper">
-    <div class="container">
-        <div class="hero-content">
-            <h1 class="title-bordeaux mb-3">AImageLab Research Group</h1>
-            <p class="fs-5 title-black">
-                AImageLab is a research laboratory of the Dipartimento di Ingegneria "Enzo Ferrari" at the University of Modena and Reggio Emilia, Italy. AImageLab is also part of the Artificial Intelligence Research and Innovation Center (AIRI) of the Modena Technopole.
-            </p>
-            
-            {% if user.is_authenticated %}
-                <p class="mt-4 fw-bold title-red">
-                    You are logged in as {{ user.username }}
+<!-- Hero Section -->
+<section id="hero" class="relative min-h-screen w-full overflow-hidden">
+    <!-- Parallax Layer 1 - Slowest (Background) -->
+    <div class="parallax-layer absolute inset-0 w-full h-[120%] z-[1] pointer-events-none opacity-6" data-speed="0.2">
+        <img src="{% static 'main/assets/bg1.svg' %}" alt="" class="w-full h-full object-cover object-center repeat-none">
+    </div>
+
+    <!-- Parallax Later Eye -->
+    <div class="parallax-layer absolute inset-0 w-full h-[120%] z-[2] pointer-events-none opacity-8" data-speed="0.4">
+        <img src="{% static 'main/assets/bge.svg' %}" alt="" class="w-full h-full object-cover object-center repeat-none">
+    </div>
+
+    <!-- Parallax Layer 2 - Medium (Midground) -->
+    <div class="parallax-layer absolute inset-0 w-full h-[120%] z-[2] pointer-events-none opacity-8" data-speed="0.4">
+        <img src="{% static 'main/assets/bg2.svg' %}" alt="" class="w-full h-full object-cover object-center repeat-none">
+    </div>
+
+    <!-- Parallax Layer 3 - Fastest (Foreground) -->
+    <div class="parallax-layer absolute inset-0 w-full h-[120%] z-[3] pointer-events-none opacity-10" data-speed="0.6">
+        <img src="{% static 'main/assets/bg3.svg' %}" alt="" class="w-full h-full object-cover object-center repeat-none">
+    </div>
+
+    <div class="container mx-auto h-full pt-24 px-6 relative z-10">
+        <div class="flex flex-col md:flex-row h-full items-center justify-center gap-8 md:gap-0">
+            <!-- Left Content -->
+            <div class="relative z-10 w-full md:w-1/2 order-1">
+                <h1 class="mb-6 text-5xl md:text-7xl">
+                    <span class="text-primary">AI</span>mage<sup class="text-primary">Lab</sup>
+                </h1>
+                <p class="text-xl">
+                    Since 1998, we have been a research group at the <b class="text-primary">University of Modena and Reggio Emilia</b>, pioneering advances in <b>Artificial Intelligence</b> and Computer Vision.
                 </p>
-                <a href="{% url 'dashboard' %}" class="red-btn mt-3 d-inline-block">Go to Dashboard →</a>
+                
+                {% if user.is_authenticated %}
+                <div class="mt-6 p-4 bg-primary/10 rounded-lg border border-primary">
+                    <p class="font-bold text-primary">
+                        Welcome back, {{ user.username }}!
+                    </p>
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary btn-sm mt-2">Go to Dashboard →</a>
+                </div>
+                {% endif %}
+
+                <div class="flex flex-col md:flex-row w-full gap-3 align-items-center mt-6">
+                    <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
+                        <div class="avatar-group -space-x-5 mb-1">
+                            <div class="avatar">
+                                <div class="w-8">
+                                    <img src="https://aimagelab.ing.unimore.it/imagelab/uploadedImages/001016_thumb.jpg" />
+                                </div>
+                            </div>
+                            <div class="avatar">
+                                <div class="w-8">
+                                    <img src="https://aimagelab.ing.unimore.it/imagelab/uploadedImages/001016_thumb.jpg" />
+                                </div>
+                            </div>
+                            <div class="avatar">
+                                <div class="w-8">
+                                    <img src="https://aimagelab.ing.unimore.it/imagelab/uploadedImages/001016_thumb.jpg" />
+                                </div>
+                            </div>
+                            <div class="avatar avatar-placeholder">
+                                <div class="bg-primary text-primary-content text-xs w-8">
+                                    <span>99+</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="block my-auto text-xs text-neutral text-center">PIs, researchers, <br> and PhD students. </span>
+                        <a href="{% url 'people' %}" class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">People&nbsp;↗</a>
+                    </div>
+                    <div class="divider md:divider-horizontal hidden md:flex"></div>
+                    <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
+                        <div class="badge badge-primary my-2">
+                            1100+
+                        </div>
+                        <span class="block ml-1 my-auto text-xs text-neutral text-center">publications <br> in top venues </span>
+                        <button class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">Papers&nbsp;↗</button>
+                    </div>
+                    <div class="divider divider-horizontal hidden md:flex"></div>
+                    <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
+                        <div class="badge badge-primary my-2">
+                            50+
+                        </div>
+                        <span class="block ml-1 my-auto text-xs text-neutral text-center">research <br> projects </span>
+                        <button class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">More&nbsp;↗</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Animated Squares -->
+            <div class="relative w-full hidden ml-32 md:flex md:h-[70vh] order-2 justify-center items-center overflow-hidden">
+                <div id="squares-container" class="relative w-full h-full z-10">
+                    <!-- Squares will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent News Section -->
+    <div class="container mx-auto my-16 px-6 relative z-10">
+        <h2 class="h2-home my-2">Recent News</h2>
+
+        <div class="flex gap-6 max-w-full overflow-x-auto pb-4" id="news" style="scrollbar-width: thin; scrollbar-color: var(--color-primary);">
+            {% if latest_posts %}
+                {% for post in latest_posts %}
+                <div class="carousel-item">
+                    <div class="card w-[70vw] md:w-96 bg-white border-base-300 border-1">
+                        {% if post.cover %}
+                        <figure class="h-48">
+                            <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="w-full h-full object-cover" />
+                        </figure>
+                        {% endif %}
+                        <div class="card-body">
+                            <h3 class="card-title">{{ post.title }}</h3>
+                            {% if post.event_date %}
+                            <span class="badge badge-sm badge-primary">Event on {{ post.event_date|date:"d M y" }}!</span>
+                            {% endif %}
+                            <p class="text-base-content">{{ post.description|truncatewords:20 }}</p>
+                            <div class="text-xs text-base-content/50">{{ post.created_at|date:"F Y" }}</div>
+                            <div class="card-actions justify-end mt-2">
+                                <a href="{% url 'single' post.slug %}" class="btn btn-primary btn-sm">Read more</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             {% else %}
-                <a href="{% url 'login' %}" class="red-btn mt-3 d-inline-block">Please login to continue →</a>
+                <div class="carousel-item">
+                    <div class="card w-[70vw] md:w-96 bg-white border-base-300 border-1">
+                        <div class="card-body">
+                            <h3 class="card-title">4 Papers at ICCV 2025</h3>
+                            <p class="text-base-content">AImageLab presenting cutting-edge research on vision and language models.</p>
+                            <div class="text-xs text-base-content/50">August 2025</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="card w-[70vw] md:w-96 bg-white border-base-300 border-1">
+                        <div class="card-body">
+                            <h3 class="card-title">IRCDL 2026 Hosting</h3>
+                            <span class="badge badge-sm badge-primary">Event on 12 Jan 25!</span>
+                            <p class="text-base-content">AImageLab organizing Italian Research Conference on Digital Libraries.</p>
+                            <div class="text-xs text-base-content/50">September 2025</div>
+                        </div>
+                    </div>
+                </div>
             {% endif %}
         </div>
+        <a href="{% url 'news' %}" class="btn btn-secondary btn-ghost btn-xs ml-2 my-auto">All News ↗</a>
     </div>
 </section>
 
-<!-- Upcoming Events Section -->
-{% if upcoming_events %}
-<section class="container my-5">
-    <div class="mb-4">
-        <h2 class="title-bordeaux">Upcoming Events</h2>
-    </div>
-    <div class="row g-4">
-        {% for post in upcoming_events %}
-        <div class="col-md-6 col-lg-3">
-            <div class="custom-card p-0 h-100 d-flex flex-column">
-                {% if post.cover %}
-                <div class="event-thumb" style="background-image: url('{{ post.cover.url }}');"></div>
-                {% else %}
-                <div class="event-thumb" style="background-color: #FDEDEC;"></div>
-                {% endif %}
-                <div class="p-3 flex-grow-1 d-flex flex-column">
-                    <h3 class="title-bordeaux h6"><a href="{% url 'single' post.slug %}" class="title-bordeaux text-decoration-none">{{ post.title }}</a></h3>
-                    <p class="small title-red mb-2">📅 {{ post.event_date|date:"F d, Y" }}</p>
-                    {% if post.description %}
-                    <p class="title-black text-justify small mb-3 flex-grow-1">{{ post.description }}</p>
-                    {% endif %}
-                    <a href="{% url 'single' post.slug %}" class="red-btn d-inline-block align-self-start">Read more →</a>
+<!-- Research Areas Section -->
+<section id="research" class="py-16">
+    <div class="container mx-auto px-6">
+        <h2 class="h2-home">Research Areas</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <svg class="fill-primary w-12" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M30.731 8.16c-0.005-0.035-0.011-0.066-0.019-0.095l0.001 0.005c-0.031-0.134-0.094-0.249-0.182-0.342l0 0-6.297-6.296c-0.093-0.087-0.208-0.15-0.336-0.181l-0.005-0.001c-0.026-0.008-0.058-0.014-0.091-0.019l-0.004-0c-0.026-0.007-0.059-0.014-0.092-0.018l-0.004-0h-9.445c-0.414 0-0.75 0.336-0.75 0.75v0 22.038c0 0.414 0.336 0.75 0.75 0.75h15.742c0.414-0 0.75-0.336 0.75-0.75v0-15.742c-0.005-0.038-0.012-0.071-0.020-0.103l0.001 0.005zM24.453 3.773l3.736 3.735h-3.736zM15.008 23.25v-20.538h7.945v5.546c0 0.414 0.336 0.75 0.75 0.75h5.547v14.242zM17.742 27.25c-0.414 0-0.75 0.336-0.75 0.75v0 1.27h-14.242v-20.539h7.25c0.414 0 0.75-0.336 0.75-0.75s-0.336-0.75-0.75-0.75v0h-8c-0.414 0-0.75 0.336-0.75 0.75v0 22.039c0 0.414 0.336 0.75 0.75 0.75h15.742c0.414-0 0.75-0.336 0.75-0.75v0-2.020c-0-0.414-0.336-0.75-0.75-0.75v0z"></path>
+                    </svg>
+                    <h3 class="card-title text-primary">Vision & Language</h3>
+                    <p class="hidden md:block">Multimodal models combining vision and natural language understanding for advanced AI applications.</p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <svg class="fill-primary w-12" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27 22.25c-0.831 0.002-1.598 0.277-2.215 0.739l0.010-0.007-3.299-2.998c0.82-1.097 1.313-2.479 1.313-3.977 0-1.614-0.572-3.094-1.525-4.249l0.009 0.011 3.644-3.643c0.584 0.391 1.302 0.624 2.074 0.624 2.077 0 3.76-1.683 3.76-3.76s-1.683-3.76-3.76-3.76c-2.077 0-3.76 1.683-3.76 3.76 0 0.773 0.233 1.491 0.633 2.088l-0.009-0.014-3.643 3.643c-1.145-0.944-2.627-1.517-4.244-1.517-0.937 0-1.828 0.192-2.638 0.54l0.044-0.017-1.032-1.874c0.791-0.688 1.288-1.695 1.288-2.819 0-2.060-1.67-3.729-3.729-3.729s-3.729 1.67-3.729 3.729c0 2.060 1.67 3.729 3.729 3.729 0.007 0 0.015-0 0.022-0h-0.001c0.398-0.006 0.778-0.073 1.133-0.194l-0.026 0.008 1.037 1.883c-1.757 1.243-2.89 3.265-2.894 5.553v0.001c0.010 0.697 0.125 1.364 0.33 1.99l-0.013-0.047-1.423 0.603c-0.681-0.971-1.795-1.597-3.056-1.597-2.056 0-3.722 1.666-3.722 3.722s1.666 3.722 3.722 3.722c2.056 0 3.722-1.666 3.722-3.722 0-0.264-0.027-0.521-0.079-0.769l0.004 0.024 1.419-0.602c1.167 2.093 3.367 3.485 5.892 3.485 1.73 0 3.308-0.654 4.5-1.728l-0.006 0.005 3.309 3.007c-0.335 0.544-0.535 1.201-0.539 1.906v0.001c0 2.071 1.679 3.75 3.75 3.75s3.75-1.679 3.75-3.75c0-2.071-1.679-3.75-3.75-3.75v0zM7.69 5c0-1.243 1.007-2.25 2.25-2.25s2.25 1.007 2.25 2.25c0 1.243-1.007 2.25-2.25 2.25v0c-1.242-0.002-2.248-1.008-2.25-2.25v-0zM5 22.92c-1.242-0.001-2.248-1.007-2.248-2.249s1.007-2.249 2.249-2.249c1.242 0 2.248 1.006 2.249 2.248v0c-0.002 1.242-1.008 2.248-2.25 2.25h-0zM27 2.75c1.243 0 2.25 1.007 2.25 2.25s-1.007 2.25-2.25 2.25c-1.243 0-2.25-1.007-2.25-2.25v0c0.002-1.242 1.008-2.248 2.25-2.25h0zM10.69 16c0-0 0-0 0-0.001 0-2.932 2.377-5.309 5.309-5.309s5.309 2.377 5.309 5.309c0 2.932-2.377 5.309-5.309 5.309h-0c-2.931-0.003-5.306-2.378-5.31-5.308v-0zM27 28.25c-1.243 0-2.25-1.007-2.25-2.25s1.007-2.25 2.25-2.25c1.243 0 2.25 1.007 2.25 2.25v0c-0.002 1.242-1.008 2.248-2.25 2.25h-0z"></path>
+                    </svg>
+                    <h3 class="card-title text-primary">ML & DL</h3>
+                    <p class="hidden md:block">Development of novel algorithms and architectures for supervised, unsupervised, and reinforcement learning, model merging, and PEFT.</p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <svg class="fill-primary w-12" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M28.5 29.25h-4.313c0.914-0.518 1.696-1.142 2.367-1.87l0.006-0.007c1.672-1.925 2.69-4.455 2.69-7.224 0-0.052-0-0.105-0.001-0.157l0 0.008c0.004-0.101 0.006-0.22 0.006-0.339 0-5.601-4.436-10.167-9.987-10.375l-0.019-0.001v-2.286c-0.005-1.247-0.84-2.298-1.981-2.628l-0.019-0.005v-2.367c-0-0.414-0.336-0.75-0.75-0.75h-4c-0.414 0-0.75 0.336-0.75 0.75v0 2.367c-1.161 0.335-1.996 1.386-2 2.632v12.001c0.002 1.518 1.232 2.748 2.75 2.75h4c1.518-0.002 2.748-1.232 2.75-2.75v-8.178c4.735 0.177 8.507 4.058 8.507 8.821 0 0.125-0.003 0.25-0.008 0.374l0.001-0.018c0.001 0.044 0.001 0.097 0.001 0.149 0 2.386-0.875 4.567-2.322 6.24l0.010-0.012c-1.643 1.774-3.985 2.88-6.585 2.88-0.125 0-0.249-0.003-0.372-0.008l0.018 0.001h-15c-0.414 0-0.75 0.336-0.75 0.75s0.336 0.75 0.75 0.75v0h25c0.414 0 0.75-0.336 0.75-0.75s-0.336-0.75-0.75-0.75v0zM13.25 2.75h2.5v1.5h-2.5zM17.75 19c-0.001 0.69-0.56 1.249-1.25 1.25h-4c-0.69-0.001-1.249-0.56-1.25-1.25v-12c0.001-0.69 0.56-1.249 1.25-1.25h4c0.69 0.001 1.249 0.56 1.25 1.25v0zM8.5 26.244h12c0.414 0 0.75-0.336 0.75-0.75s-0.336-0.75-0.75-0.75v0h-12c-0.414 0-0.75 0.336-0.75 0.75s0.336 0.75 0.75 0.75v0z"></path>
+                    </svg>
+                    <h3 class="card-title text-primary">Medical Imaging</h3>
+                    <p class="hidden md:block">Deep learning applications for medical image analysis and clinical decision support.</p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <svg class="fill-primary w-12" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 1.25c-8.146 0-14.75 6.604-14.75 14.75s6.604 14.75 14.75 14.75c8.146 0 14.75-6.604 14.75-14.75v0c-0.010-8.142-6.608-14.74-14.749-14.75h-0.001zM18.453 20.25h-4.907l-2.454-4.25 2.454-4.25h4.923l2.439 4.248zM20.198 11.75h8.34c0.451 1.272 0.712 2.74 0.712 4.268 0 2.788-0.868 5.374-2.349 7.501l0.028-0.043zM27.919 10.25h-13.506l4.181-7.242c4.137 0.858 7.512 3.548 9.29 7.164l0.035 0.078zM16 2.75c0.331 0 0.656 0.026 0.982 0.050l-6.755 11.701-4.172-7.226c2.433-2.777 5.985-4.522 9.945-4.524h0zM5.056 8.544l6.758 11.706h-8.353c-0.451-1.272-0.712-2.739-0.712-4.268 0-2.78 0.863-5.358 2.335-7.482l-0.029 0.044zM4.081 21.75h13.506l-4.18 7.242c-4.138-0.858-7.513-3.548-9.291-7.164l-0.035-0.078zM16 29.25c-0.331 0-0.656-0.026-0.982-0.050l6.754-11.697 4.157 7.241c-2.432 2.766-5.977 4.503-9.929 4.506h-0z"></path>
+                    </svg>
+                    <h3 class="card-title text-primary">Computer Vision</h3>
+                    <p class="hidden md:block">Advanced algorithms for image and video analysis, object recognition, and scene understanding.</p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <svg class="fill-primary w-12" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 12.25c-2.071 0-3.75 1.679-3.75 3.75s1.679 3.75 3.75 3.75c2.071 0 3.75-1.679 3.75-3.75v0c-0.003-2.070-1.68-3.747-3.75-3.75h-0zM16 18.25c-1.243 0-2.25-1.007-2.25-2.25s1.007-2.25 2.25-2.25c1.243 0 2.25 1.007 2.25 2.25v0c-0.002 1.242-1.008 2.248-2.25 2.25h-0zM2.75 16c0.213-3.554 1.667-6.732 3.93-9.142l-0.007 0.008c0.131-0.135 0.212-0.319 0.212-0.522 0-0.414-0.336-0.75-0.75-0.75-0.204 0-0.388 0.081-0.524 0.213l0-0c-2.542 2.664-4.167 6.222-4.36 10.157l-0.001 0.037c0.195 3.972 1.82 7.53 4.367 10.202l-0.006-0.006c0.135 0.131 0.319 0.212 0.523 0.212 0.414 0 0.75-0.336 0.75-0.75 0-0.203-0.081-0.388-0.213-0.523l0 0c-2.259-2.4-3.714-5.58-3.92-9.095l-0.002-0.040zM8.863 16c0.151-2.479 1.166-4.697 2.744-6.379l-0.005 0.005c0.131-0.135 0.212-0.319 0.212-0.522 0-0.414-0.336-0.75-0.75-0.75-0.204 0-0.388 0.081-0.523 0.213l0-0c-1.853 1.943-3.037 4.537-3.177 7.406l-0.001 0.027c0.14 2.895 1.325 5.489 3.182 7.436l-0.004-0.005c0.136 0.138 0.325 0.223 0.533 0.223 0.414 0 0.749-0.335 0.749-0.749 0-0.208-0.085-0.396-0.222-0.532l-0-0c-1.577-1.674-2.592-3.893-2.737-6.345l-0.001-0.028zM26.391 5.807c-0.136-0.135-0.322-0.218-0.528-0.218-0.414 0-0.75 0.336-0.75 0.75 0 0.205 0.083 0.392 0.216 0.527l-0-0c2.255 2.402 3.709 5.58 3.92 9.093l0.002 0.040c-0.213 3.554-1.666 6.733-3.929 9.143l0.007-0.008c-0.14 0.136-0.226 0.326-0.226 0.537 0 0.414 0.336 0.75 0.75 0.75 0.211 0 0.402-0.087 0.539-0.228l0-0c2.541-2.665 4.166-6.222 4.358-10.157l0.001-0.037c-0.194-3.971-1.819-7.529-4.365-10.2l0.006 0.006zM20.398 8.567c-0.136 0.136-0.22 0.323-0.22 0.531 0 0.206 0.083 0.393 0.218 0.529l-0-0c1.574 1.676 2.589 3.893 2.739 6.344l0.001 0.029c-0.152 2.48-1.167 4.697-2.745 6.378l0.005-0.005c-0.134 0.136-0.218 0.322-0.218 0.528 0 0.415 0.336 0.751 0.751 0.751 0.207 0 0.394-0.083 0.529-0.218l-0 0c1.852-1.944 3.036-4.538 3.177-7.407l0.001-0.027c-0.14-2.896-1.325-5.491-3.184-7.437l0.004 0.004c-0.135-0.136-0.323-0.22-0.529-0.22s-0.394 0.084-0.529 0.22l-0 0z"></path>
+                    </svg>
+                    <h3 class="card-title text-primary">IoT & Embedded Sensors</h3>
+                    <p class="hidden md:block">Design and deployment of IoT systems and embedded sensors for data collection and analysis.</p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <svg class="fill-primary w-12" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 16.75c4.28 0 7.75-3.47 7.75-7.75s-3.47-7.75-7.75-7.75c-4.28 0-7.75 3.47-7.75 7.75v0c0.005 4.278 3.472 7.745 7.75 7.75h0zM16 2.75c3.452 0 6.25 2.798 6.25 6.25s-2.798 6.25-6.25 6.25c-3.452 0-6.25-2.798-6.25-6.25v0c0.004-3.45 2.8-6.246 6.25-6.25h0zM30.41 29.84c-1.503-6.677-7.383-11.59-14.41-11.59s-12.907 4.913-14.391 11.491l-0.019 0.099c-0.011 0.048-0.017 0.103-0.017 0.16 0 0.414 0.336 0.75 0.75 0.75 0.357 0 0.656-0.25 0.731-0.585l0.001-0.005c1.351-5.998 6.633-10.41 12.945-10.41s11.594 4.413 12.929 10.322l0.017 0.089c0.076 0.34 0.374 0.59 0.732 0.59 0 0 0.001 0 0.001 0h-0c0.057-0 0.112-0.007 0.165-0.019l-0.005 0.001c0.34-0.076 0.59-0.375 0.59-0.733 0-0.057-0.006-0.112-0.018-0.165l0.001 0.005z"></path>
+                    </svg>
+                    <h3 class="card-title text-primary">Robotics & HRI</h3>
+                    <p class="hidden md:block">Human-robot interaction and autonomous systems for real-world applications.</p>
                 </div>
             </div>
         </div>
-        {% endfor %}
-    </div>
-    <div class="mt-4 text-center">
-        <a href="{% url 'news' %}" class="red-btn">View all events →</a>
     </div>
 </section>
-{% endif %}
 
-<!-- Latest Posts Section -->
-{% if latest_posts %}
-<section class="container my-5">
-    <div class="mb-4">
-        <h2 class="title-bordeaux">Latest News</h2>
+<!-- Membership Section -->
+<section class="bg-base-200 pt-8 pb-16">
+    <div class="container mx-auto px-6">
+        <h2 class="h2-home mb-4 text-center">AImageLab is proudly member of</h2>
+        <div class="flex flex-col md:flex-row gap-2 justify-evenly">
+            <div class="text-center">
+                <img src="https://aimagelab.ing.unimore.it/imagelab/images/Sigillo2015.svg" alt="University of Modena and Reggio Emilia" class="h-12 my-2 mx-auto" />
+                <p class="font-bold">Department of Engineering<br />"Enzo Ferrari"</p>
+                <a class="btn btn-xs btn-ghost btn-secondary mt-2" href="https://ingmo.unimore.it">DIEF ↗</a>
+            </div>
+            <div class="divider md:divider-horizontal"></div>
+            <div class="text-center">
+                <img src="https://aimagelab.ing.unimore.it/imagelab/images/Sigillo2015.svg" alt="University of Modena and Reggio Emilia" class="h-12 my-2 mx-auto" />
+                <p class="font-bold">Artificial Intelligence<br />and Research Innovation Center </p>
+                <a class="btn btn-xs btn-ghost btn-secondary mt-2" href="https://www.airi.unimore.it">AIRI ↗</a>
+            </div>
+            <div class="divider md:divider-horizontal"></div>
+            <div class="text-center">
+                <img src="https://scai.sorbonne-universite.fr/files_app/n/1320/7081db133fc40224018d64dd92536955.png" alt="ELLIS Modena" class="h-14 my-2 mx-auto" />
+                <p class="font-bold font-sans">ELLIS Modena Unit </p>
+                <a class="btn btn-xs btn-ghost btn-secondary mt-2" href="https://ellis.unimore.it">ELLIS Modena ↗</a>
+            </div>
+        </div>
     </div>
-    <div class="row g-4">
-        {% for post in latest_posts %}
-        <div class="col-md-6 col-lg-3">
-            <div class="custom-card p-0 h-100 d-flex flex-column">
-                {% if post.cover %}
-                <div class="event-thumb" style="background-image: url('{{ post.cover.url }}');"></div>
-                {% else %}
-                <div class="event-thumb" style="background-color: #FDEDEC;"></div>
-                {% endif %}
-                <div class="p-3 flex-grow-1 d-flex flex-column">
-                    <h3 class="title-bordeaux h6"><a href="{% url 'single' post.slug %}" class="title-bordeaux text-decoration-none">{{ post.title }}</a></h3>
-                    <p class="small title-red mb-2">{{ post.created_at|date:"F d, Y" }}</p>
-                    {% if post.description %}
-                    <p class="title-black text-justify small mb-3 flex-grow-1">{{ post.description }}</p>
-                    {% endif %}
-                    <a href="{% url 'single' post.slug %}" class="red-btn d-inline-block align-self-start">Read more →</a>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="py-16">
+    <div class="container mx-auto px-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Column: Contact Info and Accordion -->
+            <div>
+                <!-- Contact Information -->
+                <h2 class="h2-home mb-8">How to Reach AImageLab</h2>
+
+                <div class="card bg-base-200 mb-6">
+                    <div class="card-body">
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Via Vivarelli 10/1, 41125 Modena, Italy</strong></p>
+                            <p class="pt-2">
+                                <strong>Tel:</strong> <a href="tel:+39-059-2056270" class="text-primary hover:underline">+39-059-2056270</a>
+                            </p>
+                            <p>
+                                <strong>Fax:</strong> +39-059-2056129
+                            </p>
+                            <p class="pt-2">
+                                <strong>Email:</strong> <a href="mailto:segreteria.aimagelab@unimore.it" class="text-primary hover:underline">segreteria.aimagelab@unimore.it</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accordion for Travel Directions -->
+                <div class="join join-vertical w-full">
+                    <div class="collapse collapse-arrow join-item border border-base-300">
+                        <input type="radio" name="travel-accordion" />
+                        <div class="collapse-title text-lg font-semibold text-primary">By Plane</div>
+                        <div class="collapse-content">
+                            <div class="space-y-3 text-sm pt-2">
+                                <p>The nearest airport is the <strong>Airport of Bologna Guglielmo Marconi</strong>.</p>
+                                <p>The airport of Bologna has very frequent direct connections to all major European Hubs (Milan, Rome, Frankfurt, Brussels, Paris, London, Amsterdam).</p>
+                                <p><strong>Shuttle Service to Modena:</strong></p>
+                                <p>Departure times: 6:15, 8:15, 9:15, 10:15, 12:15, 16:15, 18:15, 21:15</p>
+                                <p><strong>Duration:</strong> About 1 hour</p>
+                                <p><strong>Cost:</strong> Approximately €10 (10% discount available for return tickets)</p>
+                                <p><strong>Ticket:</strong> Purchase aboard the shuttle</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapse collapse-arrow join-item border border-base-300">
+                        <input type="radio" name="travel-accordion" />
+                        <div class="collapse-title text-lg font-semibold text-primary">By Train</div>
+                        <div class="collapse-content">
+                            <div class="space-y-3 text-sm pt-2">
+                                <p>Modena has direct train connections to/from:</p>
+                                <ul class="list-disc list-inside">
+                                    <li>Milan</li>
+                                    <li>Zurich</li>
+                                    <li>Frankfurt</li>
+                                    <li>Paris</li>
+                                </ul>
+                                <p class="pt-2">Visit <a href="https://www.raileurope.com" target="_blank" class="text-primary hover:underline">www.raileurope.com</a> to plan your journey.</p>
+                                <p><strong>From the railway station:</strong> Take bus <strong>7N</strong> or <strong>9</strong> to "GOTTARDI"</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapse collapse-arrow join-item border border-base-300">
+                        <input type="radio" name="travel-accordion" />
+                        <div class="collapse-title text-lg font-semibold text-primary">By Car</div>
+                        <div class="collapse-content">
+                            <div class="space-y-3 text-sm pt-2">
+                                <p>Take the <strong>A1 Motorway</strong> and exit at <strong>"Modena Sud"</strong>.</p>
+                                <p>After the toll booth, turn right at the junction onto <strong>Via Vignolese</strong>.</p>
+                                <p>Drive straight for approximately <strong>10 km</strong> until you reach a junction with traffic lights.</p>
+                                <p>Cross the road and turn right into <strong>Via Gelmini</strong>.</p>
+                                <p>You will see the Faculty buildings ahead on your left.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Map -->
+            <div>
+                <div class="card bg-base-200 h-full">
+                    <div class="card-body p-0 overflow-hidden rounded-xl">
+                        <div id="map" class="min-h-96 h-full"></div>
+                    </div>
                 </div>
             </div>
         </div>
-        {% endfor %}
-    </div>
-    <div class="mt-4 text-center">
-        <a href="{% url 'news' %}" class="red-btn">View all news →</a>
     </div>
 </section>
-{% endif %}
+{% endblock %}
 
+{% block extra_js %}
+<script>
+    const map = new maplibregl.Map({
+        style: 'https://tiles.openfreemap.org/styles/positron',
+        center: [10.950360, 44.628829],
+        zoom: 8,
+        container: 'map',
+        attributionControl: true,
+        cooperativeGestures: true,
+    });
+
+    let marker = new maplibregl.Marker({
+        color: window.getComputedStyle(document.body).getPropertyValue('--color-primary')
+    })
+        .setLngLat([10.950360, 44.628829])
+        .addTo(map);
+</script>
+
+<script>
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+
+    const coloredSquares = [
+        { x: -184, y: -480, w: 1000, h: 1000, opacity: 1, defaultOpacity: 1, bgImage: "https://aimagelab.ing.unimore.it/imagelab/carousel/immagine3.png" },
+        { x: -1050, y: 85, w: 750, h: 750, opacity: 1, defaultOpacity: 1, bgImage: "{% static 'main/assets/background.jpg' %}" },
+        { x: -207, y: 610, w: 300, h: 300, opacity: 1, defaultOpacity: 1, color: primaryColor },
+        { x: 913, y: -230, w: 200, h: 200, opacity: 1, defaultOpacity: 1, color: primaryColor },
+        { x: -522, y: -790, w: 200, h: 200, opacity: 1, defaultOpacity: 1, color: primaryColor },
+        { x: 183, y: 615, w: 200, h: 200, opacity: 1, defaultOpacity: 1, color: 'rgb(193, 193, 193)' },
+        { x: 993, y: 60, w: 200, h: 200, opacity: 1, defaultOpacity: 1, color: 'rgb(193, 193, 193)' },
+        { x: -1012, y: -235, w: 200, h: 200, opacity: 1, defaultOpacity: 1, color: 'rgb(193, 193, 193)' },
+        { x: -737, y: -500, w: 450, h: 450, opacity: 1, defaultOpacity: 1, bgImage: "https://aimagelab.ing.unimore.it/imagelab/carousel/immagine6.png" },
+        { x: -124, y: -955, w: 250, h: 250, opacity: 1, defaultOpacity: 1, color: 'rgb(193, 193, 193)' },
+        { x: 226, y: -1030, w: 450, h: 450, opacity: 1, defaultOpacity: 1, color: 'rgb(193, 193, 193)' }
+    ];
+
+    const squaresContainer = document.getElementById('squares-container');
+    const heroSection = document.getElementById('hero');
+
+    const heroSquirclesContainer = document.createElement('div');
+    heroSquirclesContainer.id = 'hero-squircles-container';
+    heroSquirclesContainer.className = 'absolute inset-0 w-full h-full overflow-hidden pointer-events-none';
+    heroSquirclesContainer.style.zIndex = '0';
+    heroSection.insertBefore(heroSquirclesContainer, heroSection.firstChild);
+
+    const maxX = Math.max(...coloredSquares.map(s => s.x + s.w));
+    const maxY = Math.max(...coloredSquares.map(s => s.y + s.h));
+    const minX = Math.min(...coloredSquares.map(s => s.x));
+    const minY = Math.min(...coloredSquares.map(s => s.y));
+
+    const designWidth = maxX - minX;
+    const designHeight = maxY - minY;
+
+    function updateColoredSquares() {
+        squaresContainer.innerHTML = '';
+
+        const containerWidth = squaresContainer.offsetWidth;
+        const containerHeight = squaresContainer.offsetHeight;
+
+        const scaleX = containerWidth / designWidth;
+        const scaleY = containerHeight / designHeight;
+        const scale = Math.min(scaleX, scaleY) * 0.9;
+
+        const scaledWidth = designWidth * scale;
+        const scaledHeight = designHeight * scale;
+        const offsetX = (containerWidth - scaledWidth) / 2 - minX * scale;
+        const offsetY = (containerHeight - scaledHeight) / 2 - minY * scale;
+
+        coloredSquares.forEach((square) => {
+            const div = document.createElement('div');
+            div.className = 'mask mask-squircle absolute transition-all hero-element';
+            div.style.left = `${square.x * scale + offsetX}px`;
+            div.style.top = `${square.y * scale + offsetY}px`;
+            div.style.width = `${square.w * scale}px`;
+            div.style.height = `${square.h * scale}px`;
+            div.style.backgroundColor = square.color;
+            div.style.opacity = square.opacity;
+            div.dataset.defaultOpacity = square.defaultOpacity;
+            
+            if (square.bgImage) {
+                div.style.backgroundImage = `url(${square.bgImage})`;
+                div.style.backgroundSize = 'cover';
+                div.style.backgroundPosition = 'center';
+                div.className += ' shadow-lg duration-300 hover:scale-110'
+            }
+            
+            squaresContainer.appendChild(div);
+        });
+    }
+
+    updateColoredSquares();
+    window.addEventListener('resize', () => {
+        updateColoredSquares();
+    });
+
+    let ticking = false;
+
+    function animateOnScroll() {
+        const scrolled = window.scrollY;
+        const heroHeight = heroSection.offsetHeight;
+        const scrollProgress = Math.min(scrolled / heroHeight, 1);
+
+        const allSquircles = document.querySelectorAll('.hero-element');
+        allSquircles.forEach((squircle) => {
+            const defaultOpacity = parseFloat(squircle.dataset.defaultOpacity) || 1.0;
+            const opacity = defaultOpacity - scrollProgress * 2 * defaultOpacity;
+            squircle.style.opacity = opacity;
+        });
+
+        ticking = false;
+    }
+
+    function updateParallax() {
+        const scrolled = window.scrollY;
+        const parallaxLayers = document.querySelectorAll('.parallax-layer');
+
+        parallaxLayers.forEach((layer) => {
+            const speed = parseFloat(layer.dataset.speed);
+            const yPos = -(scrolled * speed);
+            layer.style.transform = `translate3d(0, ${yPos}px, 0)`;
+        });
+
+        ticking = false;
+    }
+
+    updateParallax();
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(animateOnScroll);
+            window.requestAnimationFrame(updateParallax);
+            ticking = true;
+        }
+    });
+</script>
 {% endblock %}
