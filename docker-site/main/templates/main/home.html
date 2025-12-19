@@ -105,50 +105,24 @@
     <div class="container mx-auto my-16 px-6 relative z-10">
         <h2 class="h2-home my-2">Recent News</h2>
 
+        {% if latest_posts %}
         <div class="flex gap-6 max-w-full overflow-x-auto pb-4" id="news" style="scrollbar-width: thin; scrollbar-color: var(--color-primary);">
-            {% if latest_posts %}
+            
                 {% for post in latest_posts %}
                 <div class="carousel-item">
-                    <div class="card w-[70vw] md:w-96 bg-white border-base-300 border-1">
-                        {% if post.cover %}
-                        <figure class="h-48">
-                            <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="w-full h-full object-cover" />
-                        </figure>
-                        {% endif %}
+                    <a href="{% url 'single' post.slug %}" class="group card w-[70vw] md:w-96 bg-white border-base-300 border-1">
+
                         <div class="card-body">
-                            <h3 class="card-title">{{ post.title }}</h3>
+                            <h3 class="card-title group-hover:underline !group-hover:text-primary">{{ post.title }}</h3>
                             {% if post.event_date %}
                             <span class="badge badge-sm badge-primary">Event on {{ post.event_date|date:"d M y" }}!</span>
                             {% endif %}
                             <p class="text-base-content">{{ post.description|truncatewords:20 }}</p>
                             <div class="text-xs text-base-content/50">{{ post.created_at|date:"F Y" }}</div>
-                            <div class="card-actions justify-end mt-2">
-                                <a href="{% url 'single' post.slug %}" class="btn btn-primary btn-sm">Read more</a>
-                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
                 {% endfor %}
-            {% else %}
-                <div class="carousel-item">
-                    <div class="card w-[70vw] md:w-96 bg-white border-base-300 border-1">
-                        <div class="card-body">
-                            <h3 class="card-title">4 Papers at ICCV 2025</h3>
-                            <p class="text-base-content">AImageLab presenting cutting-edge research on vision and language models.</p>
-                            <div class="text-xs text-base-content/50">August 2025</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="carousel-item">
-                    <div class="card w-[70vw] md:w-96 bg-white border-base-300 border-1">
-                        <div class="card-body">
-                            <h3 class="card-title">IRCDL 2026 Hosting</h3>
-                            <span class="badge badge-sm badge-primary">Event on 12 Jan 25!</span>
-                            <p class="text-base-content">AImageLab organizing Italian Research Conference on Digital Libraries.</p>
-                            <div class="text-xs text-base-content/50">September 2025</div>
-                        </div>
-                    </div>
-                </div>
             {% endif %}
         </div>
         <a href="{% url 'news' %}" class="btn btn-secondary btn-ghost btn-xs ml-2 my-auto">All News ↗</a>

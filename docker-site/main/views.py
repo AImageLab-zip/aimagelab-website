@@ -33,9 +33,9 @@ def home(request):
         event_date__isnull=True
     ).order_by('-created_at')[:4]
     
+    
     return render(request, 'main/home.html', {
-        'upcoming_events': upcoming_events,
-        'latest_posts': latest_posts,
+        'latest_posts': latest_posts
     })
 
 def news(request):
