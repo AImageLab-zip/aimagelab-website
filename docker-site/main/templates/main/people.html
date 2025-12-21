@@ -1,23 +1,17 @@
 
-{% extends "main/base.html" %}
+{% extends "main/base_with_hero.html" %}
 {% load static %}
 
 {% block title %}People - AImageLab{% endblock %}
 
-{% block content %}
-<!-- Hero Section -->
-<div class="hero bg-primary">
-    <div class="hero-content text-primary-content max-w-5xl py-20 pt-32">
-        <div class="max-w-md">
-            <h1 class="mb-5 text-5xl font-bold">This is AImage<sup>lab</sup></h1>
-            <p class="mb-5">
-                Since 1998, more than 100 people have worked in AImage<sup>Lab</sup>, contributing to
-                cutting-edge research in AI vision. Learn more about our team and their groundbreaking work.
-            </p>
-        </div>
-    </div>
-</div>
+{% block hero_title %}This is AImage<sup>lab</sup>{% endblock %}
 
+{% block hero_description %}
+Since 1998, more than 100 people have worked in AImage<sup>Lab</sup>, contributing to
+cutting-edge research in AI vision. Learn more about our team and their groundbreaking work.
+{% endblock %}
+
+{% block page_content %}
 <!-- Team Sections -->
 <div class="container px-6 mx-auto">
     {% if grouped_profiles.professors %}
@@ -25,19 +19,19 @@
     {% endif %}
 
     {% if grouped_profiles.postdocs %}        
-    {% include 'main/team_section.html' with section_title='Postdoctoral Researchers' profiles=grouped_profiles.postdocs card_size='medium' %}
+    {% include 'main/team_section.html' with section_title='Postdoctoral Researchers' profiles=grouped_profiles.postdocs card_size='large' %}
     {% endif %}
 
     {% if grouped_profiles.phd_students %}
-        {% include 'main/team_section.html' with section_title='PhD Students' profiles=grouped_profiles.phd_students card_size='medium' %}
+        {% include 'main/team_section.html' with section_title='PhD Students' profiles=grouped_profiles.phd_students card_size='large' %}
     {% endif %}
 
     {% if grouped_profiles.interns %}
-        {% include 'main/team_section.html' with section_title='Research Interns' profiles=grouped_profiles.interns card_size='small' %}
+        {% include 'main/team_section.html' with section_title='Research Interns' profiles=grouped_profiles.interns card_size='large' %}
     {% endif %}
 
     {% if grouped_profiles.alumni %}
-        {% include 'main/team_section.html' with section_title='Alumni' profiles=grouped_profiles.alumni card_size='small' is_alumni=True grid_cols='4' %}
+        {% include 'main/team_section.html' with section_title='Alumni' profiles=grouped_profiles.alumni card_size='medium' is_alumni=True %}
     {% endif %}
 </div>
 {% endblock %}
