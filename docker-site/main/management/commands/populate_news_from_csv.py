@@ -80,6 +80,7 @@ class Command(BaseCommand):
                     
                     # Check if post already exists
                     slug = row.get('slug', '').strip()
+                    slug = slug[:50]
                     if not slug:
                         self.stdout.write(self.style.WARNING(f'Skipping row with empty slug'))
                         skipped_count += 1
@@ -99,7 +100,7 @@ class Command(BaseCommand):
                         is_published=row.get('is_published', '1') == '1',
                         is_pinned=False,  # Default to not pinned
                         created_at=created_at,
-                        cover_image=row.get('cover', '').strip() if row.get('cover') else None,
+                        cover=row.get('cover', '').strip() if row.get('cover') else None,
                     )
                     
                     # Add category if exists
