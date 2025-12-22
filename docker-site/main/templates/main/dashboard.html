@@ -1,47 +1,83 @@
-{% extends 'main/base.html' %}
+{% extends 'main/base_with_hero.html' %}
 
 {% block title %}Dashboard - AImageLab{% endblock %}
 
-{% block content %}
-<!-- Inner Page Hero -->
-<section class="inner-page d-flex align-items-end">
-    <div class="container pb-5">
-        <h1 class="title-white">Dashboard</h1>
-    </div>
-</section>
+{% block hero_title %}Dashboard{% endblock %}
 
-<div class="container my-5">
-    <div class="custom-card p-4">
-        <p class="mt-3 title-black">
-            Welcome to your dashboard, <strong class="title-bordeaux">{{ user.username }}</strong>!
-        </p>
+{% block hero_description %}
+Welcome back, {{ user.username }}! Manage your profile and access admin features.
+{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12 max-w-4xl">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <div class="bordered-div mt-4 p-4">
-            <h2 class="mb-3 title-bordeaux">Your Information</h2>
-            <p class="title-black"><strong>Username:</strong> {{ user.username }}</p>
-            <p class="title-black"><strong>Email:</strong> {{ user.email|default:"Not set" }}</p>
-            <p class="title-black"><strong>Last Login:</strong> {{ user.last_login|date:"F d, Y H:i" }}</p>
-            <p class="title-black"><strong>Account Status:</strong> <span class="title-red">Active</span></p>
+        <!-- User Info Card -->
+        <div class="lg:col-span-2">
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <h2 class="card-title text-primary mb-4">
+                        <i data-lucide="user" class="w-6 h-6"></i>
+                        Your Information
+                    </h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="user-circle" class="w-5 h-5 text-primary"></i>
+                            <div>
+                                <span class="font-semibold">Username:</span>
+                                <span class="ml-2">{{ user.username }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="mail" class="w-5 h-5 text-primary"></i>
+                            <div>
+                                <span class="font-semibold">Email:</span>
+                                <span class="ml-2">{{ user.email|default:"Not set" }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="clock" class="w-5 h-5 text-primary"></i>
+                            <div>
+                                <span class="font-semibold">Last Login:</span>
+                                <span class="ml-2">{{ user.last_login|date:"F d, Y H:i" }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-success"></i>
+                            <div>
+                                <span class="font-semibold">Account Status:</span>
+                                <span class="badge badge-success ml-2">Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
-        <div class="mt-5">
-            <h2 class="title-bordeaux">Quick Links</h2>
-            <ul class="list-unstyled mt-3">
-                <li class="mb-2">
-                    <a href="{% url 'home' %}" class="white-btn">← Back to Home</a>
-                </li>
-                <li class="mb-2 mt-3">
-                    <a href="{% url 'edit_profile' %}" class="red-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-gear" viewBox="0 0 16 16" style="margin-bottom: 2px;">
-                            <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m.256 7a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1zm3.63-4.54c.18-.613 1.048-.613 1.229 0l.043.148a.64.64 0 0 0 .921.382l.136-.074c.561-.306 1.175.308.87.869l-.075.136a.64.64 0 0 0 .382.92l.149.045c.612.18.612 1.048 0 1.229l-.15.043a.64.64 0 0 0-.38.921l.074.136c.305.561-.309 1.175-.87.87l-.136-.075a.64.64 0 0 0-.92.382l-.045.149c-.18.612-1.048.612-1.229 0l-.043-.15a.64.64 0 0 0-.921-.38l-.136.074c-.561.305-1.175-.309-.87-.87l.075-.136a.64.64 0 0 0-.382-.92l-.148-.045c-.613-.18-.613-1.048 0-1.229l.148-.043a.64.64 0 0 0 .382-.921l-.074-.136c-.306-.561.308-1.175.869-.87l.136.075a.64.64 0 0 0 .92-.382zM14 12.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0"/>
-                        </svg>
-                        Edit Profile →
-                    </a>
-                </li>
-                <li class="mb-2 mt-3">
-                    <a href="/admin/" class="red-btn">Admin Panel →</a>
-                </li>
-            </ul>
+        <!-- Quick Links Card -->
+        <div class="lg:col-span-1">
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <h2 class="card-title text-primary mb-4">
+                        <i data-lucide="zap" class="w-6 h-6"></i>
+                        Quick Links
+                    </h2>
+                    <div class="space-y-3">
+                        <a href="{% url 'home' %}" class="btn btn-ghost btn-block justify-start">
+                            <i data-lucide="home" class="w-4 h-4"></i>
+                            Home
+                        </a>
+                        <a href="{% url 'edit_profile' %}" class="btn btn-primary btn-block justify-start">
+                            <i data-lucide="user-cog" class="w-4 h-4"></i>
+                            Edit Profile
+                        </a>
+                        <a href="/admin/" class="btn btn-primary btn-block justify-start">
+                            <i data-lucide="settings" class="w-4 h-4"></i>
+                            Admin Panel
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

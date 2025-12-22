@@ -1,44 +1,63 @@
-{% extends 'main/base.html' %}
+{% extends 'main/base_with_hero.html' %}
 
 {% block title %}{{ post.title }} - AImageLab{% endblock %}
 
-{% block content %}
-<!-- Inner Page Hero -->
-<section class="inner-page d-flex align-items-end">
-    <div class="container pb-5">
-        <h1 class="title-white">{{ post.title }}</h1>
-        <p class="small title-white mb-0">{{ post.created_at|date:"F d, Y" }}</p>
-    </div>
-</section>
+{% block hero_title %}{{ post.title }}{% endblock %}
 
-<div class="container my-5">
-    <div class="custom-card p-4">
-        {% if post.cover %}
-        <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="img-fluid rounded-object mb-4" style="max-width: 100%;">
-        {% endif %}
-        <div class="d-flex flex-wrap align-items-center mb-3">
-            {% if post.categories.all %}
-                {% for category in post.categories.all %}
-                    <span class="badge bg-white text-danger rounded-pill me-2 mb-2">{{ category.name }}</span>
-                {% endfor %}
+{% block hero_description %}
+{{ post.created_at|date:"F d, Y" }}
+{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12 max-w-4xl">
+    <article class="card bg-base-200">
+        <div class="card-body">
+            {% if post.cover %}
+            <figure class="mb-6">
+                <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="w-full rounded-lg">
+            </figure>
             {% endif %}
-            {% if post.event_date %}
-                <span class="badge bg-danger text-white rounded-pill mb-2">Event on {{ post.event_date|date:"F d, Y" }}</span>
+            
+            <div class="flex flex-wrap gap-2 mb-6">
+                {% if post.categories.all %}
+                    {% for category in post.categories.all %}
+                        <span class="badge badge-outline">{{ category.name }}</span>
+                    {% endfor %}
+                {% endif %}
+                {% if post.event_date %}
+                    <span class="badge badge-error">
+                        <i data-lucide="calendar" class="w-3 h-3 mr-1"></i>
+                        Event on {{ post.event_date|date:"F d, Y" }}
+                    </span>
+                {% endif %}
+            </div>
+            
+            {% if post.description %}
+            <div class="alert mb-6">
+                <i data-lucide="info" class="w-5 h-5"></i>
+                <span class="font-semibold">{{ post.description }}</span>
+            </div>
             {% endif %}
+            
+            <div class="prose max-w-none mb-6">
+                {{ post.content|linebreaks }}
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="card-actions justify-between">
+                <a href="{% url 'news' %}" class="btn btn-ghost">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    Back to News
+                </a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'post_edit' post.slug %}" class="btn btn-primary">
+                    <i data-lucide="edit" class="w-4 h-4"></i>
+                    Edit Post
+                </a>
+                {% endif %}
+            </div>
         </div>
-        {% if post.description %}
-        <p class="mb-3 title-bordeaux fs-5"><strong>{{ post.description }}</strong></p>
-        {% endif %}
-        <div class="mb-4 title-black text-justify">
-            {{ post.content|linebreaks }}
-        </div>
-        {% if user.is_authenticated %}
-        <div class="mb-3">
-            <a href="{% url 'post_edit' post.slug %}" class="red-btn">Edit Post</a>
-        </div>
-        {% endif %}
-        <hr class="my-4">
-        <a href="{% url 'news' %}" class="white-btn">← Back to News</a>
-    </div>
+    </article>
 </div>
 {% endblock %}

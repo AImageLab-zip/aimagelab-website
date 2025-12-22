@@ -1,76 +1,71 @@
-{% extends 'main/base.html' %}
+{% extends 'main/base_with_hero.html' %}
 
 {% block title %}Login - AImageLab{% endblock %}
 
-{% block content %}
-<!-- Inner Page Hero -->
-<section class="inner-page d-flex align-items-center justify-content-center">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="custom-card p-4 shadow">
-                    <div class="text-center mb-4">
-                        <h1 class="fs-2 title-bordeaux fw-bold mb-2">Hello World!</h1>
-                        <p class="title-black">Welcome to AImageLab</p>
-                    </div>
+{% block hero_title %}Hello World!{% endblock %}
+
+{% block hero_description %}
+Welcome to AImageLab - Please sign in to continue
+{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12 max-w-md">
+    <div class="card bg-base-200">
+        <div class="card-body">
                     
-                    <form method="post" action="{% url 'login' %}">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label for="username" class="form-label fw-bold title-bordeaux">Username</label>
-                            <input 
-                                type="text" 
-                                id="username" 
-                                name="username" 
-                                class="form-control rounded-object"
-                                required 
-                                placeholder="Enter your username"
-                                autofocus
-                            >
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label for="password" class="form-label fw-bold title-bordeaux">Password</label>
-                            <input 
-                                type="password" 
-                                id="password" 
-                                name="password" 
-                                class="form-control rounded-object"
-                                required 
-                                placeholder="Enter your password"
-                            >
-                        </div>
-                        
-                        <button type="submit" class="red-btn w-100 fw-bold">Login</button>
-                    </form>
-                    
-                    <!-- Divider -->
-                    <div class="text-center my-4">
-                        <div class="d-flex align-items-center">
-                            <hr class="flex-grow-1">
-                            <span class="px-3 text-muted small">OR</span>
-                            <hr class="flex-grow-1">
-                        </div>
-                    </div>
-                    
-                    <!-- OIDC Login Button -->
-                    <div class="mb-3">
-                        <a href="{% url 'oidc_authentication_init' %}" class="btn btn-outline-primary w-100 fw-bold d-flex align-items-center justify-content-center" style="padding: 0.75rem;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-shield-lock me-2" viewBox="0 0 16 16">
-                                <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.061.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.775 11.775 0 0 1-2.517 2.453 7.159 7.159 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7.158 7.158 0 0 1-1.048-.625 11.777 11.777 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 62.456 62.456 0 0 1 5.072.56z"/>
-                                <path d="M9.5 6.5a1.5 1.5 0 0 1-1 1.415l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99a1.5 1.5 0 1 1 2-1.415z"/>
-                            </svg>
-                            Sign in with {{ OIDC_PROVIDER_NAME|default:"OIDC Provider" }}
-                        </a>
-                    </div>
-                    
-                    <div class="text-center mt-4">
-                        <p class="title-black small">Please use your credentials to access the system</p>
+            <form method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                
+                <div class="form-control mb-4">
+                    <label class="label" for="username">
+                        <span class="label-text font-semibold">Username</span>
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            class="input input-bordered w-full"
+                            required 
+                            placeholder="Enter your username"
+                            autofocus
+                        >
                     </div>
                 </div>
-            </div>
+                
+                <div class="form-control mb-6">
+                    <label class="label" for="password">
+                        <span class="label-text font-semibold">Password</span>
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="input input-bordered w-full"
+                            required 
+                            placeholder="Enter your password"
+                        >
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-full">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    Login
+                </button>
+            </form>
+            
+            <div class="divider">OR</div>
+            
+            <a href="{% url 'oidc_authentication_init' %}" class="btn btn-outline w-full">
+                <i data-lucide="shield" class="w-4 h-4"></i>
+                Sign in with {{ OIDC_PROVIDER_NAME|default:"OIDC Provider" }}
+            </a>
+            
+            <p class="text-center text-sm mt-6 opacity-70">
+                Please use your credentials to access the system
+            </p>
         </div>
     </div>
-</section>
+</div>
 {% endblock %}

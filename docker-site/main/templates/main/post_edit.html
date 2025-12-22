@@ -1,85 +1,128 @@
-{% extends 'main/base.html' %}
+{% extends 'main/base_with_hero.html' %}
 
 {% block title %}{% if post %}Edit Post{% else %}Add Post{% endif %} - AImageLab{% endblock %}
 
-{% block content %}
-<!-- Inner Page Hero -->
-<section class="inner-page d-flex align-items-end">
-    <div class="container pb-5">
-        <h1 class="title-white">{% if post %}Edit Post{% else %}Add New Post{% endif %}</h1>
-    </div>
-</section>
+{% block hero_title %}{% if post %}Edit Post{% else %}Add New Post{% endif %}{% endblock %}
 
-<div class="container my-5">
-    <div class="custom-card p-4">
-        <form method="post" enctype="multipart/form-data">
+{% block hero_description %}
+{% if post %}Update the content and settings for this post{% else %}Create a new news post or event{% endif %}
+{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12 max-w-4xl">
+    <form method="post" enctype="multipart/form-data" class="card bg-base-200">
+        <div class="card-body">
             {% csrf_token %}
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Title:</label>
-                <input type="text" name="title" value="{{ post.title|default:'' }}" required class="form-control rounded-object">
+            
+            <div class="form-control mb-4">
+                <label class="label" for="title">
+                    <span class="label-text font-semibold">Title *</span>
+                </label>
+                <input type="text" id="title" name="title" value="{{ post.title|default:'' }}" required class="input input-bordered">
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Slug:</label>
-                <input type="text" name="slug" value="{{ post.slug|default:'' }}" required class="form-control rounded-object">
+            
+            <div class="form-control mb-4">
+                <label class="label" for="slug">
+                    <span class="label-text font-semibold">Slug *</span>
+                </label>
+                <input type="text" id="slug" name="slug" value="{{ post.slug|default:'' }}" required class="input input-bordered">
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Pin the post:</label>
-                <select name="is_pinned" class="form-select rounded-object">
-                    <option value="False" {% if post and not post.is_pinned %}selected{% endif %}>No</option>
-                    <option value="True" {% if post and post.is_pinned %}selected{% endif %}>Yes</option>
-                </select>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="form-control">
+                    <label class="label" for="is_pinned">
+                        <span class="label-text font-semibold">Pin the post</span>
+                    </label>
+                    <select id="is_pinned" name="is_pinned" class="select select-bordered">
+                        <option value="False" {% if post and not post.is_pinned %}selected{% endif %}>No</option>
+                        <option value="True" {% if post and post.is_pinned %}selected{% endif %}>Yes</option>
+                    </select>
+                </div>
+                
+                <div class="form-control">
+                    <label class="label" for="event_date">
+                        <span class="label-text font-semibold">Event date</span>
+                    </label>
+                    <input type="date" id="event_date" name="event_date" value="{% if post and post.event_date %}{{ post.event_date|date:'Y-m-d' }}{% endif %}" class="input input-bordered">
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Categories:</label>
-                <select name="categories" multiple class="form-select rounded-object">
+            
+            <div class="form-control mb-4">
+                <label class="label" for="categories">
+                    <span class="label-text font-semibold">Categories</span>
+                </label>
+                <select id="categories" name="categories" multiple class="select select-bordered h-32">
                     {% for category in categories %}
                         <option value="{{ category.id }}" {% if post and category in post.categories.all %}selected{% endif %}>{{ category.name }}</option>
                     {% endfor %}
                 </select>
-                <small class="title-black">Hold Ctrl (Cmd on Mac) to select multiple.</small>
+                <label class="label">
+                    <span class="label-text-alt">Hold Ctrl (Cmd on Mac) to select multiple</span>
+                </label>
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Description:</label>
-                <textarea name="description" rows="3" class="form-control rounded-object">{{ post.description|default:'' }}</textarea>
+            
+            <div class="form-control mb-4">
+                <label class="label" for="description">
+                    <span class="label-text font-semibold">Description</span>
+                </label>
+                <textarea id="description" name="description" rows="3" class="textarea textarea-bordered">{{ post.description|default:'' }}</textarea>
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Content:</label>
-                <textarea name="content" rows="10" required class="form-control rounded-object">{{ post.content|default:'' }}</textarea>
+            
+            <div class="form-control mb-4">
+                <label class="label" for="content">
+                    <span class="label-text font-semibold">Content *</span>
+                </label>
+                <textarea id="content" name="content" rows="10" required class="textarea textarea-bordered">{{ post.content|default:'' }}</textarea>
             </div>
-            <div class="mb-3 d-flex align-items-center gap-3 flex-wrap">
-                <div class="flex-grow-1">
-                    <label class="form-label fw-bold title-bordeaux">Event date:</label>
-                    <input type="date" name="event_date" value="{% if post and post.event_date %}{{ post.event_date|date:'Y-m-d' }}{% endif %}" class="form-control rounded-object">
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Cover Image:</label>
+            
+            <div class="form-control mb-4">
+                <label class="label" for="cover">
+                    <span class="label-text font-semibold">Cover Image</span>
+                </label>
                 {% if post.cover %}
                 <div class="mb-2">
-                    <img src="{{ post.cover.url }}" alt="Current cover" class="img-fluid rounded-object" style="max-width: 300px;">
+                    <img src="{{ post.cover.url }}" alt="Current cover" class="rounded-lg max-w-sm">
                 </div>
                 {% endif %}
-                <input type="file" name="cover" accept="image/*" class="form-control rounded-object">
+                <input type="file" id="cover" name="cover" accept="image/*" class="file-input file-input-bordered">
             </div>
-            <div class="mb-3">
-                <div class="d-flex gap-2 flex-wrap">
-                    {% if post %}
-                        {% if post.is_published %}
-                        <button type="submit" name="action" value="publish" class="red-btn">Save</button>
-                        <button type="submit" name="action" value="draft" class="white-btn">Turn to Draft</button>
-                        {% else %}
-                        <button type="submit" name="action" value="draft" class="white-btn">Save Draft</button>
-                        <button type="submit" name="action" value="publish" class="red-btn">Publish</button>
-                        {% endif %}
-                        <a href="{% url 'single' post.slug %}" class="white-btn">Cancel</a>
+            <div class="divider"></div>
+            
+            <div class="card-actions justify-end flex-wrap">
+                {% if post %}
+                    {% if post.is_published %}
+                    <button type="submit" name="action" value="publish" class="btn btn-primary">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        Save
+                    </button>
+                    <button type="submit" name="action" value="draft" class="btn btn-outline">
+                        <i data-lucide="archive" class="w-4 h-4"></i>
+                        Turn to Draft
+                    </button>
                     {% else %}
-                        <button type="submit" name="action" value="draft" class="white-btn">Create Draft</button>
-                        <button type="submit" name="action" value="publish" class="red-btn">Publish</button>
-                        <a href="{% url 'news' %}" class="white-btn">Cancel</a>
+                    <button type="submit" name="action" value="draft" class="btn btn-outline">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        Save Draft
+                    </button>
+                    <button type="submit" name="action" value="publish" class="btn btn-primary">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        Publish
+                    </button>
                     {% endif %}
-                </div>
+                    <a href="{% url 'single' post.slug %}" class="btn btn-ghost">Cancel</a>
+                {% else %}
+                    <button type="submit" name="action" value="draft" class="btn btn-outline">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        Create Draft
+                    </button>
+                    <button type="submit" name="action" value="publish" class="btn btn-primary">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        Publish
+                    </button>
+                    <a href="{% url 'news' %}" class="btn btn-ghost">Cancel</a>
+                {% endif %}
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 {% endblock %}
