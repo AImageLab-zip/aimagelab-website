@@ -1,7 +1,7 @@
 import csv
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
+import dateutil.parser
 from pathlib import Path
 from main.models import Post, Category
 
@@ -74,9 +74,9 @@ class Command(BaseCommand):
                         category = None
                     
                     # Parse dates
-                    created_at = parse_datetime(row.get('created_at', ''))
-                    if not created_at:
-                        created_at = timezone.now()
+                    created_at_str = row.get('created_at', '').strip()
+                    created_at = dateutil.parser.parse(created_at_str)
+                    
                     
                     # Check if post already exists
                     slug = row.get('slug', '').strip()
@@ -99,9 +99,11 @@ class Command(BaseCommand):
                         content=row.get('content', '').strip(),
                         is_published=row.get('is_published', '1') == '1',
                         is_pinned=False,  # Default to not pinned
-                        created_at=created_at,
                         cover=row.get('cover', '').strip() if row.get('cover') else None,
                     )
+                    # Override created_at after creation
+                    Post.objects.filter(pk=post.pk).update(created_at=created_at)
+                    post.refresh_from_db()
                     
                     # Add category if exists
                     if category:
@@ -109,7 +111,7 @@ class Command(BaseCommand):
                     
                     status = "✓ Published" if post.is_published else "📝 Draft"
                     created_count += 1
-                    self.stdout.write(f'{status}: {post.title}')
+                    self.stdout.write(f'{status}: {post.title}, created at {post.created_at}, slug: {post.slug}')
                     
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f'Error processing row: {e}'))
