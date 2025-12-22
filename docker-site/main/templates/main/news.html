@@ -25,9 +25,7 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                             value="{{ search_query }}"
                         />
                         <button type="submit" class="btn btn-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+                            <i data-lucide="search" class="w-4 h-4"></i>
                             Search
                         </button>
                     </form>
@@ -51,22 +49,20 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                         <div class="flex flex-wrap gap-2 mb-3">
                             {% if post.event_date %}
                             <span class="badge badge-primary badge-lg gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
+                                <i data-lucide="calendar" class="h-4 w-4"></i>
                                 Event on {{ post.event_date|date:"M d, Y" }}
                             </span>
                             {% endif %}
                             {% if post.is_pinned %}
                             <span class="badge badge-secondary badge-lg gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                                </svg>
+                                <i data-lucide="pin" class="h-4 w-4"></i>
                                 Pinned
                             </span>
                             {% endif %}
                             {% if not post.is_published %}
-                            <span class="badge badge-warning badge-lg">Draft!</span>
+                            <span class="badge badge-warning badge-lg">
+                                <i data-lucide="pencil-line" class="h-4 w-4"></i>
+                                Draft!</span>
                             {% endif %}
                         </div>
 
@@ -86,10 +82,8 @@ Stay updated with the latest research breakthroughs, events, and announcements f
 
                         <!-- Meta Info -->
                         <div class="flex flex-wrap items-center gap-2 text-sm text-base-content/60">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span>{{ post.created_at|date:"F d, Y" }}</span>
+                            
+                            <span> <i data-lucide="calendar" class="h-4 w-4 inline"></i> {{ post.created_at|date:"F d, Y" }}</span>
                             {% if post.categories.all %}
                             <span>•</span>
                             <div class="flex flex-wrap gap-1">
@@ -166,9 +160,7 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                 <div class="card bg-base-200 mb-6">
                     <div class="card-body">
                         <h3 class="card-title text-primary mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
+                            <i data-lucide="calendar-plus" class="h-6 w-6"></i>
                             Upcoming Events
                         </h3>
                         {% if upcoming_events %}
@@ -179,9 +171,7 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                                     {{ event.title }}
                                 </a>
                                 <div class="flex items-center gap-2 text-sm text-base-content/60 mt-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
+                                    <i data-lucide="calendar" class="h-4 w-4 inline"></i>
                                     {{ event.event_date|date:"M d, Y" }}
                                 </div>
                             </div>
@@ -197,9 +187,7 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                 <div class="card bg-base-200">
                     <div class="card-body">
                         <h3 class="card-title text-primary mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                            </svg>
+                            <i data-lucide="tags" class="h-6 w-6"></i>
                             Categories
                         </h3>
                         {% if categories %}
