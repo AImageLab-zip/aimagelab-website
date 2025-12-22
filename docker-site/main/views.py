@@ -17,7 +17,7 @@ from .models import UserProfile
 from .tasks import sync_user_task
 import os
 
-POST_PER_PAGE = 5
+POST_PER_PAGE = 10
 
 def home(request):
     """Home page view."""
@@ -37,6 +37,10 @@ def home(request):
     return render(request, 'main/home.html', {
         'latest_posts': latest_posts
     })
+
+def contacts(request):
+    """Contacts page view."""
+    return render(request, 'main/contacts.html')
 
 def news(request):
     """News/Blog page view with pagination and search."""

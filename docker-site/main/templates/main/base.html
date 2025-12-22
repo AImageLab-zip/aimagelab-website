@@ -32,17 +32,16 @@
                         <li><a class="font-bold" href="{% url 'home' %}">Home</a></li>
                         <li><a class="font-bold" href="{% url 'people' %}">People</a></li>
                         <li><a class="font-bold" href="{% url 'news' %}">News</a></li>
-                        {% if user.is_authenticated %}
-                            <li><a class="font-bold" href="{% url 'dashboard' %}">Dashboard</a></li>
-                        {% endif %}
-                        <li><a class="font-bold" href="#contact">Contact</a></li>
+                        <li><a class="font-bold" href="{% url 'contacts' %}">Contacts</a></li>
+                       
                     </ul>
                 </div>
+                 {% if user.is_authenticated %}
+                            <a class="btn btn-primary btn-sm btn-outline " href="{% url 'dashboard' %}">Dashboard</a>
+                        {% endif %}
                 
                 {% if user.is_authenticated %}
                     <a href="{% url 'logout' %}" class="btn btn-primary btn-sm hidden lg:flex">Logout</a>
-                {% else %}
-                    <a href="{% url 'login' %}" class="btn btn-primary btn-sm hidden lg:flex">Login</a>
                 {% endif %}
                 
                 {% if user.is_staff %}
@@ -62,20 +61,18 @@
                         <li><a href="{% url 'home' %}">Home</a></li>
                         <li><a href="{% url 'people' %}">People</a></li>
                         <li><a href="{% url 'news' %}">News</a></li>
+                        <li><a href="{% url 'contacts' %}">Contacts</a></li>
                         {% if user.is_authenticated %}
                             <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
                             <li><a href="{% url 'logout' %}">Logout</a></li>
-                        {% else %}
-                            <li><a href="{% url 'login' %}">Login</a></li>
-                        {% endif %}
-                        <li><a href="#contact">Contact</a></li>
-                        {% if user.is_staff %}
-                            <li>
-                                <form method="post" action="{% url 'sync_ldap' %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="w-full text-left">Sync LDAP</button>
-                                </form>
-                            </li>
+                            {% if user.is_staff %}
+                                <li>
+                                    <form method="post" action="{% url 'sync_ldap' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="w-full text-left">Sync LDAP</button>
+                                    </form>
+                                </li>
+                            {% endif %}
                         {% endif %}
                     </ul>
                 </div>
@@ -103,12 +100,13 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-primary text-primary-content px-6 py-6 relative overflow-hidden">
+    <footer class="bg-primary text-primary-content px-6 py-6 mt-auto relative overflow-hidden">
         <div class="container mx-auto px-6 footer sm:footer-horizontal items-center">
             <aside class="grid-flow-col items-center">
                 <img src="{% static 'main/assets/logo_w.svg' %}" alt="AImageLab Logo" class="h-12 mb-4" />
                 <p>
                     &copy; 1998-{% now "Y" %} AImageLab - University of Modena and Reggio Emilia
+                    <br/> <a class="link text-secondary" href="{% url 'login' %}">Login</a>
                 </p>
             </aside>
 
