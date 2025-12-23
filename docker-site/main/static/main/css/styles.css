@@ -51,6 +51,19 @@
     background: var(--simple-gradient);
 }
 
+body{
+  min-height: 100vh;
+}
+
+.text a{
+    text-decoration: underline;
+    color: var(--color-primary);
+}
+
+a:hover{
+    color: var(--color-secondary);
+}
+
 .h2-home{
     font-size: 1.8rem;
     font-weight: 600;
