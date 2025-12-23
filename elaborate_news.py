@@ -76,7 +76,7 @@ def generate_slug(title, created_at):
         year = year_match.group(0)
         # Get words before the year
         words_before_year = title[:year_match.start()].strip()
-        words = re.findall(r'\w+', words_before_year.lower())[:3]
+        words = re.findall(r'\w+', words_before_year.lower())[:5]
     else:
         # Use year from created_at
         year = created_at.split('-')[0] if created_at else '2024'
@@ -122,6 +122,8 @@ def process_csv():
         writer = csv.DictWriter(outfile, fieldnames=output_columns)
         writer.writeheader()
         
+        seen_slugs = set()
+        
         for row in reader:
             # Convert HTML content to Markdown
             markdown_content = html_to_markdown(row['content'])
@@ -134,6 +136,14 @@ def process_csv():
             
             # Generate slug
             slug = generate_slug(title, row['created_at'])
+            # Ensure slug uniqueness by appending a counter if needed
+            unique_slug = slug
+            counter = 1
+            while unique_slug in seen_slugs:
+                unique_slug = f"{slug}-{counter}"
+                counter += 1
+            seen_slugs.add(unique_slug)
+            slug = unique_slug
             
             # Convert category to string using mapping
             category_id = row['id_category']

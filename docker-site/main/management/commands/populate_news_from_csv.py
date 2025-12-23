@@ -4,6 +4,7 @@ from django.utils import timezone
 import dateutil.parser
 from pathlib import Path
 from main.models import Post, Category
+import unicodedata
 
 
 class Command(BaseCommand):
@@ -81,6 +82,8 @@ class Command(BaseCommand):
                     # Check if post already exists
                     slug = row.get('slug', '').strip()
                     slug = slug[:50]
+                    slug = unicodedata.normalize('NFKD', slug).encode('ascii', 'ignore').decode('ascii')
+                    slug = ''.join(c for c in slug if c.isalnum() or c in '-_')
                     if not slug:
                         self.stdout.write(self.style.WARNING(f'Skipping row with empty slug'))
                         skipped_count += 1
