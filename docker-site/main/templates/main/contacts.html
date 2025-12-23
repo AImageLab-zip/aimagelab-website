@@ -11,6 +11,24 @@ Get in touch with AImageLab - Find directions, contact information, and how to r
 {% block page_content %}
 <section class="py-16">
     <div class="container mx-auto px-6">
+        <div class="mb-12">
+            <h2 class="h2-home mb-2">Connect with Us</h2>
+            <div class="mb-8 text-lg text-base-content/70">
+                We're here to assist you. Whether you have questions about our research, collaborations, or any other inquiries, feel free to reach out using the contact information below or visit us at our location.
+            </div>
+            <div class="flex gap-4 mb-8">
+                <a href="https://www.linkedin.com/company/aimagelab" target="_blank" aria-label="LinkedIn" class="btn btn-primary">
+                    <i data-lucide="linkedin" class="w-6 h-6"></i> LinkedIn
+                </a>
+                <a href="https://github.com/aimagelab" target="_blank" aria-label="GitHub" class="btn btn-primary">
+                    <i data-lucide="github" class="w-6 h-6"></i> GitHub
+                </a>
+                <a href="https://www.youtube.com/@aimagelab" target="_blank" aria-label="YouTube" class="btn btn-primary">
+                    <i data-lucide="youtube" class="w-6 h-6"></i> YouTube
+                </a>
+            </div>
+
+        </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Left Column: Contact Info and Accordion -->
             <div>
@@ -35,15 +53,14 @@ Get in touch with AImageLab - Find directions, contact information, and how to r
                 </div>
 
                 <!-- Accordion for Travel Directions -->
-                <div class="join join-vertical w-full">
-                    <div class="collapse collapse-arrow join-item border border-base-300">
-                        <input type="radio" name="travel-accordion" />
-                        <div class="collapse-title text-lg font-semibold text-primary">
+                <div class="space-y-4">
+                    <div tabindex="0" class="collapse collapse-arrow bg-base-100 border-base-300 border">
+                        <div class="collapse-title font-semibold after:start-5 after:end-auto pe-4 ps-12">
                             <i data-lucide="plane" class="w-5 h-5 inline mr-2"></i>
                             By Plane
                         </div>
-                        <div class="collapse-content">
-                            <div class="space-y-3 text-sm pt-2">
+                        <div class="collapse-content text-sm">
+                            <div class="space-y-3 pt-2">
                                 <p>The nearest airport is the <strong>Airport of Bologna Guglielmo Marconi</strong>.</p>
                                 <p>The airport of Bologna has very frequent direct connections to all major European Hubs (Milan, Rome, Frankfurt, Brussels, Paris, London, Amsterdam).</p>
                                 <p><strong>Shuttle Service to Modena:</strong></p>
@@ -55,14 +72,13 @@ Get in touch with AImageLab - Find directions, contact information, and how to r
                         </div>
                     </div>
 
-                    <div class="collapse collapse-arrow join-item border border-base-300">
-                        <input type="radio" name="travel-accordion" />
-                        <div class="collapse-title text-lg font-semibold text-primary">
+                    <div tabindex="0" class="collapse collapse-arrow bg-base-100 border-base-300 border">
+                        <div class="collapse-title font-semibold after:start-5 after:end-auto pe-4 ps-12">
                             <i data-lucide="train" class="w-5 h-5 inline mr-2"></i>
                             By Train
                         </div>
-                        <div class="collapse-content">
-                            <div class="space-y-3 text-sm pt-2">
+                        <div class="collapse-content text-sm">
+                            <div class="space-y-3 pt-2">
                                 <p>Modena has direct train connections to/from:</p>
                                 <ul class="list-disc list-inside">
                                     <li>Milan</li>
@@ -76,14 +92,13 @@ Get in touch with AImageLab - Find directions, contact information, and how to r
                         </div>
                     </div>
 
-                    <div class="collapse collapse-arrow join-item border border-base-300">
-                        <input type="radio" name="travel-accordion" />
-                        <div class="collapse-title text-lg font-semibold text-primary">
+                    <div tabindex="0" class="collapse collapse-arrow bg-base-100 border-base-300 border">
+                        <div class="collapse-title font-semibold after:start-5 after:end-auto pe-4 ps-12">
                             <i data-lucide="car" class="w-5 h-5 inline mr-2"></i>
                             By Car
                         </div>
-                        <div class="collapse-content">
-                            <div class="space-y-3 text-sm pt-2">
+                        <div class="collapse-content text-sm">
+                            <div class="space-y-3 pt-2">
                                 <p>Take the <strong>A1 Motorway</strong> and exit at <strong>"Modena Sud"</strong>.</p>
                                 <p>After the toll booth, turn right at the junction onto <strong>Via Vignolese</strong>.</p>
                                 <p>Drive straight for approximately <strong>10 km</strong> until you reach a junction with traffic lights.</p>
@@ -97,7 +112,7 @@ Get in touch with AImageLab - Find directions, contact information, and how to r
 
             <!-- Right Column: Map -->
             <div>
-                <div class="card bg-base-200 h-full">
+                <div class="card bg-base-200 h-full max-h-144">
                     <div class="card-body p-0 overflow-hidden rounded-xl">
                         <div id="map" class="min-h-96 h-full"></div>
                     </div>
@@ -113,7 +128,7 @@ Get in touch with AImageLab - Find directions, contact information, and how to r
     const map = new maplibregl.Map({
         style: 'https://tiles.openfreemap.org/styles/positron',
         center: [10.950360, 44.628829],
-        zoom: 8,
+        zoom: 5,
         container: 'map',
         attributionControl: true,
         cooperativeGestures: true,
