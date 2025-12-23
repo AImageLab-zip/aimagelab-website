@@ -21,12 +21,6 @@ POST_PER_PAGE = 10
 
 def home(request):
     """Home page view."""
-    # Get upcoming events (posts with event_date, ordered by event_date)
-    upcoming_events = Post.objects.filter(
-        is_published=True,
-        event_date__isnull=False
-    ).order_by('event_date')[:4]
-    
     # Get latest posts without event_date
     latest_posts = Post.objects.filter(
         is_published=True,
@@ -45,6 +39,7 @@ def contacts(request):
 def news(request):
     """News/Blog page view with pagination and search."""
     search_query = request.GET.get('search', '')
+    category_query = request.GET.get('category', '')
     
     # Filter posts based on authentication
     if request.user.is_authenticated:
@@ -59,6 +54,9 @@ def news(request):
             Q(description__icontains=search_query) |
             Q(content__icontains=search_query)
         )
+        
+    if category_query:
+        posts = posts.filter(categories__name__iexact=category_query)
     
     # Order by creation date and prefetch categories for efficiency
     posts = posts.order_by('is_published', '-is_pinned', '-created_at').prefetch_related('categories')
@@ -74,10 +72,21 @@ def news(request):
     except EmptyPage:
         posts_page = paginator.page(paginator.num_pages)
     
+    # Get upcoming events (posts with event_date, ordered by event_date)
+    upcoming_events = Post.objects.filter(
+        is_published=True,
+        event_date__isnull=False
+    ).order_by('event_date')[:5]
+    
+    categories = Category.objects.all().order_by('name')
+    
     return render(request, 'main/news.html', {
         'posts': posts_page,
         'search_query': search_query,
-    })
+        'category_query': category_query,
+        'upcoming_events': upcoming_events,
+        'categories': categories    
+    })  
 
 def post_single(request, slug):
     """Single post detail view."""

@@ -37,6 +37,15 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                         </p>
                     </div>
                     {% endif %}
+
+                    {% if category_query %}
+                    <div class="mt-3">
+                        <p class="text-sm">
+                            Filtering by category: <strong class="text-primary">"{{ category_query }}"</strong>
+                            <a href="{% url 'news' %}" class="link link-primary ml-2">Clear filter</a>
+                        </p>
+                    </div>
+                    {% endif %} 
                 </div>
             </div>
 
