@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "mozilla_django_oidc",  # OIDC authentication
     "main.apps.MainConfig",
+    'markdownify.apps.MarkdownifyConfig',
 ]
 
 MIDDLEWARE = [

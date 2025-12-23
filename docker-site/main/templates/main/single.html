@@ -7,6 +7,8 @@
 {% block hero_description %}
 {{ post.created_at|date:"F d, Y" }}
 {% endblock %}
+{% load markdownify %}
+
 
 {% block page_content %}
 <div class="container mx-auto px-6 my-12 max-w-4xl">
@@ -32,15 +34,9 @@
                 {% endif %}
             </div>
             
-            {% if post.description %}
-            <div class="alert mb-6">
-                <i data-lucide="info" class="w-5 h-5"></i>
-                <span class="font-semibold">{{ post.description }}</span>
-            </div>
-            {% endif %}
-            
+                      
             <div class="prose max-w-none mb-6">
-                {{ post.content|linebreaks }}
+                {{ post.content|markdownify }}
             </div>
             
             <div class="divider"></div>
