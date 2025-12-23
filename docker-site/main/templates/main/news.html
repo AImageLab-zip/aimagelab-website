@@ -13,6 +13,23 @@ Stay updated with the latest research breakthroughs, events, and announcements f
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Main Content -->
         <div class="lg:col-span-2">
+            <!-- Link to add a post if authenticated and staff -->
+            {% if user.is_authenticated and user.is_staff %}
+            <div class="card bg-base-200 mb-6">
+                <div class="card-body flex flex-col md:flex-row gap-3 justify-end">
+                    <p class="block my-auto text-lg">
+                         <span class="font-bold text-primary">
+                        Welcome back, {{ user.username }}!
+                         </span> <br/>
+                        Got a thought to share?
+                    </p>
+                    <a href="{% url 'post_add' %}" class="btn btn-primary">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add News Post
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Search Bar -->
             <div class="card bg-base-200 mb-6">
                 <div class="card-body">
