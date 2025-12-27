@@ -27,14 +27,14 @@ Update your personal information and professional links
                         <fieldset class="fieldset mb-4">
                             <legend class="fieldset-legend">Biography</legend>
                             <textarea id="bio" name="bio" rows="4" class="textarea w-full" placeholder="Tell us about yourself...">{{ profile.bio }}</textarea>
-                            <p class="label">A short description of your background and interests</p>
+                            <p class="label overflow-scroll">A short description of your background and interests</p>
                         </fieldset>
                         
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Phone Number</legend>
                             <input class="input w-full" id="phone_number" name="phone_number"
                                    value="{{ profile.phone_number }}" placeholder="+39 123 456 7890">
-                            <p class="label">International format preferred (e.g., +39-123-456-7890)</p>
+                            <p class="label overflow-scroll">International format preferred (e.g., +39-123-456-7890)</p>
                         </fieldset>
                     </div>
                 </div>
@@ -114,7 +114,7 @@ Update your personal information and professional links
                         <fieldset class="fieldset mb-4">
                             <legend class="fieldset-legend">Upload New Picture</legend>
                             <input type="file" class="file-input w-full" id="avatar" name="avatar" accept="image/*">
-                            <p class="label">JPG, PNG, GIF. Max size: 5MB. Recommended: square aspect ratio</p>
+                            <p class="label overflow-scroll">JPG, PNG, GIF. Max size: 5MB. Recommended: square aspect ratio</p>
                         </fieldset>
                         
                         {% if profile.avatar %}
