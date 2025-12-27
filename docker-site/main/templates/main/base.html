@@ -19,7 +19,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 
-<body>
+<body class="min-h-screen flex flex-col font-sans bg-base-100 text-base-content">
     <!-- Navigation -->
     <div id="navbar" class="fixed top-0 z-20 w-full px-4 transition-colors duration-300">
         <div class="navbar container mx-auto">
@@ -100,13 +100,21 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-primary text-primary-content px-6 py-6 mt-auto relative overflow-hidden">
+    <footer class="bg-neutral text-neutral-content px-6 py-6 mt-auto relative overflow-hidden">
         <div class="container mx-auto px-6 footer sm:footer-horizontal items-center">
             <aside class="grid-flow-col items-center">
-                <img src="{% static 'main/assets/logo_w.svg' %}" alt="AImageLab Logo" class="h-12 mb-4" />
+                <img src="{% static 'main/assets/logo_w.svg' %}" alt="AImageLab Logo" class="h-12" />
                 <p>
-                    &copy; 1998-{% now "Y" %} AImageLab - University of Modena and Reggio Emilia
-                    <br/> <a class="link text-secondary" href="{% url 'login' %}">Login</a>
+                    1998-{% now "Y" %} &copy;  AImageLab<br/>University of Modena and Reggio Emilia
+
+                    <br/> 
+                    {% if user.is_authenticated %}
+                    <a class="link text-xs text-current/50" href="{% url 'logout' %}">Logout</a> | 
+                    {% else %}
+                    <a class="link text-xs text-current/50" href="{% url 'login' %}">Login</a> | 
+                    {% endif %}
+                    <a class="link text-xs text-current/50" href="#">Privacy Policy</a>  |
+                    <a class="link text-xs text-current/50" href="{% url 'contacts' %}">Contacts</a>
                 </p>
             </aside>
 
