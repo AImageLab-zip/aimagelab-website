@@ -5,146 +5,145 @@
 {% block hero_title %}Edit Your Profile{% endblock %}
 
 {% block hero_description %}
-Update your personal information and links
+Update your personal information and professional links
 {% endblock %}
 
 {% block page_content %}
-<div class="container mx-auto px-6 my-12 max-w-4xl">
-    <form method="post" enctype="multipart/form-data" class="card bg-base-200">
-        <div class="card-body">
-            {% csrf_token %}
-
-            <!-- Avatar Section -->
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold text-primary mb-4">Profile Picture</h2>
-                <div class="flex flex-col items-center mb-6">
-                    {% if profile.avatar %}
-                    <div class="avatar mb-4">
-                        <div class="w-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                            <img src="{{ profile.avatar.url }}" alt="Current avatar" />
-                        </div>
+<div class="container mx-auto px-6 my-12">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Content Column -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Basic Information Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="user" class="w-5 h-5"></i>
+                            Basic Information
+                        </h2>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">Biography</legend>
+                            <textarea id="bio" name="bio" rows="4" class="textarea w-full" placeholder="Tell us about yourself...">{{ profile.bio }}</textarea>
+                            <p class="label">A short description of your background and interests</p>
+                        </fieldset>
+                        
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">Phone Number</legend>
+                            <input class="input w-full" id="phone_number" name="phone_number"
+                                   value="{{ profile.phone_number }}" placeholder="+39 123 456 7890">
+                            <p class="label">International format preferred (e.g., +39-123-456-7890)</p>
+                        </fieldset>
                     </div>
-                    {% else %}
-                    <div class="avatar placeholder mb-4">
-                        <div class="bg-primary text-primary-content rounded-full w-32">
-                            <span class="text-3xl">{{ user.first_name.0 }}{{ user.last_name.0 }}</span>
-                        </div>
+                </div>
+                
+                <!-- Professional Links Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="link" class="w-5 h-5"></i>
+                            Professional Links
+                        </h2>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">
+                                <i data-lucide="globe" class="w-4 h-4 inline mr-2"></i>
+                                Personal Website
+                            </legend>
+                            <input type="url" class="input w-full" id="website" name="website"
+                                   value="{{ profile.website }}" placeholder="https://your-website.com">
+                        </fieldset>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">
+                                <i data-lucide="book-open" class="w-4 h-4 inline mr-2"></i>
+                                Google Scholar
+                            </legend>
+                            <input type="url" class="input w-full" id="google_scholar" name="google_scholar"
+                                   value="{{ profile.google_scholar }}" placeholder="https://scholar.google.com/...">
+                        </fieldset>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">
+                                <i data-lucide="github" class="w-4 h-4 inline mr-2"></i>
+                                GitHub
+                            </legend>
+                            <input type="url" class="input w-full" id="github" name="github"
+                                   value="{{ profile.github }}" placeholder="https://github.com/username">
+                        </fieldset>
+                        
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">
+                                <i data-lucide="linkedin" class="w-4 h-4 inline mr-2"></i>
+                                LinkedIn
+                            </legend>
+                            <input type="url" class="input w-full" id="linkedin" name="linkedin"
+                                   value="{{ profile.linkedin }}" placeholder="https://linkedin.com/in/username">
+                        </fieldset>
                     </div>
-                    {% endif %}
-                </div>
-
-                <div class="form-control mb-4">
-                    <label class="label" for="avatar">
-                        <span class="label-text font-semibold">Upload New Picture</span>
-                    </label>
-                    <input type="file" class="file-input file-input-bordered" id="avatar" name="avatar" accept="image/*">
-                    <label class="label">
-                        <span class="label-text-alt">Supported formats: JPG, PNG, GIF. Max size: 5MB</span>
-                    </label>
-                </div>
-
-                {% if profile.avatar %}
-                <div class="form-control">
-                    <label class="label cursor-pointer justify-start gap-3">
-                        <input class="checkbox checkbox-primary" type="checkbox" id="remove_avatar" name="remove_avatar">
-                        <span class="label-text">Remove current picture</span>
-                    </label>
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="divider"></div>
-
-            <!-- Basic Info -->
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold text-primary mb-4">Basic Information</h2>
-
-                <div class="form-control mb-4">
-                    <label class="label" for="bio">
-                        <span class="label-text font-semibold">Biography</span>
-                    </label>
-                    <textarea class="textarea textarea-bordered" id="bio" name="bio" rows="4"
-                             placeholder="Tell us about yourself...">{{ profile.bio }}</textarea>
-                    <label class="label">
-                        <span class="label-text-alt">A short description of your background and interests</span>
-                    </label>
-                </div>
-
-                <div class="form-control mb-4">
-                    <label class="label" for="phone_number">
-                        <span class="label-text font-semibold">Phone Number</span>
-                    </label>
-                    <input type="tel" class="input input-bordered" id="phone_number" name="phone_number"
-                           value="{{ profile.phone_number }}" placeholder="+39 123 456 7890">
-                    <label class="label">
-                        <span class="label-text-alt">International format preferred</span>
-                    </label>
                 </div>
             </div>
-
-            <div class="divider"></div>
-
-            <!-- Links Section -->
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold text-primary mb-4">Professional Links</h2>
-
-                <div class="form-control mb-4">
-                    <label class="label" for="website">
-                        <span class="label-text font-semibold">
-                            <i data-lucide="globe" class="w-4 h-4 inline"></i>
-                            Personal Website
-                        </span>
-                    </label>
-                    <input type="url" class="input input-bordered" id="website" name="website"
-                           value="{{ profile.website }}" placeholder="https://your-website.com">
-                </div>
-
-                <div class="form-control mb-4">
-                    <label class="label" for="google_scholar">
-                        <span class="label-text font-semibold">
-                            <i data-lucide="book-open" class="w-4 h-4 inline"></i>
-                            Google Scholar
-                        </span>
-                    </label>
-                    <input type="url" class="input input-bordered" id="google_scholar" name="google_scholar"
-                           value="{{ profile.google_scholar }}" placeholder="https://scholar.google.com/...">
-                </div>
-
-                <div class="form-control mb-4">
-                    <label class="label" for="github">
-                        <span class="label-text font-semibold">
-                            <i data-lucide="github" class="w-4 h-4 inline"></i>
-                            GitHub
-                        </span>
-                    </label>
-                    <input type="url" class="input input-bordered" id="github" name="github"
-                           value="{{ profile.github }}" placeholder="https://github.com/username">
-                </div>
-
-                <div class="form-control mb-4">
-                    <label class="label" for="linkedin">
-                        <span class="label-text font-semibold">
-                            <i data-lucide="linkedin" class="w-4 h-4 inline"></i>
-                            LinkedIn
-                        </span>
-                    </label>
-                    <input type="url" class="input input-bordered" id="linkedin" name="linkedin"
-                           value="{{ profile.linkedin }}" placeholder="https://linkedin.com/in/username">
+            
+            <!-- Sidebar Column -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Profile Picture Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="camera" class="w-5 h-5"></i>
+                            Profile Picture
+                        </h2>
+                        
+                        <!-- Current Avatar Display -->
+                        <div class="flex flex-col items-center mb-6">
+                            <div class="avatar mb-4">
+                                {% if profile.avatar %}
+                                <div class="mask mask-squircle w-32 ring ring-primary ring-offset-base-100 ring-offset-2">
+                                    <img src="{{ profile.avatar.url }}" alt="Current avatar" />
+                                </div>
+                                {% else %}
+                                <div class="mask mask-squircle w-32 bg-base-300 ring ring-primary ring-offset-base-100 ring-offset-2">
+                                    <img src="https://api.dicebear.com/9.x/shapes/svg?seed={{ user.get_full_name|urlencode }}&backgroundColor=transparent&shape1Color=cc0000,ff3333,990000&shape2Color=ff0000,cc3333,ff6666&shape3Color=ff3333,cc0000,990000" alt="Default avatar" />
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">Upload New Picture</legend>
+                            <input type="file" class="file-input w-full" id="avatar" name="avatar" accept="image/*">
+                            <p class="label">JPG, PNG, GIF. Max size: 5MB. Recommended: square aspect ratio</p>
+                        </fieldset>
+                        
+                        {% if profile.avatar %}
+                        <div class="divider my-2"></div>
+                        <div class="form-control">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input class="checkbox checkbox-primary" type="checkbox" id="remove_avatar" name="remove_avatar">
+                                <span class="label-text text-sm">Remove current picture</span>
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-
-            <div class="divider"></div>
-
-            <!-- Action Buttons -->
-            <div class="card-actions justify-end mt-6">
-                <button type="submit" class="btn btn-primary">
-                    <i data-lucide="save" class="w-4 h-4"></i>
-                    Save Changes
-                </button>
-                <a href="{% url 'people' %}" class="btn btn-ghost">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                    Back to Team
-                </a>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="card bg-base-200 mt-6">
+            <div class="card-body">
+                <div class="flex flex-wrap gap-3 justify-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        Save Changes
+                    </button>
+                    <a href="{% url 'people' %}" class="btn btn-ghost">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        Back to Team
+                    </a>
+                </div>
             </div>
         </div>
     </form>

@@ -26,11 +26,7 @@
                         </div>
                         {% else %}
                         <div class="mask mask-squircle {% if card_size == 'large' %}w-24{% elif card_size == 'small' %}w-16{% else %}w-24{% endif %} bg-base-300">
-                            {% if is_alumni %}
-                                <img src="https://api.dicebear.com/9.x/shapes/svg?seed={{ profile.get_full_name|urlencode }}&backgroundColor=transparent&shape1Color=7f8c8d,95a5a6,bdc3c7&shape2Color=95a5a6,7f8c8d,bdc3c7&shape3Color=bdc3c7,95a5a6,7f8c8d" alt="{{ profile.get_full_name }}" />
-                            {% else %}
                                 <img src="https://api.dicebear.com/9.x/shapes/svg?seed={{ profile.get_full_name|urlencode }}&backgroundColor=transparent&shape1Color=cc0000,ff3333,990000&shape2Color=ff0000,cc3333,ff6666&shape3Color=ff3333,cc0000,990000" alt="{{ profile.get_full_name }}" />
-                            {% endif %}
                         </div>
                         {% endif %}
                     </div>
