@@ -101,10 +101,10 @@
             
                 {% for post in latest_posts %}
                 <div class="carousel-item">
-                    <a href="{% url 'single' post.slug %}" class="group card w-[70vw] md:w-96 bg-white border-base-300 border-1">
+                    <a href="{% url 'single' post.slug %}" class="group card w-[70vw] md:w-96 bg-white border-base-300 border-1 hover:shadow-lg hover:border-base-300 transition-all">
 
                         <div class="card-body">
-                            <h3 class="card-title group-hover:underline group-hover:text-primary">{{ post.title }}</h3>
+                            <h3 class="card-title hover:text-primary">{{ post.title }}</h3>
                             {% if post.event_date %}
                             <span class="badge badge-sm badge-primary">Event on {{ post.event_date|date:"d M y" }}!</span>
                             {% endif %}

@@ -60,6 +60,11 @@
     color: var(--color-secondary);
 }
 
+.text ul{
+    margin-left: 1.5rem;
+    list-style: circle;
+}
+
 .h2-home{
     font-size: 1.8rem;
     font-weight: 600;
