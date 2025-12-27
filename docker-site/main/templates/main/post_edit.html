@@ -85,11 +85,20 @@
                             <p class="label">Pinned posts appear at the top of the news list</p>
                         </fieldset>
                         
-                        <fieldset class="fieldset">
+                        <fieldset class="fieldset mb-4">
                             <legend class="fieldset-legend">Event Date (optional)</legend>
-                            <input type="date" id="event_date" name="event_date" value="{% if post and post.event_date %}{{ post.event_date|date:'Y-m-d' }}{% endif %}" class="input">
-                            <p class="label">Set if this post is about an upcoming or past event</p>
+                            <input type="datetime-local" id="event_date" name="event_date" value="{% if post and post.event_date %}{{ post.event_date|date:'Y-m-d\TH:i' }}{% endif %}" class="input">
+                            <p class="label">Set if this post is about an upcoming or past event (date and time)</p>
                         </fieldset>
+                        
+                        {% if post and post.event_date %}
+                        <div class="form-control mb-4">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input class="checkbox checkbox-primary" type="checkbox" id="remove_event_date" name="remove_event_date">
+                                <span class="label-text text-sm">Remove event date</span>
+                            </label>
+                        </div>
+                        {% endif %}
                         
                         {% if post %}
                         <div class="divider my-2"></div>

@@ -26,16 +26,16 @@
                 
                 <!-- Right Column: Content -->
                 <div class="{% if not post.cover %}lg:col-span-2{% endif %} order-2">
-                    <div class="flex flex-wrap gap-2 mb-6">
+                    <div class="flex flex-wrap gap-2 mb-6 items-center">
                         {% if post.categories.all %}
                             {% for category in post.categories.all %}
                                 <span class="badge badge-outline">{{ category.name }}</span>
                             {% endfor %}
                         {% endif %}
                         {% if post.event_date %}
-                            <span class="badge badge-error">
-                                <i data-lucide="calendar" class="w-3 h-3 mr-1"></i>
-                                Event on {{ post.event_date|date:"F d, Y" }}
+                            <span class="badge badge-error gap-1">
+                                <i data-lucide="calendar" class="w-3 h-3"></i>
+                                Event: {{ post.event_date|date:"M d, Y \a\t H:i" }}
                             </span>
                         {% endif %}
                     </div>

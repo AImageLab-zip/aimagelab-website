@@ -111,14 +111,22 @@ def post_form(request, slug=None):
         content = request.POST.get('content')
         cover = request.FILES.get('cover')
         category_ids = request.POST.getlist('categories')
-        is_event_checked = request.POST.get('is_event') == 'on'
-        event_date_raw = request.POST.get('event_date') or None
+        
+        # Handle event_date
         event_date = None
-        if is_event_checked and event_date_raw:
-            try:
-                event_date = datetime.strptime(event_date_raw, "%Y-%m-%d").date()
-            except ValueError:
-                event_date = None
+        remove_event_date = request.POST.get('remove_event_date') == 'on'
+        
+        if remove_event_date:
+            event_date = None
+        else:
+            event_date_raw = request.POST.get('event_date')
+            if event_date_raw:
+                try:
+                    # datetime-local format is "YYYY-MM-DDTHH:mm"
+                    event_date = datetime.fromisoformat(event_date_raw)
+                except (ValueError, TypeError):
+                    event_date = None
+        
         is_published = action == 'publish'
         
         if post:
