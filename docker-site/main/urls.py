@@ -16,4 +16,5 @@ urlpatterns = [
     path('news/add/', views.post_form, name='post_add'),
     path('news/<slug:slug>/', views.post_single, name='single'),
     path('news/<slug:slug>/edit/', views.post_form, name='post_edit'),
+    path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
 ]

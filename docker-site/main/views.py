@@ -93,6 +93,10 @@ def post_single(request, slug):
     post = Post.objects.get(slug=slug)
     return render(request, 'main/single.html', {'post': post})
 
+def privacy_policy(request):
+    """Privacy Policy page view."""
+    return render(request, 'main/privacy_policy.html')
+
 @login_required
 def post_form(request, slug=None):
     """Add or edit a post."""
