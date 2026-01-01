@@ -222,6 +222,31 @@
     </div>
 </section>
 
+<!-- Parallax Image Section -->
+<section class="relative h-96 overflow-hidden">
+    <div class="parallax-bg absolute inset-0 bg-cover bg-center bg-fixed" 
+         style="background-image: url('https://aimagelab.ing.unimore.it/imagelab/carousel/immagine4.png');">
+        <div class="absolute inset-0 bg-black/30"></div>
+    </div>
+</section>
+
+<!-- Publications Call to Action Section -->
+<section class="py-16 bg-base-100">
+    <div class="container mx-auto px-6 text-center">
+        <h2 class="h2-home mb-6">Advancing the State of the Art</h2>
+        <p class="text-lg mb-8 max-w-3xl mx-auto">
+            Our research contributes to the global knowledge base with cutting-edge publications in top-tier venues. 
+            Discover our latest findings, methodologies, and innovations that are shaping the future of AI and Computer Vision.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="#" class="btn btn-primary btn-lg">
+                Latest Publications
+                <i data-lucide="external-link" class="w-5 h-5 ml-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
 <!-- Membership Section -->
 <section class="bg-base-200 pt-8 pb-16">
     <div class="container mx-auto px-6">
@@ -362,6 +387,34 @@
         if (!ticking) {
             window.requestAnimationFrame(animateOnScroll);
             window.requestAnimationFrame(updateParallax);
+            ticking = true;
+        }
+    });
+
+    // Parallax effect for the background image section
+    function updateBgParallax() {
+        const scrolled = window.scrollY;
+        const parallaxBg = document.querySelector('.parallax-bg');
+        
+        if (parallaxBg) {
+            const rect = parallaxBg.parentElement.getBoundingClientRect();
+            const speed = 0.5;
+            
+            // Only apply parallax when the section is in viewport
+            if (rect.bottom >= 0 && rect.top <= window.innerHeight) {
+                const yPos = -(scrolled - rect.top + window.innerHeight) * speed;
+                parallaxBg.style.transform = `translateY(${yPos}px) translateZ(0)`;
+            }
+        }
+        
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(animateOnScroll);
+            window.requestAnimationFrame(updateParallax);
+            window.requestAnimationFrame(updateBgParallax);
             ticking = true;
         }
     });
