@@ -24,8 +24,7 @@ def home(request):
     # Get latest posts without event_date
     latest_posts = Post.objects.filter(
         is_published=True,
-        event_date__isnull=True
-    ).order_by('-created_at')[:4]
+    ).order_by('-is_pinned', '-created_at')[:10]
     
     
     return render(request, 'main/home.html', {
@@ -75,7 +74,8 @@ def news(request):
     # Get upcoming events (posts with event_date, ordered by event_date)
     upcoming_events = Post.objects.filter(
         is_published=True,
-        event_date__isnull=False
+        event_date__isnull=False,
+        event_date__gt=datetime.now()
     ).order_by('event_date')[:5]
     
     categories = Category.objects.all().order_by('name')

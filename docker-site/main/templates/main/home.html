@@ -36,7 +36,7 @@
                 <p class="text-xl">
                     Since 1998, we have been a research group at the <b class="text-primary">University of Modena and Reggio Emilia</b>, pioneering advances in <b>Artificial Intelligence</b> and Computer Vision.
                 </p>
-                
+
                 <div class="flex flex-col md:flex-row w-full gap-3 align-items-center mt-6">
                     <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
                         <div class="avatar-group -space-x-5 mb-1">
@@ -94,28 +94,73 @@
 
     <!-- Recent News Section -->
     <div class="container mx-auto my-16 px-6 relative z-10">
-        <h2 class="h2-home my-2">Recent News</h2>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="h2-home my-2">Recent News</h2>
+            <!-- Desktop Arrow Controls -->
+            <div class="hidden md:flex gap-2">
+                <button id="news-prev" class="btn btn-circle btn-sm btn-outline btn-secondary">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+                <button id="news-next" class="btn btn-circle btn-sm btn-outline btn-secondary">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
 
         {% if latest_posts %}
-        <div class="flex gap-6 max-w-full overflow-x-auto pb-4" id="news" style="scrollbar-width: thin; scrollbar-color: var(--color-primary);">
-            
+        <div class="relative">
+            <!-- Mobile: Scrollable -->
+            <div class="md:hidden flex gap-6 max-w-full overflow-x-auto pb-4" style="scrollbar-width: thin; scrollbar-color: var(--color-primary);">
                 {% for post in latest_posts %}
                 <div class="carousel-item">
-                    <a href="{% url 'single' post.slug %}" class="group card w-[70vw] md:w-96 bg-white border-base-300 border-1 hover:shadow-lg hover:border-base-300 transition-all">
-
+                    <a href="{% url 'single' post.slug %}" class="group card w-[70vw] bg-white border-base-300 border-1 hover:shadow-lg hover:border-base-300 transition-all relative">
+                    
                         <div class="card-body">
-                            <h3 class="card-title hover:text-primary">{{ post.title }}</h3>
-                            {% if post.event_date %}
-                            <span class="badge badge-sm badge-primary">Event on {{ post.event_date|date:"d M y" }}!</span>
-                            {% endif %}
+                            <h3 class="card-title hover:text-primary block">
+                                {% if post.is_pinned %}
+                                    <i data-lucide="pin" class="text-current/50 inline"></i>
+                                {% endif %}
+                                {{ post.title }}</h3>
+                                {% if post.event_date %}
+                        <span class="badge badge-xs badge-primary z-10">{{ post.event_date|date:"d M y" }}</span>
+                        {% endif %}
                             <p class="text-base-content">{{ post.description|truncatewords:20 }}</p>
                             <div class="text-xs text-base-content/50">{{ post.created_at|date:"F Y" }}</div>
                         </div>
                     </a>
                 </div>
                 {% endfor %}
-            {% endif %}
+            </div>
+
+            <!-- Desktop: Carousel -->
+            <div class="hidden md:block overflow-hidden">
+                <div id="news-carousel" class="flex gap-6 transition-transform duration-300 ease-in-out">
+                    {% for post in latest_posts %}
+                    <div class="carousel-item flex-shrink-0">
+                        <a href="{% url 'single' post.slug %}" class="group card w-96 bg-white border-base-300 border-1 hover:shadow-lg hover:border-base-300 transition-all">
+
+                            <div class="card-body">
+
+                                <h3 class="card-title hover:text-primary block">
+                                    {% if post.is_pinned %}
+                                        <i data-lucide="pin" class="text-current/50 inline"></i>
+                                    {% endif %}
+                                    {{ post.title }}
+                                </h3>
+                                {% if post.event_date %}
+                                <span class="badge badge-sm badge-primary z-10">Event on {{ post.event_date|date:"d M y" }}</span>
+                                {% endif %}
+                                <p class="text-base-content">{{ post.description|truncatewords:20 }}</p>
+                                <div class="text-xs text-base-content/50">{{ post.created_at|date:"F Y" }}</div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
+        {% endif %}
+
         <a href="{% url 'news' %}" class="btn btn-secondary btn-ghost btn-xs ml-2 my-auto">All News ↗</a>
     </div>
 </section>
@@ -151,7 +196,7 @@
 
             <div class="card bg-base-200">
                 <div class="card-body">
-                      <i data-lucide="aperture" class="text-primary w-12 h-12 stroke-1"></i>
+                    <i data-lucide="aperture" class="text-primary w-12 h-12 stroke-1"></i>
                     <h3 class="card-title text-primary">Computer Vision</h3>
                     <p class="hidden md:block">Advanced algorithms for image and video analysis, object recognition, and scene understanding.</p>
                 </div>
@@ -264,14 +309,14 @@
             div.style.backgroundColor = square.color;
             div.style.opacity = square.opacity;
             div.dataset.defaultOpacity = square.defaultOpacity;
-            
+
             if (square.bgImage) {
                 div.style.backgroundImage = `url(${square.bgImage})`;
                 div.style.backgroundSize = 'cover';
                 div.style.backgroundPosition = 'center';
                 div.className += ' shadow-lg duration-300 hover:scale-110'
             }
-            
+
             squaresContainer.appendChild(div);
         });
     }
@@ -320,5 +365,64 @@
             ticking = true;
         }
     });
-</script>
+    // News Carousel Functionality
+    const newsCarousel = document.getElementById('news-carousel');
+    const prevBtn = document.getElementById('news-prev');
+    const nextBtn = document.getElementById('news-next');
+
+    if (newsCarousel && prevBtn && nextBtn) {
+        const items = newsCarousel.children;
+        let currentIndex = 0;
+        const itemWidth = 384; // w-96 = 384px
+        const gap = 24; // gap-6 = 24px
+        const itemWidthWithGap = itemWidth + gap;
+
+        // Calculate how many items can be visible at once (based on container width)
+        function getVisibleItemsCount() {
+            const containerWidth = newsCarousel.parentElement.offsetWidth;
+            return Math.floor(containerWidth / itemWidthWithGap) || 1;
+        }
+
+        function updateCarousel() {
+            const visibleItems = getVisibleItemsCount();
+            const maxIndex = Math.max(0, items.length - visibleItems);
+
+            // Clamp current index
+            currentIndex = Math.max(0, Math.min(currentIndex, maxIndex));
+
+            // Update transform
+            const translateX = -(currentIndex * itemWidthWithGap);
+            newsCarousel.style.transform = `translateX(${translateX}px)`;
+
+            // Update button states
+            prevBtn.disabled = currentIndex <= 0;
+            nextBtn.disabled = currentIndex >= maxIndex;
+
+            // Update button opacity
+            prevBtn.style.opacity = currentIndex <= 0 ? '0.5' : '1';
+            nextBtn.style.opacity = currentIndex >= maxIndex ? '0.5' : '1';
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCarousel();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            const visibleItems = getVisibleItemsCount();
+            const maxIndex = items.length - visibleItems;
+            if (currentIndex < maxIndex) {
+                currentIndex++;
+                updateCarousel();
+            }
+        });
+
+        // Update on resize
+        window.addEventListener('resize', updateCarousel);
+
+        // Initialize
+        updateCarousel();
+    }</script>
 {% endblock %}
