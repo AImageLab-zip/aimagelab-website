@@ -222,27 +222,28 @@
     </div>
 </section>
 
-<!-- Parallax Image Section -->
-<section class="relative h-96 overflow-hidden">
-    <div class="parallax-bg absolute inset-0 bg-cover bg-center bg-fixed" 
-         style="background-image: url('https://aimagelab.ing.unimore.it/imagelab/carousel/immagine4.png');">
-        <div class="absolute inset-0 bg-black/30"></div>
-    </div>
-</section>
-
-<!-- Publications Call to Action Section -->
-<section class="py-16 bg-base-100">
-    <div class="container mx-auto px-6 text-center">
-        <h2 class="h2-home mb-6">Advancing the State of the Art</h2>
-        <p class="text-lg mb-8 max-w-3xl mx-auto">
-            Our research contributes to the global knowledge base with cutting-edge publications in top-tier venues. 
-            Discover our latest findings, methodologies, and innovations that are shaping the future of AI and Computer Vision.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="#" class="btn btn-primary btn-lg">
-                Latest Publications
-                <i data-lucide="external-link" class="w-5 h-5 ml-2"></i>
-            </a>
+<!-- Environmental Images Row Section (2 columns, image right, masked squircle, bigger) -->
+<section class="py-12 bg-base-100">
+    <div class="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
+        <!-- Left Column: Text -->
+        <div class="w-full md:w-1/2 mb-8 md:mb-0">
+            <h2 class="h2-home mb-6">Advancing the State of the Art</h2>
+            <p class="text-lg mb-8 max-w-3xl">
+                Our research contributes to the global knowledge base with cutting-edge publications in top-tier venues. 
+                Discover our latest findings, methodologies, and innovations that are shaping the future of AI and Computer Vision.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="#" class="btn btn-primary btn-lg">
+                    Latest Publications
+                    <i data-lucide="external-link" class="w-5 h-5 ml-2"></i>
+                </a>
+            </div>
+        </div>
+        <!-- Right Column: Image (masked squircle, bigger) -->
+        <div class="w-full md:w-1/2 flex justify-center">
+            <div class="mask mask-squircle overflow-hidden shadow-xl" style="width: 340px; height: 340px;">
+                <img src="https://aimagelab.ing.unimore.it/imagelab/carousel/immagine2.png" alt="Lab Environment 2" class="object-cover w-full h-full" />
+            </div>
         </div>
     </div>
 </section>
@@ -250,7 +251,10 @@
 <!-- Membership Section -->
 <section class="bg-base-200 pt-8 pb-16">
     <div class="container mx-auto px-6">
-        <h2 class="h2-home mb-4 text-center">AImageLab is proudly member of</h2>
+        <h2 class="h2-home">Proud of our Connections</h2>
+        <p class="mb-8">
+            AImageLab is proud to be part of a vibrant research community, collaborating with esteemed institutions and organizations to drive innovation in AI and Computer Vision.
+        </p>
         <div class="flex flex-col md:flex-row gap-2 justify-evenly">
             <div class="text-center">
                 <img src="https://aimagelab.ing.unimore.it/imagelab/images/Sigillo2015.svg" alt="University of Modena and Reggio Emilia" class="h-12 my-2 mx-auto" />
