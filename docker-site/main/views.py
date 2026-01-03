@@ -183,11 +183,11 @@ def people(request):
     
     # Group by role
     grouped_profiles = {
-        'professors': profiles.filter(role__in=['professor', 'assoc_professor', 'asst_professor']),
-        'postdocs': profiles.filter(role='postdoc'),
-        'phd_students': profiles.filter(role='phd'),
-        'interns': profiles.filter(role='intern'),
-        'alumni': profiles.filter(role='alumni'),
+        'professors': profiles.filter(role__in=['professor', 'assoc_professor', 'asst_professor']).order_by('-display_order', 'user__first_name'),
+        'postdocs': profiles.filter(role='postdoc').order_by('-display_order', 'user__first_name'),
+        'phd_students': profiles.filter(role='phd').order_by('-display_order', 'user__first_name'),
+        'interns': profiles.filter(role='intern').order_by('-display_order', 'user__first_name'),
+        'alumni': profiles.filter(role='alumni').order_by('-display_order', 'user__first_name'),
     }
     
     return render(request, 'main/people.html', {'grouped_profiles': grouped_profiles})
