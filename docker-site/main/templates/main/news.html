@@ -73,8 +73,8 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                             <div>
                                 <!-- Image (thumbnail if exists, fallback to cover) -->
                                 {% if post.thumbnail or post.cover %}
-                                <figure class="w-full md:w-64 pr-4">
-                                    <img src="{% if post.thumbnail %}{{ post.thumbnail.url }}{% else %}{{ post.cover.url }}{% endif %}" alt="{{ post.title }}" class="rounded-lg w-full h-32 md:h-auto object-cover" style="aspect-ratio: 2.4 / 1;" />
+                                <figure class="w-full md:w-64 mb-4 md:pr-4">
+                                    <img src="{% if post.thumbnail %}{{ post.thumbnail.url }}{% else %}{{ post.cover.url }}{% endif %}" alt="{{ post.title }}" class="rounded-lg w-full md:h-auto object-cover" style="aspect-ratio: 2 / 1;" />
                                 </figure>
                                 {% endif %}
                             </div>
@@ -123,7 +123,6 @@ Stay updated with the latest research breakthroughs, events, and announcements f
 
                                         <span> <i data-lucide="calendar" class="h-4 w-4 inline"></i> {{ post.created_at|date:"F d, Y" }}</span>
                                         {% if post.categories.all %}
-                                        <span>•</span>
                                         <div class="flex flex-wrap gap-1">
                                             {% for category in post.categories.all %}
                                             <span class="badge badge-sm badge-outline">{{ category.name }}</span>
