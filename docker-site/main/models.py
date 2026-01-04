@@ -9,9 +9,11 @@ class UserProfile(models.Model):
     
     ROLE_CHOICES = [
         # ('professor_special', 'Full Professor (University Dean)'),
-        ('professor', 'Full Professor'),
+        ('full_professor', 'Full Professor'),
         ('assoc_professor', 'Associate Professor'),
-        ('asst_professor', 'Assistant Professor'),
+        ('researcher_tt', 'Assistant Professor'),
+        ('researcher_a', 'Researcher (RTD-A)'),
+        ('researcher_b', 'Researcher (RTD-B)'),
         ('postdoc', 'Postdoctoral Researcher'),
         ('phd', 'PhD Student'),
         ('intern', 'Research Intern'),

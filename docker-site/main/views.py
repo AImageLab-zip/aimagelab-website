@@ -195,7 +195,7 @@ def people(request):
     
     # Group by role
     grouped_profiles = {
-        'professors': profiles.filter(role__in=['professor', 'assoc_professor', 'asst_professor']).order_by('-display_order', 'user__first_name'),
+        'professors': profiles.filter(role__in=['full_professor', 'assoc_professor', 'researcher_tt', 'researcher_b', 'researcher_a']).order_by('-display_order', 'user__first_name'),
         'postdocs': profiles.filter(role='postdoc').order_by('-display_order', 'user__first_name'),
         'phd_students': profiles.filter(role='phd').order_by('-display_order', 'user__first_name'),
         'interns': profiles.filter(role='intern').order_by('-display_order', 'user__first_name'),

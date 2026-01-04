@@ -168,7 +168,13 @@ LDAP_ATTRIBUTES = ['uid', 'givenName', 'sn', 'mail']
 
 # Role mapping from LDAP organizational units to Django UserProfile roles
 LDAP_ROLE_MAPPING = {
-    'strutturati': 'professor', #provvisorio
+    'professori_ordinari': 'full_professor',
+    'professori_associati': 'assoc_professor',
+    'ricercatori_rtt': 'researcher_tt',
+    'ricercatori_rtda': 'researcher_a',
+    'ricercatori_rtdb': 'researcher_b',
+    'assegnisti': 'research_fellow',
+    'collaborazioni': 'collaborator',
     'dottorandi': 'phd',
     'tesisti': 'intern',
     'studenti': 'alumni',
@@ -178,7 +184,12 @@ LDAP_ROLE_MAPPING = {
 
 # Role priority (higher number = higher priority when user in multiple groups)
 LDAP_ROLE_PRIORITY = {
-    'professor': 5,
+    'full_professor': 10,
+    'assoc_professor': 9,
+    'researcher_tt': 8,
+    'researcher_b': 7,
+    'researcher_a': 6,
+    'collaborator': 5,
     'postdoc': 4,
     'phd': 3,
     'intern': 2,
