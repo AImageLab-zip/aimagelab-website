@@ -1,4 +1,3 @@
-
 {% extends "main/base_with_hero.html" %}
 {% load static %}
 
@@ -15,23 +14,42 @@ cutting-edge research in AI vision. Learn more about our team and their groundbr
 <!-- Team Sections -->
 <div class="container px-6 mx-auto">
     {% if grouped_profiles.professors %}
-        {% include 'main/team_section.html' with section_title='Professors' profiles=grouped_profiles.professors card_size='large' %}
+    {% include 'main/team_section.html' with section_title='Professors' profiles=grouped_profiles.professors card_size='large' %}
     {% endif %}
 
-    {% if grouped_profiles.postdocs %}        
+    {% if grouped_profiles.postdocs %}
     {% include 'main/team_section.html' with section_title='Postdoctoral Researchers' profiles=grouped_profiles.postdocs card_size='large' %}
     {% endif %}
 
     {% if grouped_profiles.phd_students %}
-        {% include 'main/team_section.html' with section_title='PhD Students' profiles=grouped_profiles.phd_students card_size='large' %}
+    {% include 'main/team_section.html' with section_title='PhD Students' profiles=grouped_profiles.phd_students card_size='large' %}
     {% endif %}
 
     {% if grouped_profiles.interns %}
-        {% include 'main/team_section.html' with section_title='Research Interns' profiles=grouped_profiles.interns card_size='large' %}
+    {% include 'main/team_section.html' with section_title='Research Interns' profiles=grouped_profiles.interns card_size='large' %}
     {% endif %}
 
     {% if grouped_profiles.alumni %}
-        {% include 'main/team_section.html' with section_title='Alumni' profiles=grouped_profiles.alumni card_size='medium' is_alumni=True %}
+    {% include 'main/team_section.html' with section_title='Alumni' profiles=grouped_profiles.alumni card_size='medium' is_alumni=True %}
     {% endif %}
 </div>
+<script type="module">
+    import { createAvatar } from 'https://esm.sh/@dicebear/core@9';
+    import { shapes } from 'https://esm.sh/@dicebear/collection@9';
+
+    const dicebearImgs = document.querySelectorAll('[id^="dicebear-avatar-img"]');
+    dicebearImgs.forEach(dicebearImg => {
+        const seed = dicebearImg.dataset.seed || 'ailb';
+        const avatar = createAvatar(shapes, {
+            seed,
+            backgroundColor: ['transparent'],
+            shape1Color: ['BF0004'],
+            shape2Color: ['ff4455'],
+            shape3Color: ['801518'],
+        });
+        const svg = avatar.toString();
+        const encoded = encodeURIComponent(svg);
+        dicebearImg.src = `data:image/svg+xml,${encoded}`;
+    });
+</script>
 {% endblock %}

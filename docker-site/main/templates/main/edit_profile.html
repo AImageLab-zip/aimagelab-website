@@ -105,7 +105,7 @@ Update your personal information and professional links
                                 </div>
                                 {% else %}
                                 <div class="mask mask-squircle w-32 bg-base-300 ring ring-primary ring-offset-base-100 ring-offset-2">
-                                    <img src="https://api.dicebear.com/9.x/shapes/svg?seed={{ user.get_full_name|urlencode }}&backgroundColor=transparent&shape1Color=cc0000,ff3333,990000&shape2Color=ff0000,cc3333,ff6666&shape3Color=ff3333,cc0000,990000" alt="Default avatar" />
+                                    <img id="dicebear-avatar-img" data-seed="{{ user.get_full_name|default:user.username|urlencode }}" alt="Default avatar" />
                                 </div>
                                 {% endif %}
                             </div>
@@ -148,4 +148,23 @@ Update your personal information and professional links
         </div>
     </form>
 </div>
+<script type="module">
+    import { createAvatar } from 'https://esm.sh/@dicebear/core@9';
+    import { shapes } from 'https://esm.sh/@dicebear/collection@9';
+
+    const dicebearImgs = document.querySelectorAll('[id^="dicebear-avatar-img"]');
+    dicebearImgs.forEach(dicebearImg => {
+        const seed = dicebearImg.dataset.seed || 'ailb';
+        const avatar = createAvatar(shapes, {
+            seed,
+            backgroundColor: ['transparent'],
+            shape1Color: ['BF0004'],
+            shape2Color: ['ff4455'],
+            shape3Color: ['801518'],
+        });
+        const svg = avatar.toString();
+        const encoded = encodeURIComponent(svg);
+        dicebearImg.src = `data:image/svg+xml,${encoded}`;
+    });
+</script>
 {% endblock %}
