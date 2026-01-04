@@ -17,6 +17,9 @@ from .models import UserProfile
 from .tasks import sync_user_task
 import os
 
+from PIL import Image
+from io import BytesIO
+
 POST_PER_PAGE = 10
 
 def home(request):
@@ -271,7 +274,14 @@ def edit_profile(request):
                 profile.avatar.delete()
             # Save new avatar
             avatar_file = request.FILES['avatar']
-            profile.avatar.save(f"{request.user.username}_{avatar_file.name}", avatar_file)
+            
+            # Open and resize image
+            img = Image.open(avatar_file)
+            img.thumbnail((256, 256), Image.Resampling.LANCZOS)
+            img_io = BytesIO()
+            img.save(img_io, format='JPEG', quality=85)
+            img_io.seek(0)
+            profile.avatar.save(f"{request.user.username}_avatar.jpg", ContentFile(img_io.getvalue()))
 
         # Handle avatar removal
         if request.POST.get('remove_avatar') == 'on' and profile.avatar:
