@@ -74,6 +74,7 @@ class Post(models.Model):
     title = models.CharField(max_length=300)
     description = models.TextField(blank=True)
     cover = models.ImageField(upload_to='blog_covers/', blank=True, null=True)
+    thumbnail = models.ImageField(upload_to='blog_thumbnails/', blank=True, null=True, help_text="Cropped thumbnail for news listings (480x200)")
     slug = models.SlugField(unique=True)
     
     

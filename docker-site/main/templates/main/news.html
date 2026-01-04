@@ -18,9 +18,9 @@ Stay updated with the latest research breakthroughs, events, and announcements f
             <div class="card bg-base-200 mb-6">
                 <div class="card-body flex flex-col md:flex-row gap-3 justify-end">
                     <p class="block my-auto text-lg">
-                         <span class="font-bold text-primary">
-                        Welcome back, {{ user.username }}!
-                         </span> <br/>
+                        <span class="font-bold text-primary">
+                            Welcome back, {{ user.username }}!
+                        </span> <br />
                         Got a thought to share?
                     </p>
                     <a href="{% url 'post_add' %}" class="btn btn-primary">
@@ -34,13 +34,7 @@ Stay updated with the latest research breakthroughs, events, and announcements f
             <div class="card bg-base-200 mb-6">
                 <div class="card-body">
                     <form method="get" action="{% url 'news' %}" class="flex flex-col md:flex-row gap-3">
-                        <input 
-                            type="text" 
-                            name="search" 
-                            class="input input-bordered flex-1" 
-                            placeholder="Search news by title, description, or content..."
-                            value="{{ search_query }}"
-                        />
+                        <input type="text" name="search" class="input input-bordered flex-1" placeholder="Search news by title, description, or content..." value="{{ search_query }}" />
                         <button type="submit" class="btn btn-primary">
                             <i data-lucide="search" class="w-4 h-4"></i>
                             Search
@@ -62,7 +56,7 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                             <a href="{% url 'news' %}" class="link link-primary ml-2">Clear filter</a>
                         </p>
                     </div>
-                    {% endif %} 
+                    {% endif %}
                 </div>
             </div>
 
@@ -71,66 +65,76 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                 {% for post in posts %}
                 <article class="card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-all">
                     <div class="card-body">
-                        <!-- Badges -->
-                        <div class="flex flex-wrap gap-2 mb-3">
-                            {% if post.event_date %}
-                            <span class="badge badge-primary badge-lg gap-2">
-                                <i data-lucide="calendar" class="h-4 w-4"></i>
-                                Event on {{ post.event_date|date:"M d, Y" }}
-                            </span>
-                            {% endif %}
-                            {% if post.is_pinned %}
-                            <span class="badge badge-secondary badge-lg gap-2">
-                                <i data-lucide="pin" class="h-4 w-4"></i>
-                                Pinned
-                            </span>
-                            {% endif %}
-                            {% if not post.is_published %}
-                            <span class="badge badge-warning badge-lg">
-                                <i data-lucide="pencil-line" class="h-4 w-4"></i>
-                                Draft!</span>
-                            {% endif %}
-                        </div>
 
-                        <!-- Cover Image (if exists) -->
-                        {% if post.cover %}
-                        <figure class="mb-4">
-                            <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="rounded-lg w-full h-64 object-cover" />
-                        </figure>
-                        {% endif %}
 
-                        <!-- Title -->
-                        <h2 class="card-title text-2xl">
-                            <a href="{% url 'single' post.slug %}" class="hover:text-primary transition-colors">
-                                {{ post.title }}
-                            </a>
-                        </h2>
+                        <!-- Content Layout: Image on left, content on right -->
+                        <div class="flex flex-col md:flex-row">
 
-                        <!-- Meta Info -->
-                        <div class="flex flex-wrap items-center gap-2 text-sm text-base-content/60">
-                            
-                            <span> <i data-lucide="calendar" class="h-4 w-4 inline"></i> {{ post.created_at|date:"F d, Y" }}</span>
-                            {% if post.categories.all %}
-                            <span>•</span>
-                            <div class="flex flex-wrap gap-1">
-                                {% for category in post.categories.all %}
-                                <span class="badge badge-sm badge-outline">{{ category.name }}</span>
-                                {% endfor %}
+                            <div>
+                                <!-- Image (thumbnail if exists, fallback to cover) -->
+                                {% if post.thumbnail or post.cover %}
+                                <figure class="w-full md:w-64 pr-4">
+                                    <img src="{% if post.thumbnail %}{{ post.thumbnail.url }}{% else %}{{ post.cover.url }}{% endif %}" alt="{{ post.title }}" class="rounded-lg w-full h-32 md:h-auto object-cover" style="aspect-ratio: 2.4 / 1;" />
+                                </figure>
+                                {% endif %}
                             </div>
-                            {% endif %}
+
+                            <!-- Content -->
+                            <div class="flex-1 min-w-0">
+                                {% if post.event_date %}
+                                <span class="badge badge-primary mb-2 gap-2">
+                                    <i data-lucide="calendar" class="h-4 w-4"></i>
+                                    Event on {{ post.event_date|date:"M d, Y" }}
+                                </span>
+                                {% endif %}
+                                <!-- Title -->
+                                <h2 class="card-title block text-2xl">
+
+                                    {% if post.is_pinned %}
+                                    <span class="badge badge-secondary gap-2">
+                                        <i data-lucide="pin" class="h-4 w-4"></i>
+                                        Pinned
+                                    </span>
+                                    {% endif %}
+                                    {% if not post.is_published %}
+                                    <span class="badge badge-warning ">
+                                        <i data-lucide="pencil-line" class="h-4 w-4"></i>
+                                        Draft!</span>
+                                    {% endif %}
+                                    <a href="{% url 'single' post.slug %}" class="hover:text-primary transition-colors">
+                                        {{ post.title }}
+                                    </a>
+                                </h2>
+
+
+
+                                <!-- Description -->
+                                {% if post.description %}
+                                <p class="text-base-content/80 mt-3">{{ post.description }}</p>
+                                {% endif %}
+
+                                
+                            </div>
                         </div>
 
-                        <!-- Description -->
-                        {% if post.description %}
-                        <p class="text-base-content/80 mt-3">{{ post.description }}</p>
-                        {% endif %}
+                        <div class="card-actions justify-end items-center mt-4">
+                                    <!-- Meta Info -->
+                                    <div class="flex flex-wrap items-center gap-2 text-sm mr-auto text-base-content/60">
 
-                        <!-- Read More Button -->
-                        <div class="card-actions justify-end mt-4">
-                            <a href="{% url 'single' post.slug %}" class="btn btn-primary btn-ghost btn-sm">
-                                Read more ↗
-                            </a>
-                        </div>
+                                        <span> <i data-lucide="calendar" class="h-4 w-4 inline"></i> {{ post.created_at|date:"F d, Y" }}</span>
+                                        {% if post.categories.all %}
+                                        <span>•</span>
+                                        <div class="flex flex-wrap gap-1">
+                                            {% for category in post.categories.all %}
+                                            <span class="badge badge-sm badge-outline">{{ category.name }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{% url 'single' post.slug %}" class="btn btn-primary btn-ghost btn-sm">
+                                        Read more ↗
+                                    </a>
+                                </div>
                     </div>
                 </article>
                 {% empty %}
@@ -138,9 +142,9 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                     <div class="card-body">
                         <p class="text-center text-base-content/60">
                             {% if search_query %}
-                                No news found matching your search.
+                            No news found matching your search.
                             {% else %}
-                                No news available.
+                            No news available.
                             {% endif %}
                         </p>
                     </div>
@@ -157,20 +161,19 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                         «
                     </a>
                     {% endif %}
-                    
+
                     {% for num in posts.paginator.page_range %}
-                        {% if posts.number == num %}
-                        <button class="join-item btn btn-active btn-primary">{{ num }}</button>
-                        {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %}
-                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" class="join-item btn">{{ num }}</a>
+                    {% if posts.number == num %}
+                    <button class="join-item btn btn-active btn-primary">{{ num }}</button>
+                    {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %} <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" class="join-item btn">{{ num }}</a>
                         {% endif %}
-                    {% endfor %}
-                    
-                    {% if posts.has_next %}
-                    <a href="?page={{ posts.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="join-item btn">
-                        »
-                    </a>
-                    {% endif %}
+                        {% endfor %}
+
+                        {% if posts.has_next %}
+                        <a href="?page={{ posts.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="join-item btn">
+                            »
+                        </a>
+                        {% endif %}
                 </div>
                 <p class="text-sm text-base-content/60">
                     Page {{ posts.number }} of {{ posts.paginator.num_pages }} • Total posts: {{ posts.paginator.count }}

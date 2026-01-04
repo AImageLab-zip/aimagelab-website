@@ -8,6 +8,11 @@
 {% if post %}Update the content and settings for this post{% else %}Create a new news post or event{% endif %}
 {% endblock %}
 
+{% block extra_css %}
+<!-- Cropper.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+{% endblock %}
+
 {% block page_content %}
 <div class="container mx-auto px-6 my-12">
     <form method="post" enctype="multipart/form-data">
@@ -165,6 +170,80 @@
                         {% endif %}
                     </div>
                 </div>
+
+                <!-- Thumbnail Card with Cropper -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="crop" class="w-5 h-5"></i>
+                            Thumbnail (for News Listing)
+                        </h2>
+                        
+                        {% if post.thumbnail %}
+                        <div class="mb-4" id="current-thumbnail-preview">
+                            <p class="text-sm font-semibold mb-2">Current Thumbnail:</p>
+                            <img src="{{ post.thumbnail.url }}" alt="Current thumbnail" class="rounded-lg w-full">
+                        </div>
+                        {% endif %}
+
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend overflow-x-scroll">Create Thumbnail from Image</legend>
+                            <input type="file" id="thumbnail-source" accept="image/*" class="file-input w-full">
+                            <p class="label overflow-x-scroll">Upload an image to crop for thumbnail (480x200px, 2.4:1 ratio)</p>
+                        </fieldset>
+
+                        <!-- Use Cover as Thumbnail Source Button -->
+                        <div class="mb-4">
+                            <button type="button" id="use-cover-button" class="btn btn-outline btn-sm w-full">
+                                <i data-lucide="image" class="w-4 h-4"></i>
+                                {% if post.thumbnail %}Re-crop from Cover Image{% else %}Use Cover as Thumbnail{% endif %}
+                            </button>
+                            <p class="label overflow-x-scroll text-xs">Crop the cover image to create a thumbnail</p>
+                        </div>
+
+                        <!-- Cropper Section (hidden by default) -->
+                        <div id="cropper-section" style="display: none;">
+                            <div class="mb-4">
+                                <p class="text-sm font-semibold mb-2">Crop Image (drag to adjust):</p>
+                                <div class="border border-base-300 rounded-lg overflow-hidden" style="max-height: 300px;">
+                                    <img id="cropper-image" class="max-w-full">
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <button type="button" id="crop-button" class="btn btn-success btn-sm">
+                                    <i data-lucide="crop" class="w-4 h-4"></i>
+                                    Apply Crop
+                                </button>
+                                <button type="button" id="reset-crop-button" class="btn btn-outline btn-sm">
+                                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Cropped Preview -->
+                        <div id="cropped-preview" style="display: none;">
+                            <p class="text-sm font-semibold mb-2">Cropped Thumbnail Preview:</p>
+                            <img id="cropped-preview-image" class="rounded-lg w-full mb-2">
+                            <button type="button" id="change-crop-button" class="btn btn-outline btn-sm">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                Re-crop
+                            </button>
+                        </div>
+
+                        <!-- Hidden input for the cropped thumbnail -->
+                        <input type="file" id="thumbnail" name="thumbnail" style="display: none;">
+                        
+                        {% if post and post.thumbnail %}
+                        <div class="form-control mt-4">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="remove_thumbnail" name="remove_thumbnail">
+                                <span class="label-text text-sm break-words">Remove current thumbnail</span>
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -221,4 +300,198 @@
         </div>
     </form>
 </div>
+
+<!-- Cropper.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Thumbnail cropping with Cropper.js
+    const thumbnailSourceInput = document.getElementById('thumbnail-source');
+    const coverInput = document.getElementById('cover');
+    const useCoverButton = document.getElementById('use-cover-button');
+    const cropperSection = document.getElementById('cropper-section');
+    const cropperImage = document.getElementById('cropper-image');
+    const cropButton = document.getElementById('crop-button');
+    const resetCropButton = document.getElementById('reset-crop-button');
+    const croppedPreview = document.getElementById('cropped-preview');
+    const croppedPreviewImage = document.getElementById('cropped-preview-image');
+    const changeCropButton = document.getElementById('change-crop-button');
+    const thumbnailInput = document.getElementById('thumbnail');
+    const currentThumbnailPreview = document.getElementById('current-thumbnail-preview');
+    
+    let cropper = null;
+    let originalFile = null;
+    let coverImageUrl = null; // Track the current cover image URL
+    
+    // Store existing cover URL if it exists
+    {% if post.cover %}
+    coverImageUrl = "{{ post.cover.url }}";
+    {% endif %}
+    
+    // Function to initialize cropper with image
+    function initializeCropper(file, imageDataUrl) {
+        originalFile = file;
+        cropperImage.src = imageDataUrl;
+        cropperSection.style.display = 'block';
+        croppedPreview.style.display = 'none';
+        
+        // Hide current thumbnail preview when cropping new one
+        if (currentThumbnailPreview) {
+            currentThumbnailPreview.style.display = 'none';
+        }
+        
+        // Destroy existing cropper instance if any
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        
+        // Initialize Cropper.js with 2.4:1 aspect ratio (480x200)
+        cropper = new Cropper(cropperImage, {
+            aspectRatio: 480 / 200, // 2.4:1 ratio
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 1,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: true,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+            minContainerHeight: 100,
+        });
+    }
+    
+    // Function to load image from URL and initialize cropper
+    function loadImageFromUrl(imageUrl) {
+        // Fetch the image and convert to blob
+        fetch(imageUrl)
+            .then(response => response.blob())
+            .then(blob => {
+                const fileName = imageUrl.split('/').pop();
+                const file = new File([blob], fileName, { type: blob.type });
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    initializeCropper(file, event.target.result);
+                };
+                reader.readAsDataURL(blob);
+            })
+            .catch(error => {
+                console.error('Error loading cover image:', error);
+                alert('Could not load cover image. Please try uploading a new image.');
+            });
+    }
+    
+    // Handle "Use Cover" button click
+    useCoverButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (coverImageUrl) {
+            loadImageFromUrl(coverImageUrl);
+        } else {
+            alert('No cover image available. Please upload a cover image first.');
+        }
+    });
+    
+    // Handle cover image upload - auto-load into thumbnail cropper AND update coverImageUrl
+    coverInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                coverImageUrl = event.target.result; // Update the cover URL for later use
+                initializeCropper(file, event.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Handle thumbnail source image upload
+    thumbnailSourceInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                initializeCropper(file, event.target.result);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            cropperSection.style.display = 'none';
+            croppedPreview.style.display = 'none';
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }
+    });
+    
+    // Apply crop button
+    cropButton.addEventListener('click', function() {
+        if (cropper) {
+            // Get canvas at appropriate resolution
+            const canvas = cropper.getCroppedCanvas({
+                width: 480,
+                height: 200,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            });
+            
+            canvas.toBlob(function(blob) {
+                // Create a File object from the blob
+                const fileName = 'thumbnail_' + (originalFile ? originalFile.name : 'cropped.jpg');
+                const croppedFile = new File([blob], fileName, { type: blob.type });
+                
+                // Create a DataTransfer to set the file input
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(croppedFile);
+                thumbnailInput.files = dataTransfer.files;
+                
+                // Show preview
+                const previewUrl = URL.createObjectURL(blob);
+                croppedPreviewImage.src = previewUrl;
+                croppedPreview.style.display = 'block';
+                cropperSection.style.display = 'none';
+                
+            }, originalFile ? originalFile.type : 'image/jpeg', 0.9);
+        }
+    });
+    
+    // Reset crop button
+    resetCropButton.addEventListener('click', function() {
+        if (cropper) {
+            cropper.reset();
+        }
+    });
+    
+    // Change crop button (re-open cropper)
+    changeCropButton.addEventListener('click', function() {
+        croppedPreview.style.display = 'none';
+        cropperSection.style.display = 'block';
+        
+        // Re-initialize cropper if needed
+        if (!cropper && cropperImage.src) {
+            cropper = new Cropper(cropperImage, {
+                aspectRatio: 480 / 200,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: true,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+                minContainerHeight: 100,
+            });
+        }
+    });
+    
+    // Re-initialize lucide icons after DOM changes
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+});
+</script>
 {% endblock %}

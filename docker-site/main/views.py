@@ -110,6 +110,7 @@ def post_form(request, slug=None):
         description = request.POST.get('description', '')
         content = request.POST.get('content')
         cover = request.FILES.get('cover')
+        thumbnail = request.FILES.get('thumbnail')
         category_ids = request.POST.getlist('categories')
         is_pinned = request.POST.get('is_pinned') == 'on'
         
@@ -131,6 +132,9 @@ def post_form(request, slug=None):
         # Handle cover image
         remove_cover = request.POST.get('remove_cover') == 'on'
         
+        # Handle thumbnail
+        remove_thumbnail = request.POST.get('remove_thumbnail') == 'on'
+        
         is_published = action == 'publish'
         
         if post:
@@ -145,6 +149,10 @@ def post_form(request, slug=None):
                 post.cover = cover
             if remove_cover:
                 post.cover = None
+            if thumbnail:
+                post.thumbnail = thumbnail
+            if remove_thumbnail:
+                post.thumbnail = None
             if action in ['publish', 'draft']:
                 post.is_published = is_published
             post.save()
@@ -158,6 +166,7 @@ def post_form(request, slug=None):
                 content=content,
                 is_published=is_published,
                 cover=cover,
+                thumbnail=thumbnail,
                 event_date=event_date,
                 is_pinned=is_pinned,
             )
