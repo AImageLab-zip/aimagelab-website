@@ -7,7 +7,7 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from .models import UserProfile, Post, Category
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q
+from django.db.models import Q, Case, When, IntegerField
 from datetime import datetime
 
 from django.http import FileResponse, Http404
@@ -193,13 +193,21 @@ def people(request):
     # Get visible profiles grouped by role
     profiles = UserProfile.objects.filter(is_visible=True).select_related('user')
     
-    # Group by role
+    # Create ordering based on LDAP_ROLE_PRIORITY
+    role_priority = settings.LDAP_ROLE_PRIORITY
+    role_order = Case(
+        *[When(role=role, then=priority) for role, priority in role_priority.items()],
+        default=0,
+        output_field=IntegerField()
+    )
+    
+    # Group by role and order by priority (descending), display_order, then first name
     grouped_profiles = {
-        'professors': profiles.filter(role__in=['full_professor', 'assoc_professor', 'researcher_tt', 'researcher_b', 'researcher_a']).order_by('-display_order', 'user__first_name'),
-        'postdocs': profiles.filter(role='postdoc').order_by('-display_order', 'user__first_name'),
+        'professors': profiles.filter(role__in=['full_professor', 'assoc_professor', 'researcher_tt', 'researcher_b', 'researcher_a']).order_by(-role_order, '-display_order', 'user__first_name'),
+        'postdocs': profiles.filter(role__in=['postdoc', 'collaborators']).order_by(-role_order, '-display_order', 'user__first_name'),
         'phd_students': profiles.filter(role='phd').order_by('-display_order', 'user__first_name'),
         'interns': profiles.filter(role='intern').order_by('-display_order', 'user__first_name'),
-        'alumni': profiles.filter(role='alumni').order_by('-display_order', 'user__first_name'),
+        'alumni': profiles.filter(role__in=['alumni', 'past_member']).order_by(-role_order, '-display_order', 'user__first_name'),
     }
     
     return render(request, 'main/people.html', {'grouped_profiles': grouped_profiles})

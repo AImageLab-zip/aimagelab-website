@@ -6,14 +6,14 @@
     - profiles: List of profile objects
     - card_size: 'large', 'medium', or 'small' (default: 'medium')
     - is_alumni: Boolean for alumni-specific styling (default: False)
-    - grid_cols: Number of columns on large screens (default: '3')
+    - grid_cols: Number of columns on large screens (default: '4')
 {% endcomment %}
 
 {% load static %}
 
 <div class="my-12 {% if is_alumni %}pb-12{% endif %}">
     <h2 class="h2-home mb-6">{{ section_title }}</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-{{ grid_cols|default:'3' }} gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 2xl:grid-cols-{{ grid_cols|default:'4' }} gap-6">
         {% for profile in profiles %}
         <div class="card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-shadow duration-300 {% if is_alumni %}opacity-90{% endif %}">
             <div class="card-body flex flex-row gap-4 {% if card_size == 'small' %}p-4{% endif %}">
