@@ -14,7 +14,8 @@ dist/
 build/
 notes.txt
 media/
-news*.csv
+
+*.csv
 
 # Django
 *.log
