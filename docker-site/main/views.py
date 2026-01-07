@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from .models import UserProfile, Post, Category
+from .models import UserProfile, Post, Category, Project
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField
 from datetime import datetime
@@ -90,6 +90,51 @@ def news(request):
         'upcoming_events': upcoming_events,
         'categories': categories    
     })  
+
+def projects(request):
+    """Projects page view with pagination and search (similar to News)."""
+    search_query = request.GET.get('search', '')
+    type_query = request.GET.get('type', '')
+
+    projects_qs = Project.objects.all()
+
+    if search_query:
+        projects_qs = projects_qs.filter(
+            Q(name__icontains=search_query) |
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+
+    if type_query:
+        projects_qs = projects_qs.filter(project_type__iexact=type_query)
+
+    # Order by start date descending
+    projects_qs = projects_qs.order_by('-start_date')
+
+    paginator = Paginator(projects_qs, POST_PER_PAGE)
+    page = request.GET.get('page', 1)
+
+    try:
+        projects_page = paginator.page(page)
+    except PageNotAnInteger:
+        projects_page = paginator.page(1)
+    except EmptyPage:
+        projects_page = paginator.page(paginator.num_pages)
+
+    # Distinct project types for filter badges
+    project_types = (
+        Project.objects.exclude(project_type="")
+        .values_list('project_type', flat=True)
+        .distinct()
+        .order_by('project_type')
+    )
+
+    return render(request, 'main/projects.html', {
+        'projects': projects_page,
+        'search_query': search_query,
+        'type_query': type_query,
+        'project_types': project_types,
+    })
 
 def post_single(request, slug):
     """Single post detail view."""

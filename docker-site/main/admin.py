@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, Category, Post
+from .models import UserProfile, Category, Post, Project
 
 
 @admin.register(UserProfile)
@@ -38,5 +38,11 @@ class CategoryAdmin(admin.ModelAdmin):
 class PostAdmin(admin.ModelAdmin):
     pass
 
+class ProjectAdmin(admin.ModelAdmin):
+    pass
+
+
+
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Post, PostAdmin)
+admin.site.register(Project, ProjectAdmin)

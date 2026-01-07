@@ -1,0 +1,146 @@
+{% extends "main/base_with_hero.html" %}
+{% load static %}
+{% block title %}Projects - AImageLab{% endblock %}
+
+{% block hero_title %}Research Projects{% endblock %}
+
+{% block hero_description %}
+Explore ongoing and completed research projects at AImageLab.
+{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+
+            <!-- Search Bar -->
+            <div class="card bg-base-200 mb-6">
+                <div class="card-body">
+                    <form method="get" action="{% url 'projects' %}" class="flex flex-col md:flex-row gap-3">
+                        <input type="text" name="search" class="input input-bordered flex-1" placeholder="Search by name, title, or description..." value="{{ search_query }}" />
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                            Search
+                        </button>
+                    </form>
+                    {% if search_query %}
+                    <div class="mt-3">
+                        <p class="text-sm">
+                            Showing results for: <strong class="text-primary">"{{ search_query }}"</strong>
+                            <a href="{% url 'projects' %}" class="link link-primary ml-2">Clear search</a>
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    {% if type_query %}
+                    <div class="mt-3">
+                        <p class="text-sm">
+                            Filtering by type: <strong class="text-primary">"{{ type_query }}"</strong>
+                            <a href="{% url 'projects' %}" class="link link-primary ml-2">Clear filter</a>
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Projects List -->
+            <div class="space-y-6">
+                {% for proj in projects %}
+                <article class="card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-all">
+                    <div class="card-body">
+                        <div class="flex flex-col">
+                            <div class="flex items-center gap-2 mb-2">
+                                {% if proj.project_type %}
+                                <span class="badge badge-secondary">
+                                    <i data-lucide="tag" class="h-4 w-4"></i>
+                                    {{ proj.project_type }}
+                                </span>
+                                {% endif %}
+                                {% if proj.founding_by %}
+                                <span class="badge badge-outline">
+                                    <i data-lucide="banknote" class="h-4 w-4"></i>
+                                    {{ proj.founding_by }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <h2 class="card-title block text-2xl">
+                                {{ proj.title }}
+                            </h2>
+                            {% if proj.name %}
+                            <p class="text-base-content/70">{{ proj.name }}</p>
+                            {% endif %}
+                            {% if proj.description %}
+                            <p class="text-base-content/80 mt-3">{{ proj.description }}</p>
+                            {% endif %}
+                            <div class="flex flex-wrap items-center gap-4 text-sm text-base-content/60 mt-4">
+                                <span><i data-lucide="calendar" class="h-4 w-4 inline"></i> Start: {{ proj.start_date|date:"M d, Y" }}</span>
+                                {% if proj.end_date %}
+                                <span><i data-lucide="calendar-range" class="h-4 w-4 inline"></i> End: {{ proj.end_date|date:"M d, Y" }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                {% empty %}
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <p class="text-center text-base-content/60">No projects available.</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if projects.has_other_pages %}
+            <div class="flex flex-col items-center mt-8 gap-4">
+                <div class="join">
+                    {% if projects.has_previous %}
+                    <a href="?page={{ projects.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_query %}&type={{ type_query }}{% endif %}" class="join-item btn">«</a>
+                    {% endif %}
+
+                    {% for num in projects.paginator.page_range %}
+                    {% if projects.number == num %}
+                    <button class="join-item btn btn-active btn-primary">{{ num }}</button>
+                    {% elif num > projects.number|add:'-3' and num < projects.number|add:'3' %}
+                    <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_query %}&type={{ type_query }}{% endif %}" class="join-item btn">{{ num }}</a>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if projects.has_next %}
+                    <a href="?page={{ projects.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_query %}&type={{ type_query }}{% endif %}" class="join-item btn">»</a>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-base-content/60">
+                    Page {{ projects.number }} of {{ projects.paginator.num_pages }} • Total projects: {{ projects.paginator.count }}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <div class="sticky top-24">
+                <!-- Types -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h3 class="card-title text-primary mb-4">
+                            <i data-lucide="tags" class="h-6 w-6"></i>
+                            Project Types
+                        </h3>
+                        {% if project_types %}
+                        <div class="flex flex-wrap gap-2">
+                            {% for t in project_types %}
+                            <a href="?type={{ t }}" class="badge badge-lg badge-outline hover:text-primary transition-colors">{{ t }}</a>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-sm text-base-content/60">No types available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

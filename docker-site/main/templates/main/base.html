@@ -32,6 +32,7 @@
                         <li><a class="font-bold" href="{% url 'home' %}">Home</a></li>
                         <li><a class="font-bold" href="{% url 'people' %}">People</a></li>
                         <li><a class="font-bold" href="{% url 'news' %}">News</a></li>
+                        <li><a class="font-bold" href="{% url 'projects' %}">Projects</a></li>
                         <li><a class="font-bold" href="{% url 'contacts' %}">Contacts</a></li>
                        
                     </ul>
@@ -61,6 +62,7 @@
                         <li><a href="{% url 'home' %}">Home</a></li>
                         <li><a href="{% url 'people' %}">People</a></li>
                         <li><a href="{% url 'news' %}">News</a></li>
+                        <li><a href="{% url 'projects' %}">Projects</a></li>
                         <li><a href="{% url 'contacts' %}">Contacts</a></li>
                         {% if user.is_authenticated %}
                             <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
