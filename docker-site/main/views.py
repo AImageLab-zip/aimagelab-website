@@ -92,11 +92,18 @@ def news(request):
     })  
 
 def projects(request):
-    """Projects page view with pagination and search (similar to News)."""
+    """Projects page view with pagination, search, and type filter."""
     search_query = request.GET.get('search', '')
     type_query = request.GET.get('type', '')
+    show_all = request.GET.get('show_all', 'off') == 'on'
 
     projects_qs = Project.objects.all()
+
+    # By default, show only active projects (end_date is null or in the future)
+    if not show_all:
+        projects_qs = projects_qs.filter(
+            Q(end_date__isnull=True) | Q(end_date__gte=datetime.now().date())
+        )
 
     if search_query:
         projects_qs = projects_qs.filter(
@@ -121,12 +128,15 @@ def projects(request):
     except EmptyPage:
         projects_page = paginator.page(paginator.num_pages)
 
-    # Distinct project types for filter badges
+    # Get project types with count, exclude types with ≤2 projects
+    from django.db.models import Count
     project_types = (
         Project.objects.exclude(project_type="")
-        .values_list('project_type', flat=True)
-        .distinct()
+        .values('project_type')
+        .annotate(count=Count('id'))
+        .filter(count__gt=2)
         .order_by('project_type')
+        .values_list('project_type', flat=True)
     )
 
     return render(request, 'main/projects.html', {
@@ -134,6 +144,7 @@ def projects(request):
         'search_query': search_query,
         'type_query': type_query,
         'project_types': project_types,
+        'show_all': show_all,
     })
 
 def post_single(request, slug):
