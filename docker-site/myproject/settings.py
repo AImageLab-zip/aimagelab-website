@@ -175,25 +175,28 @@ LDAP_ROLE_MAPPING = {
     'ricercatori_rtdb': 'researcher_b',
     'assegnisti': 'research_fellow',
     'collaborazioni': 'collaborator',
+    'contratti_ricerca': 'research_fellow',
+    'incarichi_ricerca': 'research_fellow',
+    'incarichi_postdoc': 'postdoc',
     'dottorandi': 'phd',
-    'tesisti': 'intern',
-    'studenti': 'alumni',
     'past_members': 'past_member',
-    'ospiti': 'alumni',
 }
 
 # Role priority (higher number = higher priority when user in multiple groups)
 LDAP_ROLE_PRIORITY = {
-    'full_professor': 10,
-    'assoc_professor': 9,
-    'researcher_tt': 8,
-    'researcher_b': 7,
-    'researcher_a': 6,
-    'collaborator': 5,
-    'postdoc': 4,
-    'phd': 3,
-    'intern': 2,
-    'alumni': 1,
+    'full_professor': 20,
+    'assoc_professor': 19,
+    'researcher_tt': 15,
+    'researcher_b': 14,
+    'researcher_a': 13,
+    'postdoc': 10,
+    'phd': 6,
+    'research_fellow': 4,
+    'research_contract': 4,
+    'research_assignment': 4,
+    'collaborator': 3,
+
+    'alumni': 0,
     'past_member': 0,
 }
 
