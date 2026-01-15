@@ -1,4 +1,4 @@
-{% extends "main/base_with_hero.html" %}
+{% extends "main/base_with_sidebar.html" %}
 {% load static %}
 {% block title %}Projects - AImageLab{% endblock %}
 
@@ -8,11 +8,7 @@
 Explore ongoing and completed research projects at AImageLab.
 {% endblock %}
 
-{% block page_content %}
-<div class="container mx-auto px-6 my-12">
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <!-- Main Content (Projects Grid) -->
-        <div class="lg:col-span-3">
+{% block main_content %}
             <!-- Projects Grid (2 columns) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                 {% for proj in projects %}
@@ -88,11 +84,10 @@ Explore ongoing and completed research projects at AImageLab.
                 </p>
             </div>
             {% endif %}
-        </div>
+{% endblock %}
 
-        <!-- Sidebar -->
-        <div class="lg:col-span-1">
-            <div class="sticky top-24 space-y-6">
+{% block sidebar_content %}
+            <div class="space-y-6">
                 <!-- Search Bar -->
                 <div class="card bg-base-200">
                     <div class="card-body">
@@ -137,9 +132,6 @@ Explore ongoing and completed research projects at AImageLab.
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 <script>
     document.getElementById('show-all-toggle').addEventListener('change', function() {
         const params = new URLSearchParams(window.location.search);
@@ -153,4 +145,3 @@ Explore ongoing and completed research projects at AImageLab.
     });
 </script>
 {% endblock %}
-

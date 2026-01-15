@@ -1,4 +1,4 @@
-{% extends "main/base_with_hero.html" %}
+{% extends "main/base_with_sidebar.html" %}
 
 {% block title %}Edit Profile - AImageLab{% endblock %}
 
@@ -8,14 +8,11 @@
 Update your personal information and professional links
 {% endblock %}
 
-{% block page_content %}
-<div class="container mx-auto px-6 my-12">
+{% block main_content %}
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Main Content Column -->
-            <div class="lg:col-span-2 space-y-6">
+        <div class="space-y-6">
                 <!-- Basic Information Card -->
                 <div class="card bg-base-200">
                     <div class="card-body">
@@ -84,10 +81,11 @@ Update your personal information and professional links
                         </fieldset>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Sidebar Column -->
-            <div class="lg:col-span-1 space-y-6">
+        </div>
+{% endblock %}
+
+{% block sidebar_content %}
+        <div class="space-y-6">
                 <!-- Profile Picture Card -->
                 <div class="card bg-base-200">
                     <div class="card-body">
@@ -128,7 +126,6 @@ Update your personal information and professional links
                         {% endif %}
                     </div>
                 </div>
-            </div>
         </div>
         
         <!-- Action Buttons -->
@@ -147,7 +144,6 @@ Update your personal information and professional links
             </div>
         </div>
     </form>
-</div>
 <script type="module">
     import { createAvatar } from 'https://esm.sh/@dicebear/core@9';
     import { shapes } from 'https://esm.sh/@dicebear/collection@9';

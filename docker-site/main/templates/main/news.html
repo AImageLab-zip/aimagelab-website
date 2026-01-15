@@ -1,4 +1,4 @@
-{% extends "main/base_with_hero.html" %}
+{% extends "main/base_with_sidebar.html" %}
 {% load static %}
 {% block title %}News - AImageLab{% endblock %}
 
@@ -8,11 +8,7 @@
 Stay updated with the latest research breakthroughs, events, and announcements from AImageLab.
 {% endblock %}
 
-{% block page_content %}
-<div class="container mx-auto px-6 my-12">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Main Content -->
-        <div class="lg:col-span-2">
+{% block main_content %}
             <!-- Link to add a post if authenticated and staff -->
             {% if user.is_authenticated and user.is_staff %}
             <div class="card bg-base-200 mb-6">
@@ -179,11 +175,9 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                 </p>
             </div>
             {% endif %}
-        </div>
+{% endblock %}
 
-        <!-- Sidebar -->
-        <div class="lg:col-span-1">
-            <div class="sticky top-24">
+{% block sidebar_content %}
                 <!-- Upcoming Events -->
                 <div class="card bg-base-200 mb-6">
                     <div class="card-body">
@@ -231,8 +225,4 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                         {% endif %}
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}

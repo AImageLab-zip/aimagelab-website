@@ -1,4 +1,4 @@
-{% extends 'main/base_with_hero.html' %}
+{% extends 'main/base_with_sidebar.html' %}
 
 {% block title %}{% if post %}Edit Post{% else %}Add Post{% endif %} - AImageLab{% endblock %}
 
@@ -13,14 +13,11 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 {% endblock %}
 
-{% block page_content %}
-<div class="container mx-auto px-6 my-12">
+{% block main_content %}
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Main Content Column -->
-            <div class="lg:col-span-2 space-y-6">
+        <div class="space-y-6">
                 <!-- Basic Information Card -->
                 <div class="card bg-base-200">
                     <div class="card-body">
@@ -69,10 +66,11 @@
                         </fieldset>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Sidebar Column -->
-            <div class="lg:col-span-1 space-y-6">
+        </div>
+{% endblock %}
+
+{% block sidebar_content %}
+        <div class="space-y-6">
                 <!-- Publishing Options Card -->
                 <div class="card bg-base-200">
                     <div class="card-body">
@@ -299,7 +297,6 @@
             </div>
         </div>
     </form>
-</div>
 
 <!-- Cropper.js Library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>

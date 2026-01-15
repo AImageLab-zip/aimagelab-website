@@ -1,4 +1,4 @@
-{% extends 'main/base_with_hero.html' %}
+{% extends 'main/base_with_sidebar.html' %}
 
 {% block title %}Dashboard - AImageLab{% endblock %}
 
@@ -8,12 +8,7 @@
 Welcome back, {{ user.username }}! Manage your profile and access admin features.
 {% endblock %}
 
-{% block page_content %}
-<div class="container mx-auto px-6 my-12 max-w-4xl">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- User Info Card -->
-        <div class="lg:col-span-2">
+{% block main_content %}
             <div class="card bg-base-200">
                 <div class="card-body">
                     <h2 class="card-title text-primary mb-4">
@@ -72,10 +67,9 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                 </div>
             </div>
             {% endif %}
-        </div>
-        
-        <!-- Quick Links Card -->
-        <div class="lg:col-span-1">
+{% endblock %}
+
+{% block sidebar_content %}
             <div class="card bg-base-200">
                 <div class="card-body">
                     <h2 class="card-title text-primary mb-4">
@@ -98,7 +92,4 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
