@@ -486,6 +486,46 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Auto-generate slug from title for new posts
+    const titleInput = document.getElementById('title');
+    const slugInput = document.getElementById('slug');
+    const isNewPost = !slugInput.value || slugInput.value === '';
+    
+    if (isNewPost && titleInput && slugInput) {
+        let manuallyEdited = false;
+        
+        // Function to generate slug from title
+        function generateSlug(title) {
+            return title
+                .toLowerCase()
+                .trim()
+                .replace(/[^\w\s-]/g, '') // Remove special characters
+                .replace(/\s+/g, '-')      // Replace spaces with hyphens
+                .replace(/-+/g, '-')       // Replace multiple hyphens with single hyphen
+                .replace(/^-+|-+$/g, '');  // Remove leading/trailing hyphens
+        }
+        
+        // Auto-generate slug when title changes
+        titleInput.addEventListener('input', function() {
+            if (!manuallyEdited) {
+                slugInput.value = generateSlug(this.value);
+            }
+        });
+        
+        // Mark as manually edited if user modifies the slug
+        slugInput.addEventListener('input', function() {
+            manuallyEdited = true;
+        });
+        
+        // Reset manual edit flag if slug is cleared
+        slugInput.addEventListener('blur', function() {
+            if (this.value === '') {
+                manuallyEdited = false;
+                this.value = generateSlug(titleInput.value);
+            }
+        });
+    }
+    
     // Re-initialize lucide icons after DOM changes
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
