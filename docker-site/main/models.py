@@ -105,6 +105,8 @@ class Project(models.Model):
     name = models.CharField(max_length=200)
     title = models.CharField(max_length=300)
     description = models.TextField(blank=True)
+    logo = models.ImageField(upload_to='project_logos/', blank=True, null=True, help_text="Project logo or icon")
+    website = models.URLField(blank=True, help_text="Project website or homepage URL")
     founding_by = models.CharField(max_length=200, blank=True)
     project_type = models.CharField(max_length=100, blank=True)
     start_date = models.DateField()

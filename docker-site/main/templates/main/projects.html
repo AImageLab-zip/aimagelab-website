@@ -14,7 +14,12 @@ Explore ongoing and completed research projects at AImageLab.
                 {% for proj in projects %}
                 <article class="card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-all">
                     <div class="card-body">
-                        <div class="flex flex-col h-full">
+                        <div class="flex flex-col">
+                             {% if proj.logo %}
+                    <figure class="mr-auto">
+                        <img src="{{ proj.logo.url }}" alt="{{ proj.title }} logo" class="rounded-lg h-24 w-24 object-contain">
+                    </figure>
+                    {% endif %}
                             <div class="flex items-center gap-2 mb-2 flex-wrap">
                                 {% if proj.project_type %}
                                 <span class="badge badge-secondary">
@@ -25,11 +30,14 @@ Explore ongoing and completed research projects at AImageLab.
                                 
                             </div>
                             <h2 class="card-title block text-xl mb-2">
-                                {{ proj.title }}
+                                {% if proj.title %}
+                                    {% if proj.name %}
+                            {{ proj.name }}:
+                            {% endif %} {{ proj.title }}
+                                {% else %}
+                                    
+                                {% endif %}
                             </h2>
-                            {% if proj.name %}
-                            <p class="text-base-content/70 text-sm mb-2">{{ proj.name }}</p>
-                            {% endif %}
                             {% if proj.description %}
                             <p class="text-base-content/80 text-sm mb-2 flex-grow">{{ proj.description }}</p>
                             {% endif %}
@@ -39,11 +47,20 @@ Explore ongoing and completed research projects at AImageLab.
                                     Founded by {{ proj.founding_by }}
                                 </p>
                                 {% endif %}
+                            {% if proj.website %}
+                            <div class="mb-4">
+                                <a href="{{ proj.website }}" target="_blank" rel="noopener noreferrer" class="link link-primary text-sm inline-flex items-center gap-2">
+                                    <i data-lucide="globe" class="h-4 w-4"></i>
+                                    Visit Project Website
+                                </a>
+                            </div>
+                            {% endif %}
                             <div class="flex flex-wrap items-center gap-3 text-xs text-base-content/60 mt-auto">
-                                <span><i data-lucide="calendar" class="h-4 w-4 inline"></i> {{ proj.start_date|date:"M d, Y" }}</span>
+                                <span><i data-lucide="calendar" class="h-4 w-4 inline"></i> {{ proj.start_date|date:"M d, Y" }}
                                 {% if proj.end_date %}
-                                <span><i data-lucide="calendar-range" class="h-4 w-4 inline"></i> {{ proj.end_date|date:"M d, Y" }}</span>
+                                → {{ proj.end_date|date:"M d, Y" }}
                                 {% endif %}
+                                </span>
                             </div>
                         </div>
                     </div>
