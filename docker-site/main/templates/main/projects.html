@@ -1,0 +1,164 @@
+{% extends "main/base_with_sidebar.html" %}
+{% load static %}
+{% block title %}Projects - AImageLab{% endblock %}
+
+{% block hero_title %}Research Projects{% endblock %}
+
+{% block hero_description %}
+Explore ongoing and completed research projects at AImageLab.
+{% endblock %}
+
+{% block main_content %}
+            <!-- Projects Grid (2 columns) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                {% for proj in projects %}
+                <article class="card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-all">
+                    <div class="card-body">
+                        <div class="flex flex-col">
+                             {% if proj.logo %}
+                    <figure class="mr-auto">
+                        <img src="{{ proj.logo.url }}" alt="{{ proj.title }} logo" class="rounded-lg h-24 w-24 object-contain">
+                    </figure>
+                    {% endif %}
+                            <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                {% if proj.project_type %}
+                                <span class="badge badge-secondary">
+                                    <i data-lucide="tag" class="h-4 w-4"></i>
+                                    {{ proj.project_type }}
+                                </span>
+                                {% endif %}
+                                
+                            </div>
+                            <h2 class="card-title block text-xl mb-2">
+                                {% if proj.title %}
+                                    {% if proj.name %}
+                            {{ proj.name }}:
+                            {% endif %} {{ proj.title }}
+                                {% else %}
+                                    
+                                {% endif %}
+                            </h2>
+                            {% if proj.description %}
+                            <p class="text-base-content/80 text-sm mb-2 flex-grow">{{ proj.description }}</p>
+                            {% endif %}
+                            {% if proj.founding_by %}
+                                <p class="text-base-content/80 text-sm mb-4 flex-grow">
+                                    <i data-lucide="banknote" class="inline h-4 w-4"></i>
+                                    Founded by {{ proj.founding_by }}
+                                </p>
+                                {% endif %}
+                            {% if proj.website %}
+                            <div class="mb-4">
+                                <a href="{{ proj.website }}" target="_blank" rel="noopener noreferrer" class="link link-primary text-sm inline-flex items-center gap-2">
+                                    <i data-lucide="globe" class="h-4 w-4"></i>
+                                    Visit Project Website
+                                </a>
+                            </div>
+                            {% endif %}
+                            <div class="flex flex-wrap items-center gap-3 text-xs text-base-content/60 mt-auto">
+                                <span><i data-lucide="calendar" class="h-4 w-4 inline"></i> {{ proj.start_date|date:"M d, Y" }}
+                                {% if proj.end_date %}
+                                → {{ proj.end_date|date:"M d, Y" }}
+                                {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                {% empty %}
+                <div class="col-span-1 md:col-span-2">
+                    <div class="card bg-base-200">
+                        <div class="card-body">
+                            <p class="text-center text-base-content/60">No projects available.</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if projects.has_other_pages %}
+            <div class="flex flex-col items-center gap-4">
+                <div class="join">
+                    {% if projects.has_previous %}
+                    <a href="?page={{ projects.previous_page_number }}{% if type_query %}&type={{ type_query }}{% endif %}{% if show_all %}&show_all=on{% endif %}" class="join-item btn">«</a>
+                    {% endif %}
+
+                    {% for num in projects.paginator.page_range %}
+                    {% if projects.number == num %}
+                    <button class="join-item btn btn-active btn-primary">{{ num }}</button>
+                    {% elif num > projects.number|add:'-3' and num < projects.number|add:'3' %}
+                    <a href="?page={{ num }}{% if type_query %}&type={{ type_query }}{% endif %}{% if show_all %}&show_all=on{% endif %}" class="join-item btn">{{ num }}</a>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if projects.has_next %}
+                    <a href="?page={{ projects.next_page_number }}{% if type_query %}&type={{ type_query }}{% endif %}{% if show_all %}&show_all=on{% endif %}" class="join-item btn">»</a>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-base-content/60">
+                    Page {{ projects.number }} of {{ projects.paginator.num_pages }} • Total projects: {{ projects.paginator.count }}
+                </p>
+            </div>
+            {% endif %}
+{% endblock %}
+
+{% block sidebar_content %}
+            <div class="space-y-6">
+                <!-- Search Bar -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <form method="get" action="{% url 'projects' %}" class="flex flex-col gap-3">
+                            <input type="text" name="search" class="input input-bordered" placeholder="Search projects..." value="{{ search_query }}" />
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i data-lucide="search" class="w-4 h-4"></i>
+                                Search
+                            </button>
+                        </form>
+                        {% if search_query %}
+                        <div class="mt-3">
+                            <p class="text-xs text-base-content/70">
+                                Results for: <strong>"{{ search_query }}"</strong>
+                            </p>
+                            <a href="{% url 'projects' %}" class="link link-primary text-xs">Clear</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Project Status Toggle -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h3 class="card-title text-primary mb-4 flex items-center gap-2 text-base">
+                            <i data-lucide="filter" class="h-5 w-5"></i>
+                            Project Status
+                        </h3>
+                        <div class="form-control">
+                            <label class="label cursor-pointer">
+                                <span class="label-text text-sm">Show all projects</span>
+                                <input type="checkbox" class="toggle toggle-primary toggle-sm" id="show-all-toggle" {% if show_all %}checked{% endif %} />
+                            </label>
+                        </div>
+                        <p class="text-xs text-base-content/60 mt-3">
+                            {% if show_all %}
+                            Showing all projects (active & completed)
+                            {% else %}
+                            Showing only active projects
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+<script>
+    document.getElementById('show-all-toggle').addEventListener('change', function() {
+        const params = new URLSearchParams(window.location.search);
+        if (this.checked) {
+            params.set('show_all', 'on');
+        } else {
+            params.delete('show_all');
+        }
+        params.set('page', '1');
+        window.location.search = params.toString();
+    });
+</script>
+{% endblock %}

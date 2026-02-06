@@ -1,32 +1,95 @@
-{% extends 'main/base.html' %}
+{% extends 'main/base_with_sidebar.html' %}
 
 {% block title %}Dashboard - AImageLab{% endblock %}
 
-{% block content %}
-<div class="card">
-    <h1>Dashboard</h1>
-    <p style="margin-top: 1rem; color: #555;">
-        Welcome to your dashboard, <strong>{{ user.username }}</strong>!
-    </p>
-    
-    <div style="margin-top: 2rem; padding: 1.5rem; background-color: #ecf0f1; border-radius: 4px;">
-        <h2 style="margin-bottom: 1rem;">Your Information</h2>
-        <p><strong>Username:</strong> {{ user.username }}</p>
-        <p><strong>Email:</strong> {{ user.email|default:"Not set" }}</p>
-        <p><strong>Last Login:</strong> {{ user.last_login|date:"F d, Y H:i" }}</p>
-        <p><strong>Account Status:</strong> <span style="color: #27ae60;">Active</span></p>
-    </div>
-    
-    <div style="margin-top: 2rem;">
-        <h2>Quick Links</h2>
-        <ul style="margin-top: 1rem; list-style: none; padding-left: 0;">
-            <li style="margin-bottom: 0.5rem;">
-                <a href="{% url 'home' %}" style="color: #3498db; text-decoration: none;">← Back to Home</a>
-            </li>
-            <li style="margin-bottom: 0.5rem;">
-                <a href="/admin/" style="color: #3498db; text-decoration: none;">Admin Panel →</a>
-            </li>
-        </ul>
-    </div>
-</div>
+{% block hero_title %}Dashboard{% endblock %}
+
+{% block hero_description %}
+Welcome back, {{ user.username }}! Manage your profile and access admin features.
+{% endblock %}
+
+{% block main_content %}
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <h2 class="card-title text-primary mb-4">
+                        <i data-lucide="user" class="w-6 h-6"></i>
+                        Your Information
+                    </h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="user-circle" class="w-5 h-5 text-primary"></i>
+                            <div>
+                                <span class="font-semibold">Username:</span>
+                                <span class="ml-2">{{ user.username }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="mail" class="w-5 h-5 text-primary"></i>
+                            <div>
+                                <span class="font-semibold">Email:</span>
+                                <span class="ml-2">{{ user.email|default:"Not set" }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="clock" class="w-5 h-5 text-primary"></i>
+                            <div>
+                                <span class="font-semibold">Last Login:</span>
+                                <span class="ml-2">{{ user.last_login|date:"F d, Y H:i" }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-success"></i>
+                            <div>
+                                <span class="font-semibold">Account Status:</span>
+                                <span class="badge badge-success ml-2">Active</span>
+                                {% if user.is_staff %}
+                                    <span class="badge badge-info text-base-100 ml-2">Staff</span>
+                                {% endif %}
+                                {% if user.is_superuser %}
+                                    <span class="badge badge-warning ml-2">Superuser</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if user.is_authenticated and user.is_staff %}
+            <div class="card bg-base-200 mt-6">
+                <div class="card-body flex flex-col md:flex-row gap-3 justify-end">
+                    <p class="block my-auto text-lg">
+                        <i data-lucide="message-circle" class="inline"></i>
+                        Got a thought to share?
+                    </p>
+                    <a href="{% url 'post_add' %}" class="btn btn-primary">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add News Post
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+{% endblock %}
+
+{% block sidebar_content %}
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <h2 class="card-title text-primary mb-4">
+                        <i data-lucide="zap" class="w-6 h-6"></i>
+                        Quick Links
+                    </h2>
+                    <div class="space-y-3">
+                        <a href="{% url 'home' %}" class="btn btn-ghost btn-block justify-start">
+                            <i data-lucide="home" class="w-4 h-4"></i>
+                            Home
+                        </a>
+                        <a href="{% url 'edit_profile' %}" class="btn btn-primary btn-block justify-start">
+                            <i data-lucide="user-cog" class="w-4 h-4"></i>
+                            Edit Profile
+                        </a>
+                        <a href="/admin/" class="btn btn-primary btn-block justify-start">
+                            <i data-lucide="settings" class="w-4 h-4"></i>
+                            Admin Panel
+                        </a>
+                    </div>
+                </div>
+            </div>
 {% endblock %}

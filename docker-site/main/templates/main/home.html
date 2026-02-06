@@ -1,36 +1,485 @@
 {% extends 'main/base.html' %}
+{% load static %}
 
-{% block title %}Home - AImageLab{% endblock %}
+{% block title %}AImageLab - AI Vision Research Laboratory{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>Welcome to AImageLab Application</h1>
-    <p style="font-size: 1.1rem; color: #555; margin-top: 1rem;">
-        This is a Docker-based Django application with separate development and production environments.
-    </p>
-    
-    {% if user.is_authenticated %}
-        <p style="margin-top: 1.5rem; color: #27ae60; font-weight: bold;">
-            You are logged in as {{ user.username }}
-        </p>
-        <p style="margin-top: 0.5rem;">
-            <a href="{% url 'dashboard' %}" style="color: #3498db; text-decoration: none;">Go to Dashboard →</a>
-        </p>
-    {% else %}
-        <p style="margin-top: 1.5rem;">
-            <a href="{% url 'login' %}" style="color: #3498db; text-decoration: none;">Please login to continue →</a>
-        </p>
-    {% endif %}
-    
-    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
-        <h2>System Information</h2>
-        <ul style="list-style: none; padding-left: 0; margin-top: 1rem;">
-            <li style="margin-bottom: 0.5rem;">✓ Django Application Server</li>
-            <li style="margin-bottom: 0.5rem;">✓ MySQL Database</li>
-            <li style="margin-bottom: 0.5rem;">✓ Redis Cache & Celery</li>
-            <li style="margin-bottom: 0.5rem;">✓ Apache with SSL</li>
-            <li style="margin-bottom: 0.5rem;">✓ Certbot SSL Management</li>
-        </ul>
+<!-- Hero Section -->
+<section id="hero" class="relative min-h-screen w-full overflow-hidden">
+    <!-- Parallax Layer 1 - Slowest (Background) -->
+    <div class="parallax-layer absolute inset-0 w-full h-[120%] z-[1] pointer-events-none opacity-6" data-speed="0.2">
+        <img src="{% static 'main/assets/bg1.svg' %}" alt="" class="w-full h-full object-cover object-center repeat-none">
     </div>
-</div>
+
+    <!-- Parallax Later Eye -->
+    <div class="parallax-layer absolute inset-0 w-full h-[120%] z-[2] pointer-events-none opacity-8" data-speed="0.4">
+        <img src="{% static 'main/assets/bge.svg' %}" alt="" class="w-full h-full object-cover object-center repeat-none">
+    </div>
+
+    <!-- Parallax Layer 2 - Medium (Midground) -->
+    <div class="parallax-layer absolute inset-0 w-full h-[120%] z-[2] pointer-events-none opacity-8" data-speed="0.4">
+        <img src="{% static 'main/assets/bg2.svg' %}" alt="" class="w-full h-full object-cover object-center repeat-none">
+    </div>
+
+    <!-- Parallax Layer 3 - Fastest (Foreground) -->
+    <div class="parallax-layer absolute inset-0 w-full h-[120%] z-[3] pointer-events-none opacity-10" data-speed="0.6">
+        <img src="{% static 'main/assets/bg3.svg' %}" alt="" class="w-full h-full object-cover object-center repeat-none">
+    </div>
+
+    <div class="container mx-auto h-full pt-24 px-6 relative z-10">
+        <div class="flex flex-col md:flex-row h-full items-center justify-center gap-8 md:gap-0">
+            <!-- Left Content -->
+            <div class="relative z-10 w-full md:w-1/2 order-1">
+                <h1 class="mb-6 text-5xl md:text-7xl">
+                    <span class="text-primary">AI</span>mage<sup class="text-primary">Lab</sup>
+                </h1>
+                <p class="text-xl">
+                    Since 1998, we have been a research group at the <b class="text-primary">University of Modena and Reggio Emilia</b>, pioneering advances in <b>Artificial Intelligence</b> and Computer Vision.
+                </p>
+
+                <div class="flex flex-col md:flex-row w-full gap-3 align-items-center mt-6">
+                    <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
+                        <div class="avatar-group -space-x-5 mb-1">
+                            <div class="avatar">
+                                <div class="w-8">
+                                    <img src="https://aimagelab.ing.unimore.it/imagelab/uploadedImages/001016_thumb.jpg" />
+                                </div>
+                            </div>
+                            <div class="avatar">
+                                <div class="w-8">
+                                    <img src="https://aimagelab.ing.unimore.it/imagelab/uploadedImages/001016_thumb.jpg" />
+                                </div>
+                            </div>
+                            <div class="avatar">
+                                <div class="w-8">
+                                    <img src="https://aimagelab.ing.unimore.it/imagelab/uploadedImages/001016_thumb.jpg" />
+                                </div>
+                            </div>
+                            <div class="avatar avatar-placeholder">
+                                <div class="bg-primary text-primary-content text-xs w-8">
+                                    <span>99+</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="block my-auto text-xs text-neutral text-center">PIs, researchers, <br> and PhD students. </span>
+                        <a href="{% url 'people' %}" class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">People&nbsp;↗</a>
+                    </div>
+                    <div class="divider md:divider-horizontal hidden md:flex"></div>
+                    <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
+                        <div class="badge badge-primary my-2">
+                            1100+
+                        </div>
+                        <span class="block ml-1 my-auto text-xs text-neutral text-center">publications <br> in top venues </span>
+                        <button class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">Papers&nbsp;↗</button>
+                    </div>
+                    <div class="divider divider-horizontal hidden md:flex"></div>
+                    <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
+                        <div class="badge badge-primary my-2">
+                            50+
+                        </div>
+                        <span class="block ml-1 my-auto text-xs text-neutral text-center">research <br> projects </span>
+                        <button class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">More&nbsp;↗</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Animated Squares -->
+            <div class="relative w-full hidden ml-32 md:flex md:h-[70vh] order-2 justify-center items-center overflow-hidden">
+                <div id="squares-container" class="relative w-full h-full z-10">
+                    <!-- Squares will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent News Section -->
+    <div class="container mx-auto my-16 px-6 relative z-10">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="h2-home my-2">Recent News</h2>
+            <!-- Desktop Arrow Controls -->
+            <div class="hidden md:flex gap-2">
+                <button id="news-prev" class="btn btn-circle btn-sm btn-outline btn-secondary">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+                <button id="news-next" class="btn btn-circle btn-sm btn-outline btn-secondary">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        {% if latest_posts %}
+        <div class="relative">
+            <!-- Mobile: Scrollable -->
+            <div class="md:hidden flex gap-6 max-w-full overflow-x-auto pb-4" style="scrollbar-width: thin; scrollbar-color: var(--color-primary);">
+                {% for post in latest_posts %}
+                <div class="carousel-item">
+                    <a href="{% url 'single' post.slug %}" class="group card w-[70vw] bg-white border-base-300 border-1 hover:shadow-lg hover:border-base-300 transition-all relative">
+                    
+                        <div class="card-body">
+                            <h3 class="card-title hover:text-primary block">
+                                {% if post.is_pinned %}
+                                    <i data-lucide="pin" class="text-current/50 inline"></i>
+                                {% endif %}
+                                {{ post.title }}</h3>
+                                {% if post.event_date %}
+                        <span class="badge badge-xs badge-primary z-10">{{ post.event_date|date:"d M y" }}</span>
+                        {% endif %}
+                            <p class="text-base-content">{{ post.description|truncatewords:20 }}</p>
+                            <div class="text-xs text-base-content/50">{{ post.created_at|date:"F Y" }}</div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Desktop: Carousel -->
+            <div class="hidden md:block overflow-hidden">
+                <div id="news-carousel" class="flex gap-6 transition-transform duration-300 ease-in-out">
+                    {% for post in latest_posts %}
+                    <div class="carousel-item flex-shrink-0">
+                        <a href="{% url 'single' post.slug %}" class="group card w-96 bg-white border-base-300 border-1 hover:shadow-lg hover:border-base-300 transition-all">
+
+                            <div class="card-body">
+
+                                <h3 class="card-title hover:text-primary block">
+                                    {% if post.is_pinned %}
+                                        <i data-lucide="pin" class="text-current/50 inline"></i>
+                                    {% endif %}
+                                    {{ post.title }}
+                                </h3>
+                                {% if post.event_date %}
+                                <span class="badge badge-sm badge-primary z-10">Event on {{ post.event_date|date:"d M y" }}</span>
+                                {% endif %}
+                                <p class="text-base-content">{{ post.description|truncatewords:20 }}</p>
+                                <div class="text-xs text-base-content/50">{{ post.created_at|date:"F Y" }}</div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <a href="{% url 'news' %}" class="btn btn-secondary btn-ghost btn-xs ml-2 my-auto">All News ↗</a>
+    </div>
+</section>
+
+<!-- Research Areas Section -->
+<section id="research" class="py-16">
+    <div class="container mx-auto px-6">
+        <h2 class="h2-home">Research Areas</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <i data-lucide="images" class="text-primary w-12 h-12 stroke-1"></i>
+                    <h3 class="card-title text-primary">Vision & Language</h3>
+                    <p class="hidden md:block">Multimodal models combining vision and natural language understanding for advanced AI applications.</p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <i data-lucide="waypoints" class="text-primary w-12 h-12 stroke-1"></i>
+                    <h3 class="card-title text-primary">ML & DL</h3>
+                    <p class="hidden md:block">Development of novel algorithms and architectures for supervised, unsupervised, and reinforcement learning, model merging, and PEFT.</p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <i data-lucide="microscope" class="text-primary w-12 h-12 stroke-1"></i>
+                    <h3 class="card-title text-primary">Medical Imaging</h3>
+                    <p class="hidden md:block">Deep learning applications for medical image analysis and clinical decision support.</p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <i data-lucide="aperture" class="text-primary w-12 h-12 stroke-1"></i>
+                    <h3 class="card-title text-primary">Computer Vision</h3>
+                    <p class="hidden md:block">Advanced algorithms for image and video analysis, object recognition, and scene understanding.</p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <i data-lucide="wifi-cog" class="text-primary w-12 h-12 stroke-1"></i>
+
+                    <h3 class="card-title text-primary">IoT & Embedded Sensors</h3>
+                    <p class="hidden md:block">Design and deployment of IoT systems and embedded sensors for data collection and analysis.</p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <i data-lucide="bot" class="text-primary w-12 h-12 stroke-1"></i>
+                    <h3 class="card-title text-primary">Robotics & HRI</h3>
+                    <p class="hidden md:block">Human-robot interaction and autonomous systems for real-world applications.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Environmental Images Row Section (2 columns, image right, masked squircle, bigger) -->
+<section class="py-12 bg-base-100">
+    <div class="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
+        <!-- Left Column: Text -->
+        <div class="w-full md:w-1/2 mb-8 md:mb-0">
+            <h2 class="h2-home mb-6">Advancing the State of the Art</h2>
+            <p class="text-lg mb-8 max-w-3xl">
+                Our research contributes to the global knowledge base with cutting-edge publications in top-tier venues. 
+                Discover our latest findings, methodologies, and innovations that are shaping the future of AI and Computer Vision.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="#" class="btn btn-primary btn-lg">
+                    Latest Publications
+                    <i data-lucide="external-link" class="w-5 h-5 ml-2"></i>
+                </a>
+            </div>
+        </div>
+        <!-- Right Column: Image (masked squircle, bigger) -->
+        <div class="w-full md:w-1/2 flex justify-center">
+            <div class="mask mask-squircle overflow-hidden shadow-xl" style="width: 340px; height: 340px;">
+                <img src="https://aimagelab.ing.unimore.it/imagelab/carousel/immagine2.png" alt="Lab Environment 2" class="object-cover w-full h-full" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Membership Section -->
+<section class="bg-base-200 pt-8 pb-16">
+    <div class="container mx-auto px-6">
+        <h2 class="h2-home">Proud of our Connections</h2>
+        <p class="mb-8">
+            AImageLab is proud to be part of a vibrant research community, collaborating with esteemed institutions and organizations to drive innovation in AI and Computer Vision.
+        </p>
+        <div class="flex flex-col md:flex-row gap-2 justify-evenly">
+            <div class="text-center">
+                <img src="https://aimagelab.ing.unimore.it/imagelab/images/Sigillo2015.svg" alt="University of Modena and Reggio Emilia" class="h-12 my-2 mx-auto" />
+                <p class="font-bold">Department of Engineering<br />"Enzo Ferrari"</p>
+                <a class="btn btn-xs btn-ghost btn-secondary mt-2" href="https://ingmo.unimore.it">DIEF ↗</a>
+            </div>
+            <div class="divider md:divider-horizontal"></div>
+            <div class="text-center">
+                <img src="https://aimagelab.ing.unimore.it/imagelab/images/Sigillo2015.svg" alt="University of Modena and Reggio Emilia" class="h-12 my-2 mx-auto" />
+                <p class="font-bold">Artificial Intelligence<br />and Research Innovation Center </p>
+                <a class="btn btn-xs btn-ghost btn-secondary mt-2" href="https://www.airi.unimore.it">AIRI ↗</a>
+            </div>
+            <div class="divider md:divider-horizontal"></div>
+            <div class="text-center">
+                <img src="https://scai.sorbonne-universite.fr/files_app/n/1320/7081db133fc40224018d64dd92536955.png" alt="ELLIS Modena" class="h-14 my-2 mx-auto" />
+                <p class="font-bold font-sans">ELLIS Modena Unit </p>
+                <a class="btn btn-xs btn-ghost btn-secondary mt-2" href="https://ellis.unimore.it">ELLIS Modena ↗</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+
+    const coloredSquares = [
+        { x: -184, y: -480, w: 1000, h: 1000, opacity: 1, defaultOpacity: 1, bgImage: "{% static 'main/assets/aicenter-mod.jpg' %}" },
+        { x: -1050, y: 85, w: 750, h: 750, opacity: 1, defaultOpacity: 1, bgImage: "{% static 'main/assets/tecnopolo.jpg' %}" },
+        { x: -207, y: 610, w: 300, h: 300, opacity: 1, defaultOpacity: 1, color: primaryColor },
+        { x: 913, y: -230, w: 200, h: 200, opacity: 1, defaultOpacity: 1, color: primaryColor },
+        { x: -522, y: -790, w: 200, h: 200, opacity: 1, defaultOpacity: 1, color: primaryColor },
+        { x: 183, y: 615, w: 200, h: 200, opacity: 1, defaultOpacity: 1, color: 'rgb(193, 193, 193)' },
+        { x: 993, y: 60, w: 200, h: 200, opacity: 1, defaultOpacity: 1, color: 'rgb(193, 193, 193)' },
+        { x: -1012, y: -235, w: 200, h: 200, opacity: 1, defaultOpacity: 1, color: 'rgb(193, 193, 193)' },
+        { x: -737, y: -500, w: 450, h: 450, opacity: 1, defaultOpacity: 1, bgImage: "{% static 'main/assets/plane.jpg' %}" },
+        { x: -124, y: -955, w: 250, h: 250, opacity: 1, defaultOpacity: 1, color: 'rgb(193, 193, 193)' },
+        { x: 226, y: -1030, w: 450, h: 450, opacity: 1, defaultOpacity: 1, color: 'rgb(193, 193, 193)' }
+    ];
+
+    const squaresContainer = document.getElementById('squares-container');
+    const heroSection = document.getElementById('hero');
+
+    const heroSquirclesContainer = document.createElement('div');
+    heroSquirclesContainer.id = 'hero-squircles-container';
+    heroSquirclesContainer.className = 'absolute inset-0 w-full h-full overflow-hidden pointer-events-none';
+    heroSquirclesContainer.style.zIndex = '0';
+    heroSection.insertBefore(heroSquirclesContainer, heroSection.firstChild);
+
+    const maxX = Math.max(...coloredSquares.map(s => s.x + s.w));
+    const maxY = Math.max(...coloredSquares.map(s => s.y + s.h));
+    const minX = Math.min(...coloredSquares.map(s => s.x));
+    const minY = Math.min(...coloredSquares.map(s => s.y));
+
+    const designWidth = maxX - minX;
+    const designHeight = maxY - minY;
+
+    function updateColoredSquares() {
+        squaresContainer.innerHTML = '';
+
+        const containerWidth = squaresContainer.offsetWidth;
+        const containerHeight = squaresContainer.offsetHeight;
+
+        const scaleX = containerWidth / designWidth;
+        const scaleY = containerHeight / designHeight;
+        const scale = Math.min(scaleX, scaleY) * 0.9;
+
+        const scaledWidth = designWidth * scale;
+        const scaledHeight = designHeight * scale;
+        const offsetX = (containerWidth - scaledWidth) / 2 - minX * scale;
+        const offsetY = (containerHeight - scaledHeight) / 2 - minY * scale;
+
+        coloredSquares.forEach((square) => {
+            const div = document.createElement('div');
+            div.className = 'mask mask-squircle absolute transition-all hero-element';
+            div.style.left = `${square.x * scale + offsetX}px`;
+            div.style.top = `${square.y * scale + offsetY}px`;
+            div.style.width = `${square.w * scale}px`;
+            div.style.height = `${square.h * scale}px`;
+            div.style.backgroundColor = square.color;
+            div.style.opacity = square.opacity;
+            div.dataset.defaultOpacity = square.defaultOpacity;
+
+            if (square.bgImage) {
+                div.style.backgroundImage = `url(${square.bgImage})`;
+                div.style.backgroundSize = 'cover';
+                div.style.backgroundPosition = 'center';
+                div.className += ' shadow-lg duration-300 hover:scale-110'
+            }
+
+            squaresContainer.appendChild(div);
+        });
+    }
+
+    updateColoredSquares();
+    window.addEventListener('resize', () => {
+        updateColoredSquares();
+    });
+
+    let ticking = false;
+
+    function animateOnScroll() {
+        const scrolled = window.scrollY;
+        const heroHeight = heroSection.offsetHeight;
+        const scrollProgress = Math.min(scrolled / heroHeight, 1);
+
+        const allSquircles = document.querySelectorAll('.hero-element');
+        allSquircles.forEach((squircle) => {
+            const defaultOpacity = parseFloat(squircle.dataset.defaultOpacity) || 1.0;
+            const opacity = defaultOpacity - scrollProgress * 2 * defaultOpacity;
+            squircle.style.opacity = opacity;
+        });
+
+        ticking = false;
+    }
+
+    function updateParallax() {
+        const scrolled = window.scrollY;
+        const parallaxLayers = document.querySelectorAll('.parallax-layer');
+
+        parallaxLayers.forEach((layer) => {
+            const speed = parseFloat(layer.dataset.speed);
+            const yPos = -(scrolled * speed);
+            layer.style.transform = `translate3d(0, ${yPos}px, 0)`;
+        });
+
+        ticking = false;
+    }
+
+    updateParallax();
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(animateOnScroll);
+            window.requestAnimationFrame(updateParallax);
+            ticking = true;
+        }
+    });
+
+    // Parallax effect for the background image section
+    function updateBgParallax() {
+        const scrolled = window.scrollY;
+        const parallaxBg = document.querySelector('.parallax-bg');
+        
+        if (parallaxBg) {
+            const rect = parallaxBg.parentElement.getBoundingClientRect();
+            const speed = 0.5;
+            
+            // Only apply parallax when the section is in viewport
+            if (rect.bottom >= 0 && rect.top <= window.innerHeight) {
+                const yPos = -(scrolled - rect.top + window.innerHeight) * speed;
+                parallaxBg.style.transform = `translateY(${yPos}px) translateZ(0)`;
+            }
+        }
+        
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(animateOnScroll);
+            window.requestAnimationFrame(updateParallax);
+            window.requestAnimationFrame(updateBgParallax);
+            ticking = true;
+        }
+    });
+    // News Carousel Functionality
+    const newsCarousel = document.getElementById('news-carousel');
+    const prevBtn = document.getElementById('news-prev');
+    const nextBtn = document.getElementById('news-next');
+
+    if (newsCarousel && prevBtn && nextBtn) {
+        const items = newsCarousel.children;
+        let currentIndex = 0;
+        const itemWidth = 384; // w-96 = 384px
+        const gap = 24; // gap-6 = 24px
+        const itemWidthWithGap = itemWidth + gap;
+
+        // Calculate how many items can be visible at once (based on container width)
+        function getVisibleItemsCount() {
+            const containerWidth = newsCarousel.parentElement.offsetWidth;
+            return Math.floor(containerWidth / itemWidthWithGap) || 1;
+        }
+
+        function updateCarousel() {
+            const visibleItems = getVisibleItemsCount();
+            const maxIndex = Math.max(0, items.length - visibleItems);
+
+            // Clamp current index
+            currentIndex = Math.max(0, Math.min(currentIndex, maxIndex));
+
+            // Update transform
+            const translateX = -(currentIndex * itemWidthWithGap);
+            newsCarousel.style.transform = `translateX(${translateX}px)`;
+
+            // Update button states
+            prevBtn.disabled = currentIndex <= 0;
+            nextBtn.disabled = currentIndex >= maxIndex;
+
+            // Update button opacity
+            prevBtn.style.opacity = currentIndex <= 0 ? '0.5' : '1';
+            nextBtn.style.opacity = currentIndex >= maxIndex ? '0.5' : '1';
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCarousel();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            const visibleItems = getVisibleItemsCount();
+            const maxIndex = items.length - visibleItems;
+            if (currentIndex < maxIndex) {
+                currentIndex++;
+                updateCarousel();
+            }
+        });
+
+        // Update on resize
+        window.addEventListener('resize', updateCarousel);
+
+        // Initialize
+        updateCarousel();
+    }</script>
 {% endblock %}

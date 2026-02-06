@@ -1,19 +1,27 @@
 # Main app models
 from django.db import models
 from django.contrib.auth.models import User
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class UserProfile(models.Model):
     """Extended user profile for team members"""
     
     ROLE_CHOICES = [
-        ('professor', 'Full Professor'),
+        # ('professor_special', 'Full Professor (University Dean)'),
+        ('full_professor', 'Full Professor'),
         ('assoc_professor', 'Associate Professor'),
-        ('asst_professor', 'Assistant Professor'),
+        ('researcher_tt', 'Researcher (RTT)'),
+        ('researcher_a', 'Researcher (RTD-A)'),
+        ('researcher_b', 'Researcher (RTD-B)'),
         ('postdoc', 'Postdoctoral Researcher'),
+        ('research_fellow', 'Research Fellow'),
+        ('collaborator', 'External Collaborator'),
         ('phd', 'PhD Student'),
         ('intern', 'Research Intern'),
         ('alumni', 'Alumni'),
+        ('past_member', 'Past Member'),
+        ('guest', 'Visitor Researcher'), # ?
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -31,6 +39,12 @@ class UserProfile(models.Model):
     google_scholar = models.URLField(blank=True)
     github = models.URLField(blank=True)
     linkedin = models.URLField(blank=True)
+    phone_number = PhoneNumberField(
+        blank=True,
+        null=True,
+        region='IT',
+        help_text="Contact phone number (international format)"
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -43,3 +57,66 @@ class UserProfile(models.Model):
     
     def get_full_name(self):
         return self.user.get_full_name() or self.user.username
+
+class Category(models.Model):
+    """Blog post category model"""
+    
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True)
+    
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = "Categories"
+    
+    def __str__(self):
+        return self.name
+
+
+class Post(models.Model):
+    """Blog post model"""
+    
+    title = models.CharField(max_length=300)
+    description = models.TextField(blank=True)
+    cover = models.ImageField(upload_to='blog_covers/', blank=True, null=True)
+    thumbnail = models.ImageField(upload_to='blog_thumbnails/', blank=True, null=True, help_text="Cropped thumbnail for news listings (480x200)")
+    slug = models.SlugField(unique=True)
+    
+    
+    categories = models.ManyToManyField("Category", related_name="posts")
+    
+    #author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    event_date = models.DateTimeField(blank=True, null=True)
+    is_published = models.BooleanField(default=True)
+    is_pinned = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.title
+
+
+class Project(models.Model):
+    """Research project model"""
+
+    name = models.CharField(max_length=200)
+    title = models.CharField(max_length=300)
+    description = models.TextField(blank=True)
+    logo = models.ImageField(upload_to='project_logos/', blank=True, null=True, help_text="Project logo or icon")
+    website = models.URLField(blank=True, help_text="Project website or homepage URL")
+    founding_by = models.CharField(max_length=200, blank=True)
+    project_type = models.CharField(max_length=100, blank=True)
+    start_date = models.DateField()
+    end_date = models.DateField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-start_date', 'name']
+
+    def __str__(self):
+        return f"{self.title} ({self.name})"

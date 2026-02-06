@@ -12,6 +12,10 @@ ENV/
 .eggs/
 dist/
 build/
+notes.txt
+media/
+
+*.csv
 
 # Django
 *.log
@@ -25,6 +29,7 @@ celerybeat-schedule.db
 # Environment
 .env
 .env.local
+.env.oidc
 secrets.yml
 
 # IDE
@@ -45,3 +50,5 @@ Thumbs.db
 *.bak
 *.backup
 *.sql
+
+docker-site/media/
