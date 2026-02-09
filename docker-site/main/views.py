@@ -2,10 +2,11 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, JsonResponse
 from django.conf import settings
 import os
-from .models import UserProfile
+from .models import UserProfile, IRISImportLog
+from .tasks import import_iris_publications, is_import_running
 
 
 def home(request):
@@ -88,3 +89,68 @@ def serve_media(request, path):
     
     # Serve the file
     return FileResponse(open(file_path, 'rb'))
+
+
+@login_required
+def trigger_iris_import(request):
+    """
+    Trigger IRIS publications import.
+    
+    This view starts a Celery task to import publications from IRIS.
+    If an import is already running, it returns a message to the user.
+    
+    Only accessible to authenticated users.
+    """
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('dashboard')
+    
+    # Check if import is already running
+    if is_import_running():
+        messages.warning(
+            request,
+            'IRIS import is already in progress. Please wait for it to complete.'
+        )
+        return redirect('dashboard')
+    
+    # Start the import task
+    task = import_iris_publications.delay()
+    
+    messages.success(
+        request,
+        f'IRIS import started successfully! Task ID: {task.id}. '
+        'You will be notified when the import is complete.'
+    )
+    
+    return redirect('dashboard')
+
+
+@login_required
+def iris_import_status(request):
+    """
+    Get the status of IRIS imports.
+    
+    Returns JSON with information about recent imports.
+    """
+    # Get the most recent import logs
+    recent_imports = IRISImportLog.objects.all()[:10]
+    
+    imports_data = []
+    for log in recent_imports:
+        imports_data.append({
+            'id': log.id,
+            'status': log.status,
+            'started_at': log.started_at.isoformat(),
+            'completed_at': log.completed_at.isoformat() if log.completed_at else None,
+            'staff_processed': log.staff_processed,
+            'publications_created': log.publications_created,
+            'publications_updated': log.publications_updated,
+            'links_created': log.links_created,
+            'error_message': log.error_message
+        })
+    
+    return JsonResponse({
+        'is_running': is_import_running(),
+        'recent_imports': imports_data
+    })
+

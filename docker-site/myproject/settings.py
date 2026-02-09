@@ -147,6 +147,24 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 
+# Cache Configuration (for IRIS import locking and other caching)
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.environ.get("CACHE_URL", "redis://redis:6379/1"),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+# IRIS Gateway REST API Configuration
+IRIS_API_BASE_URL = os.environ.get(
+    "IRIS_API_BASE_URL", "https://iris.unimore.it/gw/rest/api"
+)
+IRIS_API_USERNAME = os.environ.get("IRIS_API_USERNAME", "")
+IRIS_API_PASSWORD = os.environ.get("IRIS_API_PASSWORD", "")
+
 # Logging
 LOGGING = {
     "version": 1,

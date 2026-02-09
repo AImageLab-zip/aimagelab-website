@@ -66,6 +66,9 @@ services:
       - TZ=${TZ}
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - IRIS_API_BASE_URL=${IRIS_API_BASE_URL}
+      - IRIS_API_USERNAME=${IRIS_API_USERNAME}
+      - IRIS_API_PASSWORD=${IRIS_API_PASSWORD}
     depends_on:
       mysql-db:
         condition: service_healthy
@@ -95,6 +98,9 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - TZ=${TZ}
+      - IRIS_API_BASE_URL=${IRIS_API_BASE_URL}
+      - IRIS_API_USERNAME=${IRIS_API_USERNAME}
+      - IRIS_API_PASSWORD=${IRIS_API_PASSWORD}
     depends_on:
       mysql-db:
         condition: service_healthy
@@ -125,6 +131,9 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - TZ=${TZ}
+      - IRIS_API_BASE_URL=${IRIS_API_BASE_URL}
+      - IRIS_API_USERNAME=${IRIS_API_USERNAME}
+      - IRIS_API_PASSWORD=${IRIS_API_PASSWORD}
     depends_on:
       mysql-db:
         condition: service_healthy

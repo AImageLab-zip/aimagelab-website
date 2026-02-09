@@ -3,6 +3,7 @@ Celery configuration for myproject.
 """
 import os
 from celery import Celery
+from celery.schedules import crontab
 
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
@@ -17,6 +18,22 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 
+# Configure Celery Beat schedule
+app.conf.beat_schedule = {
+    'import-iris-publications-daily': {
+        'task': 'main.tasks.import_iris_publications',
+        'schedule': crontab(hour=0, minute=0),  # Run every day at 00:00
+        'options': {
+            'expires': 3600,  # Task expires after 1 hour if not executed
+        }
+    },
+}
+
+# Set timezone for beat scheduler
+app.conf.timezone = 'Europe/Rome'  # Adjust to your timezone
+
+
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
     print(f'Request: {self.request!r}')
+

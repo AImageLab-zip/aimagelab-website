@@ -75,6 +75,22 @@
             background-color: #c0392b;
         }
         
+        .nav-links .btn-import {
+            background-color: #27ae60;
+            padding: 0.5rem 1rem;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-links .btn-import:hover {
+            background-color: #229954;
+        }
+        
         /* Main Content */
         .container {
             max-width: 1200px;
@@ -150,6 +166,14 @@
                 <li><a href="{% url 'people' %}">People</a></li>
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li>
+                        <form method="post" action="{% url 'trigger_iris_import' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-import" title="Import publications from IRIS">
+                                Import IRIS Publications
+                            </button>
+                        </form>
+                    </li>
                     <li><span style="color: #ecf0f1;">Welcome, {{ user.username }}</span></li>
                     <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
                 {% else %}
