@@ -1,0 +1,66 @@
+{% extends 'main/base_with_hero.html' %}
+
+{% block title %}{{ post.title }} - AImageLab{% endblock %}
+
+{% block hero_title %}{{ post.title }}{% endblock %}
+
+{% block hero_description %}
+{{ post.created_at|date:"F d, Y" }}
+{% endblock %}
+{% load markdownify %}
+
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12">
+    <article class="card bg-base-200">
+        <div class="card-body">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Left Column: Cover Image -->
+                {% if post.cover %}
+                <div class="order-1">
+                    <figure class="sticky top-24">
+                        <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="w-full rounded-lg">
+                    </figure>
+                </div>
+                {% endif %}
+                
+                <!-- Right Column: Content -->
+                <div class="{% if not post.cover %}lg:col-span-2{% endif %} order-2">
+                    <div class="flex flex-wrap gap-2 mb-6 items-center">
+                        {% if post.categories.all %}
+                            {% for category in post.categories.all %}
+                                <span class="badge badge-outline">{{ category.name }}</span>
+                            {% endfor %}
+                        {% endif %}
+                        {% if post.event_date %}
+                            <span class="badge badge-error gap-1">
+                                <i data-lucide="calendar" class="w-3 h-3"></i>
+                                Event: {{ post.event_date|date:"M d, Y \a\t H:i" }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text max-w-none mb-6 space-y-3">
+                        {{ post.content|markdownify|linebreaks  }}
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="card-actions justify-between">
+                        <a href="{% url 'news' %}" class="btn btn-ghost">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                            Back to News
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'post_edit' post.slug %}" class="btn btn-primary">
+                            <i data-lucide="edit" class="w-4 h-4"></i>
+                            Edit Post
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+</div>
+{% endblock %}

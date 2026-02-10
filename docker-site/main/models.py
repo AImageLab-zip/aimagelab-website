@@ -1,19 +1,27 @@
 # Main app models
 from django.db import models
 from django.contrib.auth.models import User
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class UserProfile(models.Model):
     """Extended user profile for team members"""
     
     ROLE_CHOICES = [
-        ('professor', 'Full Professor'),
+        # ('professor_special', 'Full Professor (University Dean)'),
+        ('full_professor', 'Full Professor'),
         ('assoc_professor', 'Associate Professor'),
-        ('asst_professor', 'Assistant Professor'),
+        ('researcher_tt', 'Researcher (RTT)'),
+        ('researcher_a', 'Researcher (RTD-A)'),
+        ('researcher_b', 'Researcher (RTD-B)'),
         ('postdoc', 'Postdoctoral Researcher'),
+        ('research_fellow', 'Research Fellow'),
+        ('collaborator', 'External Collaborator'),
         ('phd', 'PhD Student'),
         ('intern', 'Research Intern'),
         ('alumni', 'Alumni'),
+        ('past_member', 'Past Member'),
+        ('guest', 'Visitor Researcher'), # ?
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -31,43 +39,21 @@ class UserProfile(models.Model):
     google_scholar = models.URLField(blank=True)
     github = models.URLField(blank=True)
     linkedin = models.URLField(blank=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        ordering = ['display_order', 'user__first_name']
-    
-    def __str__(self):
-        return f"{self.user.get_full_name()} - {self.get_role_display()}"
-    
-    def get_full_name(self):
-        return self.user.get_full_name() or self.user.username
-
-
-class Staff(models.Model):
-    """Staff member with IRIS integration"""
-    user_profile = models.OneToOneField(
-        UserProfile, 
-        on_delete=models.CASCADE, 
-        related_name='staff_info',
+    phone_number = PhoneNumberField(
+        blank=True,
         null=True,
-        blank=True
+        region='IT',
+        help_text="Contact phone number (international format)"
     )
-    nome = models.CharField(max_length=200, verbose_name="First Name")
-    cognome = models.CharField(max_length=200, verbose_name="Last Name")
-    
-    # Primary IRIS identifier - Fiscal Code (Codice Fiscale)
+    # IRIS Integration fields
     codice_fiscale = models.CharField(
         max_length=16,
-        unique=True,
-        null=True,
         blank=True,
+        null=True,
+        unique=True,
         verbose_name="Codice Fiscale",
         help_text="Italian fiscal code (primary IRIS identifier)"
     )
-    
-    # Cached IRIS identifiers (retrieved from API using CF)
     iris_pid = models.CharField(
         max_length=50,
         blank=True,
@@ -86,28 +72,25 @@ class Staff(models.Model):
         verbose_name="IRIS ID AB",
         help_text="IRIS ID AB - cached from API"
     )
-    
-    # Legacy field for backward compatibility
     id_iris = models.CharField(
         max_length=50,
         blank=True,
         null=True,
         verbose_name="Legacy IRIS ID",
-        help_text="Legacy field - use codice_fiscale instead"
+        help_text="Legacy field for backward compatibility"
     )
-    
-    hidden = models.BooleanField(default=False, verbose_name="Hidden")
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = "Staff Member"
-        verbose_name_plural = "Staff Members"
-        ordering = ['cognome', 'nome']
+        ordering = ['display_order', 'user__first_name']
     
     def __str__(self):
-        return f"{self.cognome} {self.nome}"
+        return f"{self.user.get_full_name()} - {self.get_role_display()}"
+    
+    def get_full_name(self):
+        return self.user.get_full_name() or self.user.username
 
 
 class PublicationIRIS(models.Model):
@@ -158,10 +141,10 @@ class PublicationIRIS(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # Many-to-many relationship with Staff
-    staff_members = models.ManyToManyField(
-        Staff,
-        through='StaffPublicationIRIS',
+    # Many-to-many relationship with UserProfile
+    authors = models.ManyToManyField(
+        UserProfile,
+        through='UserProfilePublicationIRIS',
         related_name='publications'
     )
     
@@ -179,10 +162,10 @@ class PublicationIRIS(models.Model):
         return f"{self.titolo[:100]} ({self.anno})"
 
 
-class StaffPublicationIRIS(models.Model):
-    """Link table between Staff and Publications with position info"""
-    staff = models.ForeignKey(
-        Staff,
+class UserProfilePublicationIRIS(models.Model):
+    """Link table between UserProfile and Publications with position info"""
+    user_profile = models.ForeignKey(
+        UserProfile,
         on_delete=models.CASCADE,
         related_name='publication_links'
     )
@@ -197,13 +180,13 @@ class StaffPublicationIRIS(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = "Staff-Publication Link"
-        verbose_name_plural = "Staff-Publication Links"
-        unique_together = [['staff', 'publication']]
+        verbose_name = "UserProfile-Publication Link"
+        verbose_name_plural = "UserProfile-Publication Links"
+        unique_together = [['user_profile', 'publication']]
         ordering = ['publication__anno', 'posizione']
     
     def __str__(self):
-        return f"{self.staff} - {self.publication.titolo[:50]}"
+        return f"{self.user_profile} - {self.publication.titolo[:50]}"
 
 
 class IRISImportLog(models.Model):
@@ -232,3 +215,68 @@ class IRISImportLog(models.Model):
     
     def __str__(self):
         return f"Import {self.id} - {self.status} at {self.started_at}"
+
+
+class Category(models.Model):
+    """Blog post category model"""
+    
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True)
+    
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = "Categories"
+    
+    def __str__(self):
+        return self.name
+
+
+class Post(models.Model):
+    """Blog post model"""
+    
+    title = models.CharField(max_length=300)
+    description = models.TextField(blank=True)
+    cover = models.ImageField(upload_to='blog_covers/', blank=True, null=True)
+    thumbnail = models.ImageField(upload_to='blog_thumbnails/', blank=True, null=True, help_text="Cropped thumbnail for news listings (480x200)")
+    slug = models.SlugField(unique=True)
+    
+    
+    categories = models.ManyToManyField("Category", related_name="posts")
+    
+    #author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    event_date = models.DateTimeField(blank=True, null=True)
+    is_published = models.BooleanField(default=True)
+    is_pinned = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.title
+
+
+class Project(models.Model):
+    """Research project model"""
+
+    name = models.CharField(max_length=200)
+    title = models.CharField(max_length=300)
+    description = models.TextField(blank=True)
+    logo = models.ImageField(upload_to='project_logos/', blank=True, null=True, help_text="Project logo or icon")
+    website = models.URLField(blank=True, help_text="Project website or homepage URL")
+    founding_by = models.CharField(max_length=200, blank=True)
+    project_type = models.CharField(max_length=100, blank=True)
+    start_date = models.DateField()
+    end_date = models.DateField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-start_date', 'name']
+
+    def __str__(self):
+        return f"{self.title} ({self.name})"
+

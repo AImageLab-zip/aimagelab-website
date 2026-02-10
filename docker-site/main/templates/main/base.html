@@ -1,204 +1,186 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="aimagelab-theme">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AImageLab Application{% endblock %}</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            background-color: #f5f5f5;
-        }
-        
-        /* Navigation Bar */
-        nav {
-            background-color: #2c3e50;
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .nav-brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-decoration: none;
-            color: white;
-        }
-        
-        .nav-links {
-            list-style: none;
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-        
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        
-        .nav-links a:hover {
-            background-color: #34495e;
-        }
-        
-        .nav-links .btn-logout {
-            background-color: #e74c3c;
-            padding: 0.5rem 1rem;
-            border: none;
-            color: white;
-            cursor: pointer;
-            border-radius: 4px;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .nav-links .btn-logout:hover {
-            background-color: #c0392b;
-        }
-        
-        .nav-links .btn-import {
-            background-color: #27ae60;
-            padding: 0.5rem 1rem;
-            border: none;
-            color: white;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: background-color 0.3s;
-        }
-        
-        .nav-links .btn-import:hover {
-            background-color: #229954;
-        }
-        
-        /* Main Content */
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 20px;
-        }
-        
-        /* Messages */
-        .messages {
-            max-width: 1200px;
-            margin: 1rem auto;
-            padding: 0 20px;
-        }
-        
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 4px;
-            border-left: 4px solid;
-        }
-        
-        .alert-success {
-            background-color: #d4edda;
-            border-color: #28a745;
-            color: #155724;
-        }
-        
-        .alert-error {
-            background-color: #f8d7da;
-            border-color: #dc3545;
-            color: #721c24;
-        }
-        
-        .alert-info {
-            background-color: #d1ecf1;
-            border-color: #17a2b8;
-            color: #0c5460;
-        }
-        
-        .alert-warning {
-            background-color: #fff3cd;
-            border-color: #ffc107;
-            color: #856404;
-        }
-        
-        /* Content Card */
-        .card {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .card h1 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-        }
-        
-        .card h2 {
-            color: #34495e;
-            margin-bottom: 1rem;
-        }
-    </style>
+    <title>{% block title %}AImageLab - AI Vision Research Laboratory{% endblock %}</title>
+    {% load static %}
+    <link rel="icon" href="{% static 'main/assets/logo.svg' %}" type="image/svg+xml">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/colors/properties-extended.css" rel="stylesheet" type="text/css" />
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <link rel="stylesheet" href="{% static 'main/css/styles.css' %}">
+    <!-- Maplibre GL -->
+    <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <!-- Navigation Bar -->
-    <nav>
-        <div class="nav-container">
-            <a href="{% url 'home' %}" class="nav-brand">AImageLab</a>
-            <ul class="nav-links">
-                <li><a href="{% url 'home' %}">Home</a></li>
-                <li><a href="{% url 'people' %}">People</a></li>
+
+<body class="min-h-screen flex flex-col font-sans bg-base-100 text-base-content">
+    <!-- Navigation -->
+    <div id="navbar" class="fixed top-0 z-20 w-full px-4 transition-colors duration-300">
+        <div class="navbar container mx-auto">
+            <div class="navbar-start">
+                <img src="{% static 'main/assets/logo.svg' %}" alt="AImageLab Logo" class="h-10 mr-2" />
+            </div>
+            <div class="navbar-end gap-2">
+                <div class="hidden lg:flex">
+                    <ul class="menu menu-horizontal px-1">
+                        <li><a class="font-bold" href="{% url 'home' %}">Home</a></li>
+                        <li><a class="font-bold" href="{% url 'people' %}">People</a></li>
+                        <li><a class="font-bold" href="{% url 'news' %}">News</a></li>
+                        <li><a class="font-bold" href="{% url 'projects' %}">Projects</a></li>
+                        <li><a class="font-bold" href="{% url 'contacts' %}">Contacts</a></li>
+                       
+                    </ul>
+                </div>
+                 {% if user.is_authenticated %}
+                            <a class="btn btn-primary btn-sm btn-outline " href="{% url 'dashboard' %}">Dashboard</a>
+                        {% endif %}
+                
                 {% if user.is_authenticated %}
-                    <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li>
-                        <form method="post" action="{% url 'trigger_iris_import' %}" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn-import" title="Import publications from IRIS">
-                                Import IRIS Publications
-                            </button>
-                        </form>
-                    </li>
-                    <li><span style="color: #ecf0f1;">Welcome, {{ user.username }}</span></li>
-                    <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
-                {% else %}
-                    <li><a href="{% url 'login' %}">Login</a></li>
+                    <a href="{% url 'logout' %}" class="btn btn-primary btn-sm hidden lg:flex">Logout</a>
                 {% endif %}
-            </ul>
+                
+                {% if user.is_staff %}
+                    <form method="post" action="{% url 'sync_ldap' %}" class="hidden lg:flex">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary btn-sm">Sync LDAP</button>
+                    </form>
+                    <form method="post" action="{% url 'trigger_iris_import' %}" class="hidden lg:flex">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-accent btn-sm" title="Import publications from IRIS">
+                            Import IRIS
+                        </button>
+                    </form>
+                {% endif %}
+                
+                <div class="dropdown dropdown-end lg:hidden">
+                    <div tabindex="0" role="button" class="btn btn-ghost border-base-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </div>
+                    <ul tabindex="-1" class="menu menu-sm dropdown-content bg-base-100 z-1 mt-2 w-48 p-2">
+                        <li><a href="{% url 'home' %}">Home</a></li>
+                        <li><a href="{% url 'people' %}">People</a></li>
+                        <li><a href="{% url 'news' %}">News</a></li>
+                        <li><a href="{% url 'projects' %}">Projects</a></li>
+                        <li><a href="{% url 'contacts' %}">Contacts</a></li>
+                        {% if user.is_authenticated %}
+                            <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                            <li><a href="{% url 'logout' %}">Logout</a></li>
+                            {% if user.is_staff %}
+                                <li>
+                                    <form method="post" action="{% url 'sync_ldap' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="w-full text-left">Sync LDAP</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form method="post" action="{% url 'trigger_iris_import' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="w-full text-left">Import IRIS</button>
+                                    </form>
+                                </li>
+                            {% endif %}
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
         </div>
-    </nav>
-    
+    </div>
+
     <!-- Messages -->
     {% if messages %}
-        <div class="messages">
+        <div class="fixed top-20 right-4 z-50 space-y-2">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
+                <div class="alert alert-{{ message.tags|default:'info' }} shadow-lg max-w-md">
+                    <div>
+                        <span>{{ message }}</span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">✕</button>
                 </div>
             {% endfor %}
         </div>
     {% endif %}
-    
+
     <!-- Main Content -->
-    <div class="container">
+    <main>
         {% block content %}{% endblock %}
-    </div>
-    
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-neutral text-neutral-content px-6 py-6 mt-auto relative overflow-hidden">
+        <div class="container mx-auto px-6 footer sm:footer-horizontal items-center">
+            <aside class="grid-flow-col items-center">
+                <img src="{% static 'main/assets/logo_w.svg' %}" alt="AImageLab Logo" class="h-12" />
+                <p>
+                    1998-{% now "Y" %} &copy;  AImageLab<br/>University of Modena and Reggio Emilia
+
+                    <br/> 
+                    {% if user.is_authenticated %}
+                    <a class="link text-xs text-current/50" href="{% url 'logout' %}">Logout</a> | 
+                    {% else %}
+                    <a class="link text-xs text-current/50" href="{% url 'login' %}">Login</a> | 
+                    {% endif %}
+                    <a class="link text-xs text-current/50" href="{% url 'privacy_policy' %}">Privacy Policy</a>  |
+                    <a class="link text-xs text-current/50" href="{% url 'contacts' %}">Contacts</a>
+                </p>
+            </aside>
+
+            <div class="grid-flow-col gap-4 md:place-self-center justify-self-center md:justify-self-end">
+                <a href="https://www.youtube.com/@aimagelab" target="_blank" aria-label="YouTube">
+                                        <i data-lucide="youtube" class="w-6 h-6 stroke-1"></i>
+                </a>
+                <a href="https://www.linkedin.com/company/aimagelab" target="_blank" aria-label="LinkedIn">
+                                                           <i data-lucide="linkedin" class="w-6 h-6 stroke-1"></i>
+
+                </a>
+                <a href="https://github.com/aimagelab" target="_blank" aria-label="GitHub">
+                    <i data-lucide="github" class="w-6 h-6 stroke-1"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
     {% block extra_js %}{% endblock %}
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        let scrollTimeout;
+        
+        window.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('bg-base-100');
+                    navbar.classList.add('shadow-lg');
+                } else {
+                    navbar.classList.remove('bg-base-100');
+                    navbar.classList.remove('shadow-lg');
+                }
+            }, 10);
+        });
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    lucide.createIcons();
+  </script>
 </body>
 </html>

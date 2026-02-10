@@ -1,0 +1,228 @@
+{% extends "main/base_with_sidebar.html" %}
+{% load static %}
+{% block title %}News - AImageLab{% endblock %}
+
+{% block hero_title %}Latest News{% endblock %}
+
+{% block hero_description %}
+Stay updated with the latest research breakthroughs, events, and announcements from AImageLab.
+{% endblock %}
+
+{% block main_content %}
+            <!-- Link to add a post if authenticated and staff -->
+            {% if user.is_authenticated and user.is_staff %}
+            <div class="card bg-base-200 mb-6">
+                <div class="card-body flex flex-col md:flex-row gap-3 justify-end">
+                    <p class="block my-auto text-lg">
+                        <span class="font-bold text-primary">
+                            Welcome back, {{ user.username }}!
+                        </span> <br />
+                        Got a thought to share?
+                    </p>
+                    <a href="{% url 'post_add' %}" class="btn btn-primary">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add News Post
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Search Bar -->
+            <div class="card bg-base-200 mb-6">
+                <div class="card-body">
+                    <form method="get" action="{% url 'news' %}" class="flex flex-col md:flex-row gap-3">
+                        <input type="text" name="search" class="input input-bordered flex-1" placeholder="Search news by title, description, or content..." value="{{ search_query }}" />
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                            Search
+                        </button>
+                    </form>
+                    {% if search_query %}
+                    <div class="mt-3">
+                        <p class="text-sm">
+                            Showing results for: <strong class="text-primary">"{{ search_query }}"</strong>
+                            <a href="{% url 'news' %}" class="link link-primary ml-2">Clear search</a>
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    {% if category_query %}
+                    <div class="mt-3">
+                        <p class="text-sm">
+                            Filtering by category: <strong class="text-primary">"{{ category_query }}"</strong>
+                            <a href="{% url 'news' %}" class="link link-primary ml-2">Clear filter</a>
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- News Posts -->
+            <div class="space-y-6">
+                {% for post in posts %}
+                <article class="card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-all">
+                    <div class="card-body">
+
+
+                        <!-- Content Layout: Image on left, content on right -->
+                        <div class="flex flex-col md:flex-row">
+
+                            <div>
+                                <!-- Image (thumbnail if exists, fallback to cover) -->
+                                {% if post.thumbnail or post.cover %}
+                                <figure class="w-full md:w-64 mb-4 md:pr-4">
+                                    <img src="{% if post.thumbnail %}{{ post.thumbnail.url }}{% else %}{{ post.cover.url }}{% endif %}" alt="{{ post.title }}" class="rounded-lg w-full md:h-auto object-cover" style="aspect-ratio: 2 / 1;" />
+                                </figure>
+                                {% endif %}
+                            </div>
+
+                            <!-- Content -->
+                            <div class="flex-1 min-w-0">
+                                {% if post.event_date %}
+                                <span class="badge badge-primary mb-2 gap-2">
+                                    <i data-lucide="calendar" class="h-4 w-4"></i>
+                                    Event on {{ post.event_date|date:"M d, Y" }}
+                                </span>
+                                {% endif %}
+                                <!-- Title -->
+                                <h2 class="card-title block text-2xl">
+
+                                    {% if post.is_pinned %}
+                                    <span class="badge badge-secondary gap-2">
+                                        <i data-lucide="pin" class="h-4 w-4"></i>
+                                        Pinned
+                                    </span>
+                                    {% endif %}
+                                    {% if not post.is_published %}
+                                    <span class="badge badge-warning ">
+                                        <i data-lucide="pencil-line" class="h-4 w-4"></i>
+                                        Draft!</span>
+                                    {% endif %}
+                                    <a href="{% url 'single' post.slug %}" class="hover:text-primary transition-colors">
+                                        {{ post.title }}
+                                    </a>
+                                </h2>
+
+
+
+                                <!-- Description -->
+                                {% if post.description %}
+                                <p class="text-base-content/80 mt-3">{{ post.description }}</p>
+                                {% endif %}
+
+                                
+                            </div>
+                        </div>
+
+                        <div class="card-actions justify-end items-center mt-4">
+                                    <!-- Meta Info -->
+                                    <div class="flex flex-wrap items-center gap-2 text-sm mr-auto text-base-content/60">
+
+                                        <span> <i data-lucide="calendar" class="h-4 w-4 inline"></i> {{ post.created_at|date:"F d, Y" }}</span>
+                                        {% if post.categories.all %}
+                                        <div class="flex flex-wrap gap-1">
+                                            {% for category in post.categories.all %}
+                                            <span class="badge badge-sm badge-outline">{{ category.name }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{% url 'single' post.slug %}" class="btn btn-primary btn-ghost btn-sm">
+                                        Read more ↗
+                                    </a>
+                                </div>
+                    </div>
+                </article>
+                {% empty %}
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <p class="text-center text-base-content/60">
+                            {% if search_query %}
+                            No news found matching your search.
+                            {% else %}
+                            No news available.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if posts.has_other_pages %}
+            <div class="flex flex-col items-center mt-8 gap-4">
+                <div class="join">
+                    {% if posts.has_previous %}
+                    <a href="?page={{ posts.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="join-item btn">
+                        «
+                    </a>
+                    {% endif %}
+
+                    {% for num in posts.paginator.page_range %}
+                    {% if posts.number == num %}
+                    <button class="join-item btn btn-active btn-primary">{{ num }}</button>
+                    {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %} <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" class="join-item btn">{{ num }}</a>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if posts.has_next %}
+                        <a href="?page={{ posts.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="join-item btn">
+                            »
+                        </a>
+                        {% endif %}
+                </div>
+                <p class="text-sm text-base-content/60">
+                    Page {{ posts.number }} of {{ posts.paginator.num_pages }} • Total posts: {{ posts.paginator.count }}
+                </p>
+            </div>
+            {% endif %}
+{% endblock %}
+
+{% block sidebar_content %}
+                <!-- Upcoming Events -->
+                <div class="card bg-base-200 mb-6">
+                    <div class="card-body">
+                        <h3 class="card-title text-primary mb-4">
+                            <i data-lucide="calendar-plus" class="h-6 w-6"></i>
+                            Upcoming Events
+                        </h3>
+                        {% if upcoming_events %}
+                        <div class="space-y-4">
+                            {% for event in upcoming_events %}
+                            <div class="border-l-4 border-primary pl-4 py-2">
+                                <a href="{% url 'single' event.slug %}" class="font-semibold hover:text-primary transition-colors">
+                                    {{ event.title }}
+                                </a>
+                                <div class="flex items-center gap-2 text-sm text-base-content/60 mt-1">
+                                    <i data-lucide="calendar" class="h-4 w-4 inline"></i>
+                                    {{ event.event_date|date:"M d, Y" }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-sm text-base-content/60">No upcoming events.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h3 class="card-title text-primary mb-4">
+                            <i data-lucide="tags" class="h-6 w-6"></i>
+                            Categories
+                        </h3>
+                        {% if categories %}
+                        <div class="flex flex-wrap gap-2">
+                            {% for category in categories %}
+                            <a href="?category={{ category.slug }}" class="badge badge-lg badge-outline hover:text-primary transition-colors">
+                                {{ category.name }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-sm text-base-content/60">No categories available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+{% endblock %}

@@ -1,5 +1,5 @@
 """
-Celery tasks for the main app
+Celery tasks for the main app - includes IRIS import and user sync functionality
 """
 import requests
 from requests.auth import HTTPBasicAuth
@@ -11,13 +11,15 @@ from django.db import transaction
 from django.conf import settings
 import logging
 
-from .models import Staff, PublicationIRIS, StaffPublicationIRIS, IRISImportLog
+from .models import UserProfile, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog
+from .services import add_or_update_user, bulk_add_or_update_users
 
 logger = logging.getLogger(__name__)
 
 # Lock key for preventing concurrent imports
 IRIS_IMPORT_LOCK_KEY = 'iris_import_in_progress'
 IRIS_IMPORT_LOCK_TIMEOUT = 3600  # 1 hour timeout
+
 
 
 @shared_task(bind=True)
@@ -59,20 +61,20 @@ def import_iris_publications(self):
             'errors': []
         }
         
-        # Get all staff members with Codice Fiscale
-        staff_members = Staff.objects.filter(
-            hidden=False,
+        # Get all user profiles with Codice Fiscale
+        user_profiles = UserProfile.objects.filter(
+            is_visible=True,
             codice_fiscale__isnull=False
-        ).exclude(codice_fiscale='')
+        ).exclude(codice_fiscale='').select_related('user')
         
-        logger.info(f"Found {staff_members.count()} staff members to process")
+        logger.info(f"Found {user_profiles.count()} user profiles to process")
         
-        for staff in staff_members:
+        for user_profile in user_profiles:
             try:
-                logger.info(f"Processing {staff.cognome} {staff.nome} (CF: {staff.codice_fiscale})")
+                logger.info(f"Processing {user_profile.user.get_full_name()} (CF: {user_profile.codice_fiscale})")
                 
                 # Fetch publications from IRIS
-                result = fetch_staff_publications(staff, import_log)
+                result = fetch_user_publications(user_profile, import_log)
                 
                 stats['staff_processed'] += 1
                 stats['publications_created'] += result['created']
@@ -84,13 +86,13 @@ def import_iris_publications(self):
                     state='PROGRESS',
                     meta={
                         'current': stats['staff_processed'],
-                        'total': staff_members.count(),
-                        'status': f"Processing {staff.cognome}..."
+                        'total': user_profiles.count(),
+                        'status': f"Processing {user_profile.user.get_full_name()}..."
                     }
                 )
                 
             except Exception as e:
-                error_msg = f"Error processing staff {staff.id_iris}: {str(e)}"
+                error_msg = f"Error processing user {user_profile.user.username}: {str(e)}"
                 logger.error(error_msg)
                 stats['errors'].append(error_msg)
         
@@ -131,13 +133,13 @@ def import_iris_publications(self):
         cache.delete(IRIS_IMPORT_LOCK_KEY)
 
 
-def fetch_staff_publications(staff, import_log):
+def fetch_user_publications(user_profile, import_log):
     """
-    Fetch publications for a single staff member from IRIS GW REST API.
+    Fetch publications for a single user from IRIS GW REST API.
     Uses Codice Fiscale (CF) directly to query publications.
     
     Args:
-        staff: Staff model instance
+        user_profile: UserProfile model instance
         import_log: IRISImportLog instance
         
     Returns:
@@ -157,28 +159,28 @@ def fetch_staff_publications(staff, import_log):
     }
     
     # Optionally fetch and cache person data for IRIS IDs (useful for other integrations)
-    if not staff.iris_pid or not staff.iris_id:
-        logger.info(f"Caching person data for CF: {staff.codice_fiscale}")
-        person_data = fetch_person_by_cf(staff.codice_fiscale, auth)
+    if not user_profile.iris_pid or not user_profile.iris_id:
+        logger.info(f"Caching person data for CF: {user_profile.codice_fiscale}")
+        person_data = fetch_person_by_cf(user_profile.codice_fiscale, auth)
         
         if person_data:
-            # Update staff with IRIS identifiers
-            staff.iris_pid = person_data.get('pid', '')
-            staff.iris_id = str(person_data.get('id', ''))
-            staff.iris_id_ab = person_data.get('idAb', '')
-            staff.save()
-            logger.info(f"Cached IRIS IDs - PID: {staff.iris_pid}, ID: {staff.iris_id}")
+            # Update user_profile with IRIS identifiers
+            user_profile.iris_pid = person_data.get('pid', '')
+            user_profile.iris_id = str(person_data.get('id', ''))
+            user_profile.iris_id_ab = person_data.get('idAb', '')
+            user_profile.save()
+            logger.info(f"Cached IRIS IDs - PID: {user_profile.iris_pid}, ID: {user_profile.iris_id}")
     
     # Fetch publications directly by Codice Fiscale
     api_url = f"{settings.IRIS_API_BASE_URL}/products"
     params = {
-        'author.cf': staff.codice_fiscale,
+        'author.cf': user_profile.codice_fiscale,
         'pageSize': 500  # Maximum allowed per page
     }
     
     try:
         # Fetch publications JSON from IRIS GW REST API
-        logger.info(f"Fetching publications for CF: {staff.codice_fiscale}")
+        logger.info(f"Fetching publications for CF: {user_profile.codice_fiscale}")
         response = requests.get(api_url, params=params, auth=auth, headers=headers, timeout=30)
         response.raise_for_status()
         
@@ -188,30 +190,30 @@ def fetch_staff_publications(staff, import_log):
         # The response structure is: {"count": "X", "page": "1", "resultList": [...]}
         result_list = data.get('resultList', [])
         
-        logger.info(f"Found {len(result_list)} publications for CF: {staff.codice_fiscale}")
+        logger.info(f"Found {len(result_list)} publications for CF: {user_profile.codice_fiscale}")
         
         # Process each publication
         for pub_data in result_list:
             try:
-                process_publication_json(pub_data, staff, stats)
+                process_publication_json(pub_data, user_profile, stats)
             except Exception as e:
                 logger.error(f"Error processing publication: {str(e)}")
                 
     except requests.RequestException as e:
-        logger.error(f"Failed to fetch publications for CF {staff.codice_fiscale}: {str(e)}")
+        logger.error(f"Failed to fetch publications for CF {user_profile.codice_fiscale}: {str(e)}")
         raise
     
     return stats
 
 
 @transaction.atomic
-def process_publication_json(pub_data, staff, stats):
+def process_publication_json(pub_data, user_profile, stats):
     """
     Process a single publication from JSON and create/update in database.
     
     Args:
         pub_data: Dictionary containing publication data from GW REST API
-        staff: Staff model instance
+        user_profile: UserProfile model instance
         stats: Dictionary to update with statistics
     """
     # Extract publication handle (unique identifier)
@@ -307,10 +309,10 @@ def process_publication_json(pub_data, staff, stats):
     # Save publication
     publication.save()
     
-    # Create/update staff-publication link
+    # Create/update user-profile-publication link
     # Position is not available in the new API, set to 0
-    link, link_created = StaffPublicationIRIS.objects.update_or_create(
-        staff=staff,
+    link, link_created = UserProfilePublicationIRIS.objects.update_or_create(
+        user_profile=user_profile,
         publication=publication,
         defaults={'posizione': 0}
     )
@@ -364,3 +366,169 @@ def is_import_running():
         bool: True if import is running, False otherwise
     """
     return bool(cache.get(IRIS_IMPORT_LOCK_KEY))
+
+
+# ============================================================================
+# User Management and Sync Tasks
+# ============================================================================
+
+@shared_task(bind=True, max_retries=3)
+def sync_user_task(self, user_data):
+    """
+    Celery task to add or update a single user asynchronously.
+    
+    Args:
+        user_data (dict): User data dictionary
+        
+    Returns:
+        dict: Result with user info and status
+        
+    Example:
+        >>> from main.tasks import sync_user_task
+        >>> user_data = {
+        ...     'username': 'jdoe',
+        ...     'email': 'john.doe@example.com',
+        ...     'first_name': 'John',
+        ...     'last_name': 'Doe',
+        ...     'role': 'phd',
+        ... }
+        >>> result = sync_user_task.delay(user_data)
+        >>> print(result.get())
+    """
+    try:
+        user, profile, created = add_or_update_user(user_data)
+        
+        logger.info(
+            f"User {user.username} {'created' if created else 'updated'} successfully"
+        )
+        
+        return {
+            'success': True,
+            'username': user.username,
+            'email': user.email,
+            'created': created,
+            'message': f"User {'created' if created else 'updated'} successfully"
+        }
+    except Exception as exc:
+        logger.error(f"Error syncing user: {str(exc)}")
+        # Retry with exponential backoff
+        raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
+
+
+@shared_task
+def bulk_sync_users_task(users_data_list):
+    """
+    Celery task to add or update multiple users in batch.
+    
+    Args:
+        users_data_list (list): List of user data dictionaries
+        
+    Returns:
+        dict: Summary of the operation
+        
+    Example:
+        >>> from main.tasks import bulk_sync_users_task
+        >>> users = [
+        ...     {'username': 'user1', 'email': 'user1@example.com', 'role': 'phd'},
+        ...     {'username': 'user2', 'email': 'user2@example.com', 'role': 'postdoc'},
+        ... ]
+        >>> result = bulk_sync_users_task.delay(users)
+        >>> print(result.get())
+    """
+    try:
+        results = bulk_add_or_update_users(users_data_list)
+        
+        logger.info(
+            f"Bulk sync completed: {results['created_count']} created, "
+            f"{results['updated_count']} updated, {results['error_count']} errors"
+        )
+        
+        return {
+            'success': True,
+            'summary': {
+                'created': results['created_count'],
+                'updated': results['updated_count'],
+                'errors': results['error_count'],
+            },
+            'details': results
+        }
+    except Exception as exc:
+        logger.error(f"Error in bulk sync: {str(exc)}")
+        return {
+            'success': False,
+            'error': str(exc)
+        }
+
+
+@shared_task
+def populate_users_from_ldap():
+    """
+    Celery task to populate users from LDAP server daily.
+    """
+    from django.core.management import call_command
+    from django.utils import timezone
+
+    try:
+        logger.info(f"Starting LDAP user population at {timezone.now()}")
+        call_command('populate_from_ldap')
+        logger.info("LDAP user population completed successfully")
+        return {'success': True, 'message': 'LDAP population completed'}
+    except Exception as exc:
+        logger.error(f"LDAP population failed: {str(exc)}")
+        return {'success': False, 'error': str(exc)}
+
+
+@shared_task
+def sync_users_from_external_source(source_url=None, source_data=None):
+    """
+    Celery task to sync users from an external source (API, file, etc.).
+    
+    Args:
+        source_url (str, optional): URL to fetch user data from
+        source_data (list, optional): Direct user data list
+        
+    Returns:
+        dict: Summary of the synchronization
+        
+    Example:
+        >>> # From data
+        >>> result = sync_users_from_external_source.delay(source_data=users_list)
+        >>> 
+        >>> # From URL (you need to implement the fetch logic)
+        >>> result = sync_users_from_external_source.delay(source_url='https://api.example.com/users')
+    """
+    try:
+        if source_data:
+            users_data = source_data
+        elif source_url:
+            # TODO: Implement fetching from external URL
+            # import requests
+            # response = requests.get(source_url)
+            # users_data = response.json()
+            logger.warning("Fetching from URL not yet implemented")
+            return {'success': False, 'error': 'URL fetching not implemented'}
+        else:
+            return {'success': False, 'error': 'No data source provided'}
+        
+        results = bulk_add_or_update_users(users_data)
+        
+        logger.info(
+            f"External sync completed: {results['created_count']} created, "
+            f"{results['updated_count']} updated, {results['error_count']} errors"
+        )
+        
+        return {
+            'success': True,
+            'summary': {
+                'created': results['created_count'],
+                'updated': results['updated_count'],
+                'errors': results['error_count'],
+            },
+            'details': results
+        }
+    except Exception as exc:
+        logger.error(f"Error syncing from external source: {str(exc)}")
+        return {
+            'success': False,
+            'error': str(exc)
+        }

@@ -1,0 +1,166 @@
+{% extends "main/base_with_sidebar.html" %}
+
+{% block title %}Edit Profile - AImageLab{% endblock %}
+
+{% block hero_title %}Edit Your Profile{% endblock %}
+
+{% block hero_description %}
+Update your personal information and professional links
+{% endblock %}
+
+{% block main_content %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="space-y-6">
+                <!-- Basic Information Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="user" class="w-5 h-5"></i>
+                            Basic Information
+                        </h2>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">Biography</legend>
+                            <textarea id="bio" name="bio" rows="4" class="textarea w-full" placeholder="Tell us about yourself...">{{ profile.bio }}</textarea>
+                            <p class="label overflow-scroll">A short description of your background and interests</p>
+                        </fieldset>
+                        
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">Phone Number</legend>
+                            <input class="input w-full" id="phone_number" name="phone_number"
+                                   value="{{ profile.phone_number }}" placeholder="+39 123 456 7890">
+                            <p class="label overflow-scroll">International format preferred (e.g., +39-123-456-7890)</p>
+                        </fieldset>
+                    </div>
+                </div>
+                
+                <!-- Professional Links Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="link" class="w-5 h-5"></i>
+                            Professional Links
+                        </h2>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">
+                                <i data-lucide="globe" class="w-4 h-4 inline mr-2"></i>
+                                Personal Website
+                            </legend>
+                            <input type="url" class="input w-full" id="website" name="website"
+                                   value="{{ profile.website }}" placeholder="https://your-website.com">
+                        </fieldset>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">
+                                <i data-lucide="book-open" class="w-4 h-4 inline mr-2"></i>
+                                Google Scholar
+                            </legend>
+                            <input type="url" class="input w-full" id="google_scholar" name="google_scholar"
+                                   value="{{ profile.google_scholar }}" placeholder="https://scholar.google.com/...">
+                        </fieldset>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">
+                                <i data-lucide="github" class="w-4 h-4 inline mr-2"></i>
+                                GitHub
+                            </legend>
+                            <input type="url" class="input w-full" id="github" name="github"
+                                   value="{{ profile.github }}" placeholder="https://github.com/username">
+                        </fieldset>
+                        
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">
+                                <i data-lucide="linkedin" class="w-4 h-4 inline mr-2"></i>
+                                LinkedIn
+                            </legend>
+                            <input type="url" class="input w-full" id="linkedin" name="linkedin"
+                                   value="{{ profile.linkedin }}" placeholder="https://linkedin.com/in/username">
+                        </fieldset>
+                    </div>
+                </div>
+        </div>
+{% endblock %}
+
+{% block sidebar_content %}
+        <div class="space-y-6">
+                <!-- Profile Picture Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="camera" class="w-5 h-5"></i>
+                            Profile Picture
+                        </h2>
+                        
+                        <!-- Current Avatar Display -->
+                        <div class="flex flex-col items-center mb-6">
+                            <div class="avatar mb-4">
+                                {% if profile.avatar %}
+                                <div class="mask mask-squircle w-32 ring ring-primary ring-offset-base-100 ring-offset-2">
+                                    <img src="{{ profile.avatar.url }}" alt="Current avatar" />
+                                </div>
+                                {% else %}
+                                <div class="mask mask-squircle w-32 bg-base-300 ring ring-primary ring-offset-base-100 ring-offset-2">
+                                    <img id="dicebear-avatar-img" data-seed="{{ user.get_full_name|default:user.username|urlencode }}" alt="Default avatar" />
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">Upload New Picture</legend>
+                            <input type="file" class="file-input w-full" id="avatar" name="avatar" accept="image/*">
+                            <p class="label overflow-scroll">JPG, PNG, GIF. Max size: 5MB. Recommended: square aspect ratio</p>
+                        </fieldset>
+                        
+                        {% if profile.avatar %}
+                        <div class="divider my-2"></div>
+                        <div class="form-control">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input class="checkbox checkbox-primary" type="checkbox" id="remove_avatar" name="remove_avatar">
+                                <span class="label-text text-sm">Remove current picture</span>
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="card bg-base-200 mt-6">
+            <div class="card-body">
+                <div class="flex flex-wrap gap-3 justify-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        Save Changes
+                    </button>
+                    <a href="{% url 'people' %}" class="btn btn-ghost">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        Back to Team
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+<script type="module">
+    import { createAvatar } from 'https://esm.sh/@dicebear/core@9';
+    import { shapes } from 'https://esm.sh/@dicebear/collection@9';
+
+    const dicebearImgs = document.querySelectorAll('[id^="dicebear-avatar-img"]');
+    dicebearImgs.forEach(dicebearImg => {
+        const seed = dicebearImg.dataset.seed || 'ailb';
+        const avatar = createAvatar(shapes, {
+            seed,
+            backgroundColor: ['transparent'],
+            shape1Color: ['BF0004'],
+            shape2Color: ['ff4455'],
+            shape3Color: ['801518'],
+        });
+        const svg = avatar.toString();
+        const encoded = encodeURIComponent(svg);
+        dicebearImg.src = `data:image/svg+xml,${encoded}`;
+    });
+</script>
+{% endblock %}
