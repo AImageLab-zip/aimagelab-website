@@ -182,8 +182,8 @@ LDAP_SERVER_URI = 'ldap://ailb-login-01.ing.unimore.it:389'
 LDAP_SEARCH_BASE = 'dc=aimagelab,dc=unimore,dc=it'
 LDAP_BIND_DN = None  # Anonymous bind
 LDAP_BIND_PASSWORD = None
-LDAP_ATTRIBUTES = ['uid', 'givenName', 'sn', 'mail']
-
+LDAP_ATTRIBUTES = ['uid', 'givenName', 'sn', 'mail', 'employeeNumber']
+    
 # Role mapping from LDAP organizational units to Django UserProfile roles
 LDAP_ROLE_MAPPING = {
     'professori_ordinari': 'full_professor',
