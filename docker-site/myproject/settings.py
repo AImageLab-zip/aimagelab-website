@@ -60,7 +60,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "mozilla_django_oidc",  # OIDC authentication
     "main.apps.MainConfig",
-    "django_sass", #https://pypi.org/project/django-sass/
+    'markdownify.apps.MarkdownifyConfig',
 ]
 
 MIDDLEWARE = [
@@ -151,6 +151,24 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 
+# Cache Configuration (for IRIS import locking and other caching)
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.environ.get("CACHE_URL", "redis://redis:6379/1"),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+# IRIS Gateway REST API Configuration
+IRIS_API_BASE_URL = os.environ.get(
+    "IRIS_API_BASE_URL", "https://iris.unimore.it/gw/rest/api"
+)
+IRIS_API_USERNAME = os.environ.get("IRIS_API_USERNAME", "")
+IRIS_API_PASSWORD = os.environ.get("IRIS_API_PASSWORD", "")
+
 # Celery Beat Scheduler - Use database-backed scheduler
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
@@ -168,21 +186,35 @@ LDAP_ATTRIBUTES = ['uid', 'givenName', 'sn', 'mail']
 
 # Role mapping from LDAP organizational units to Django UserProfile roles
 LDAP_ROLE_MAPPING = {
-    'strutturati': 'professor', #provvisorio
+    'professori_ordinari': 'full_professor',
+    'professori_associati': 'assoc_professor',
+    'ricercatori_rtt': 'researcher_tt',
+    'ricercatori_rtda': 'researcher_a',
+    'ricercatori_rtdb': 'researcher_b',
+    'assegnisti': 'research_fellow',
+    'collaborazioni': 'collaborator',
+    'contratti_ricerca': 'research_fellow',
+    'incarichi_ricerca': 'research_fellow',
+    'incarichi_postdoc': 'postdoc',
     'dottorandi': 'phd',
-    'tesisti': 'intern',
-    'studenti': 'alumni',
     'past_members': 'past_member',
-    'ospiti': 'alumni',
 }
 
 # Role priority (higher number = higher priority when user in multiple groups)
 LDAP_ROLE_PRIORITY = {
-    'professor': 5,
-    'postdoc': 4,
-    'phd': 3,
-    'intern': 2,
-    'alumni': 1,
+    'full_professor': 20,
+    'assoc_professor': 19,
+    'researcher_tt': 15,
+    'researcher_b': 14,
+    'researcher_a': 13,
+    'postdoc': 10,
+    'phd': 6,
+    'research_fellow': 4,
+    'research_contract': 4,
+    'research_assignment': 4,
+    'collaborator': 3,
+
+    'alumni': 0,
     'past_member': 0,
 }
 

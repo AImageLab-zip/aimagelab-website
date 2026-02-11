@@ -1,134 +1,175 @@
-{% extends 'main/base.html' %}
+{% extends 'main/base_with_hero.html' %}
 
 {% block title %}Add User - AImageLab{% endblock %}
 
-{% block content %}
-<div class="form-container">
-    <h1>Add or Update User</h1>
-    <p class="subtitle">Create a new user or update an existing one using Celery background task</p>
-    
-    {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <div class="message {{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-    
-    <form method="post" enctype="multipart/form-data" class="user-form">
-        {% csrf_token %}
-        
-        <div class="form-section">
-            <h2>Basic Information</h2>
+{% block hero_title %}Add or Update User{% endblock %}
+
+{% block hero_description %}
+Create a new user or update an existing one using Celery background task
+{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12 max-w-4xl">
+    <form method="post" enctype="multipart/form-data" class="card bg-base-200">
+        <div class="card-body">
+            {% csrf_token %}
             
-            <div class="form-group">
-                <label for="username">Username *</label>
-                <input type="text" id="username" name="username" required>
-                <small>Unique identifier for the user</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="email">Email *</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="first_name">First Name</label>
-                    <input type="text" id="first_name" name="first_name">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-primary mb-4">Basic Information</h2>
+                
+                <div class="form-control mb-4">
+                    <label class="label" for="username">
+                        <span class="label-text font-semibold">Username *</span>
+                    </label>
+                    <input type="text" id="username" name="username" required class="input input-bordered">
+                    <label class="label">
+                        <span class="label-text-alt">Unique identifier for the user</span>
+                    </label>
                 </div>
                 
-                <div class="form-group">
-                    <label for="last_name">Last Name</label>
-                    <input type="text" id="last_name" name="last_name">
+                <div class="form-control mb-4">
+                    <label class="label" for="email">
+                        <span class="label-text font-semibold">Email *</span>
+                    </label>
+                    <input type="email" id="email" name="email" required class="input input-bordered">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="form-control">
+                        <label class="label" for="first_name">
+                            <span class="label-text font-semibold">First Name</span>
+                        </label>
+                        <input type="text" id="first_name" name="first_name" class="input input-bordered">
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label" for="last_name">
+                            <span class="label-text font-semibold">Last Name</span>
+                        </label>
+                        <input type="text" id="last_name" name="last_name" class="input input-bordered">
+                    </div>
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label class="label" for="password">
+                        <span class="label-text font-semibold">Password</span>
+                    </label>
+                    <input type="password" id="password" name="password" class="input input-bordered">
+                    <label class="label">
+                        <span class="label-text-alt">Leave empty when updating existing users</span>
+                    </label>
+                </div>
+            </div>
+        
+            <div class="divider"></div>
+            
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-primary mb-4">Profile Information</h2>
+                
+                <div class="form-control mb-4">
+                    <label class="label" for="avatar">
+                        <span class="label-text font-semibold">Profile Picture</span>
+                    </label>
+                    <input type="file" id="avatar" name="avatar" accept="image/*" class="file-input file-input-bordered">
+                    <label class="label">
+                        <span class="label-text-alt">Upload a profile picture (JPEG, PNG, etc.)</span>
+                    </label>
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label class="label" for="role">
+                        <span class="label-text font-semibold">Role *</span>
+                    </label>
+                    <select id="role" name="role" required class="select select-bordered">
+                        {% for value, label in role_choices %}
+                            <option value="{{ value }}" {% if value == 'phd' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label class="label" for="bio">
+                        <span class="label-text font-semibold">Biography</span>
+                    </label>
+                    <textarea id="bio" name="bio" rows="4" class="textarea textarea-bordered"></textarea>
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label class="label" for="website">
+                        <span class="label-text font-semibold">Personal Website</span>
+                    </label>
+                    <input type="url" id="website" name="website" placeholder="https://example.com" class="input input-bordered">
                 </div>
             </div>
             
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password">
-                <small>Leave empty when updating existing users</small>
+            <div class="divider"></div>
+            
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-primary mb-4">Social Links</h2>
+                
+                <div class="form-control mb-4">
+                    <label class="label" for="google_scholar">
+                        <span class="label-text font-semibold">Google Scholar</span>
+                    </label>
+                    <input type="url" id="google_scholar" name="google_scholar" placeholder="https://scholar.google.com/..." class="input input-bordered">
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label class="label" for="github">
+                        <span class="label-text font-semibold">GitHub</span>
+                    </label>
+                    <input type="url" id="github" name="github" placeholder="https://github.com/username" class="input input-bordered">
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label class="label" for="linkedin">
+                        <span class="label-text font-semibold">LinkedIn</span>
+                    </label>
+                    <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/username" class="input input-bordered">
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label class="label" for="phone_number">
+                        <span class="label-text font-semibold">Phone Number</span>
+                    </label>
+                    <input type="tel" id="phone_number" name="phone_number" placeholder="+39 123 456 7890" class="input input-bordered">
+                </div>
             </div>
-        </div>
         
-        <div class="form-section">
-            <h2>Profile Information</h2>
+            <div class="divider"></div>
             
-            <div class="form-group">
-                <label for="avatar">Profile Picture</label>
-                <input type="file" id="avatar" name="avatar" accept="image/*">
-                <small>Upload a profile picture (JPEG, PNG, etc.)</small>
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-primary mb-4">Display Settings</h2>
+                
+                <div class="form-control mb-4">
+                    <label class="label" for="display_order">
+                        <span class="label-text font-semibold">Display Order</span>
+                    </label>
+                    <input type="number" id="display_order" name="display_order" value="0" min="0" class="input input-bordered">
+                    <label class="label">
+                        <span class="label-text-alt">Lower numbers appear first in the team listing</span>
+                    </label>
+                </div>
+                
+                <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                        <input type="checkbox" id="is_visible" name="is_visible" checked class="checkbox checkbox-primary">
+                        <span class="label-text font-semibold">Show on People page</span>
+                    </label>
+                </div>
             </div>
             
-            <div class="form-group">
-                <label for="role">Role *</label>
-                <select id="role" name="role" required>
-                    {% for value, label in role_choices %}
-                        <option value="{{ value }}" {% if value == 'phd' %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
+            <div class="card-actions justify-end mt-6">
+                <button type="submit" class="btn btn-primary">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    Add/Update User (Async)
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-ghost">Cancel</a>
             </div>
-            
-            <div class="form-group">
-                <label for="bio">Biography</label>
-                <textarea id="bio" name="bio" rows="4"></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="website">Personal Website</label>
-                <input type="url" id="website" name="website" placeholder="https://example.com">
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h2>Social Links</h2>
-            
-            <div class="form-group">
-                <label for="google_scholar">Google Scholar</label>
-                <input type="url" id="google_scholar" name="google_scholar" placeholder="https://scholar.google.com/...">
-            </div>
-            
-            <div class="form-group">
-                <label for="github">GitHub</label>
-                <input type="url" id="github" name="github" placeholder="https://github.com/username">
-            </div>
-            
-            <div class="form-group">
-                <label for="linkedin">LinkedIn</label>
-                <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/username">
-            </div>
-            
-            <div class="form-group">
-                <label for="phone_number">Phone Number</label>
-                <input type="tel" id="phone_number" name="phone_number" placeholder="+39 123 456 7890">
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h2>Display Settings</h2>
-            
-            <div class="form-group">
-                <label for="display_order">Display Order</label>
-                <input type="number" id="display_order" name="display_order" value="0" min="0">
-                <small>Lower numbers appear first in the team listing</small>
-            </div>
-            
-            <div class="form-group checkbox-group">
-                <label>
-                    <input type="checkbox" id="is_visible" name="is_visible" checked>
-                    <span>Show on People page</span>
-                </label>
-            </div>
-        </div>
-        
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Add/Update User (Async)</button>
-            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>
+{% endblock %}
 
 <style>
     .form-container {

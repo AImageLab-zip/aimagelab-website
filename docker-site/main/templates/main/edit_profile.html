@@ -1,340 +1,166 @@
-{% extends "main/base.html" %}
+{% extends "main/base_with_sidebar.html" %}
 
 {% block title %}Edit Profile - AImageLab{% endblock %}
 
-{% block content %}
-<div class="edit-profile-page">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="profile-header">
-                    <h1>Edit Your Profile</h1>
-                    <p>Update your personal information and links</p>
+{% block hero_title %}Edit Your Profile{% endblock %}
+
+{% block hero_description %}
+Update your personal information and professional links
+{% endblock %}
+
+{% block main_content %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="space-y-6">
+                <!-- Basic Information Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="user" class="w-5 h-5"></i>
+                            Basic Information
+                        </h2>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">Biography</legend>
+                            <textarea id="bio" name="bio" rows="4" class="textarea w-full" placeholder="Tell us about yourself...">{{ profile.bio }}</textarea>
+                            <p class="label overflow-scroll">A short description of your background and interests</p>
+                        </fieldset>
+                        
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">Phone Number</legend>
+                            <input class="input w-full" id="phone_number" name="phone_number"
+                                   value="{{ profile.phone_number }}" placeholder="+39 123 456 7890">
+                            <p class="label overflow-scroll">International format preferred (e.g., +39-123-456-7890)</p>
+                        </fieldset>
+                    </div>
                 </div>
+                
+                <!-- Professional Links Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="link" class="w-5 h-5"></i>
+                            Professional Links
+                        </h2>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">
+                                <i data-lucide="globe" class="w-4 h-4 inline mr-2"></i>
+                                Personal Website
+                            </legend>
+                            <input type="url" class="input w-full" id="website" name="website"
+                                   value="{{ profile.website }}" placeholder="https://your-website.com">
+                        </fieldset>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">
+                                <i data-lucide="book-open" class="w-4 h-4 inline mr-2"></i>
+                                Google Scholar
+                            </legend>
+                            <input type="url" class="input w-full" id="google_scholar" name="google_scholar"
+                                   value="{{ profile.google_scholar }}" placeholder="https://scholar.google.com/...">
+                        </fieldset>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">
+                                <i data-lucide="github" class="w-4 h-4 inline mr-2"></i>
+                                GitHub
+                            </legend>
+                            <input type="url" class="input w-full" id="github" name="github"
+                                   value="{{ profile.github }}" placeholder="https://github.com/username">
+                        </fieldset>
+                        
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">
+                                <i data-lucide="linkedin" class="w-4 h-4 inline mr-2"></i>
+                                LinkedIn
+                            </legend>
+                            <input type="url" class="input w-full" id="linkedin" name="linkedin"
+                                   value="{{ profile.linkedin }}" placeholder="https://linkedin.com/in/username">
+                        </fieldset>
+                    </div>
+                </div>
+        </div>
+{% endblock %}
 
-                <div class="profile-card">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-
-                        <!-- Avatar Section -->
-                        <div class="avatar-section">
-                            <h3>Profile Picture</h3>
-                            <div class="current-avatar">
+{% block sidebar_content %}
+        <div class="space-y-6">
+                <!-- Profile Picture Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="camera" class="w-5 h-5"></i>
+                            Profile Picture
+                        </h2>
+                        
+                        <!-- Current Avatar Display -->
+                        <div class="flex flex-col items-center mb-6">
+                            <div class="avatar mb-4">
                                 {% if profile.avatar %}
-                                <img src="{{ profile.avatar.url }}" alt="Current avatar" class="current-avatar-img">
+                                <div class="mask mask-squircle w-32 ring ring-primary ring-offset-base-100 ring-offset-2">
+                                    <img src="{{ profile.avatar.url }}" alt="Current avatar" />
+                                </div>
                                 {% else %}
-                                <div class="avatar-placeholder">
-                                    <span>{{ user.first_name.0 }}{{ user.last_name.0 }}</span>
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="avatar-controls">
-                                <div class="form-group">
-                                    <label for="avatar">Upload New Picture</label>
-                                    <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
-                                    <small class="form-text text-muted">Supported formats: JPG, PNG, GIF. Max size: 5MB</small>
-                                </div>
-
-                                {% if profile.avatar %}
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="remove_avatar" name="remove_avatar">
-                                    <label class="form-check-label" for="remove_avatar">
-                                        Remove current picture
-                                    </label>
+                                <div class="mask mask-squircle w-32 bg-base-300 ring ring-primary ring-offset-base-100 ring-offset-2">
+                                    <img id="dicebear-avatar-img" data-seed="{{ user.get_full_name|default:user.username|urlencode }}" alt="Default avatar" />
                                 </div>
                                 {% endif %}
                             </div>
                         </div>
-
-                        <!-- Basic Info -->
-                        <div class="form-section">
-                            <h3>Basic Information</h3>
-
-                            <div class="form-group">
-                                <label for="bio">Biography</label>
-                                <textarea class="form-control" id="bio" name="bio" rows="4"
-                                         placeholder="Tell us about yourself...">{{ profile.bio }}</textarea>
-                                <small class="form-text text-muted">A short description of your background and interests</small>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="phone_number">Phone Number</label>
-                                <input type="tel" class="form-control" id="phone_number" name="phone_number"
-                                       value="{{ profile.phone_number }}" placeholder="+39 123 456 7890">
-                                <small class="form-text text-muted">International format preferred</small>
-                            </div>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend">Upload New Picture</legend>
+                            <input type="file" class="file-input w-full" id="avatar" name="avatar" accept="image/*">
+                            <p class="label overflow-scroll">JPG, PNG, GIF. Max size: 5MB. Recommended: square aspect ratio</p>
+                        </fieldset>
+                        
+                        {% if profile.avatar %}
+                        <div class="divider my-2"></div>
+                        <div class="form-control">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input class="checkbox checkbox-primary" type="checkbox" id="remove_avatar" name="remove_avatar">
+                                <span class="label-text text-sm">Remove current picture</span>
+                            </label>
                         </div>
-
-                        <!-- Links Section -->
-                        <div class="form-section">
-                            <h3>Professional Links</h3>
-
-                            <div class="form-group">
-                                <label for="website">Personal Website</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fas fa-globe"></i></span>
-                                    </div>
-                                    <input type="url" class="form-control" id="website" name="website"
-                                           value="{{ profile.website }}" placeholder="https://your-website.com">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="google_scholar">Google Scholar</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fas fa-graduation-cap"></i></span>
-                                    </div>
-                                    <input type="url" class="form-control" id="google_scholar" name="google_scholar"
-                                           value="{{ profile.google_scholar }}" placeholder="https://scholar.google.com/...">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="github">GitHub</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fab fa-github"></i></span>
-                                    </div>
-                                    <input type="url" class="form-control" id="github" name="github"
-                                           value="{{ profile.github }}" placeholder="https://github.com/username">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="linkedin">LinkedIn</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fab fa-linkedin"></i></span>
-                                    </div>
-                                    <input type="url" class="form-control" id="linkedin" name="linkedin"
-                                           value="{{ profile.linkedin }}" placeholder="https://linkedin.com/in/username">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-save"></i> Save Changes
-                            </button>
-                            <a href="{% url 'people' %}" class="btn btn-secondary btn-lg">
-                                <i class="fas fa-arrow-left"></i> Back to Team
-                            </a>
-                        </div>
-                    </form>
+                        {% endif %}
+                    </div>
+                </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="card bg-base-200 mt-6">
+            <div class="card-body">
+                <div class="flex flex-wrap gap-3 justify-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        Save Changes
+                    </button>
+                    <a href="{% url 'people' %}" class="btn btn-ghost">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        Back to Team
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    </form>
+<script type="module">
+    import { createAvatar } from 'https://esm.sh/@dicebear/core@9';
+    import { shapes } from 'https://esm.sh/@dicebear/collection@9';
 
-<style>
-.edit-profile-page {
-    padding: 3rem 0;
-    background: #f8f9fa;
-    min-height: 100vh;
-}
-
-.profile-header {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-.profile-header h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-}
-
-.profile-header p {
-    font-size: 1.1rem;
-    color: #6c757d;
-}
-
-.profile-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    padding: 2.5rem;
-}
-
-.avatar-section {
-    margin-bottom: 3rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid #e9ecef;
-}
-
-.avatar-section h3 {
-    color: #2c3e50;
-    font-size: 1.4rem;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-}
-
-.current-avatar {
-    text-align: center;
-    margin-bottom: 1.5rem;
-}
-
-.current-avatar-img, .avatar-placeholder {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 4px solid #e9ecef;
-    margin: 0 auto 1rem;
-    display: block;
-}
-
-.current-avatar-img {
-    object-fit: cover;
-}
-
-.avatar-placeholder {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 2.5rem;
-    font-weight: 700;
-}
-
-.avatar-controls {
-    max-width: 400px;
-    margin: 0 auto;
-}
-
-.form-section {
-    margin-bottom: 3rem;
-}
-
-.form-section h3 {
-    color: #2c3e50;
-    font-size: 1.4rem;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.form-control {
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-.form-control:focus {
-    border-color: #3498db;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-}
-
-textarea.form-control {
-    resize: vertical;
-    min-height: 100px;
-}
-
-.input-group-text {
-    background: #f8f9fa;
-    border: 2px solid #e9ecef;
-    color: #6c757d;
-}
-
-.input-group .form-control {
-    border-left: none;
-}
-
-.input-group .form-control:focus {
-    border-left: none;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-}
-
-.form-text {
-    color: #6c757d;
-    font-size: 0.875rem;
-}
-
-.form-check {
-    margin-top: 1rem;
-}
-
-.form-check-input:checked {
-    background-color: #3498db;
-    border-color: #3498db;
-}
-
-.form-actions {
-    text-align: center;
-    padding-top: 2rem;
-    border-top: 1px solid #e9ecef;
-}
-
-.btn {
-    padding: 0.75rem 2rem;
-    border-radius: 8px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s;
-    margin: 0 0.5rem;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-}
-
-.btn-secondary {
-    background: #6c757d;
-    color: white;
-}
-
-.btn-secondary:hover {
-    background: #5a6268;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
-}
-
-@media (max-width: 768px) {
-    .edit-profile-page {
-        padding: 2rem 1rem;
-    }
-
-    .profile-card {
-        padding: 1.5rem;
-    }
-
-    .profile-header h1 {
-        font-size: 2rem;
-    }
-
-    .form-actions .btn {
-        display: block;
-        width: 100%;
-        margin: 0.5rem 0;
-    }
-}
-</style>
+    const dicebearImgs = document.querySelectorAll('[id^="dicebear-avatar-img"]');
+    dicebearImgs.forEach(dicebearImg => {
+        const seed = dicebearImg.dataset.seed || 'ailb';
+        const avatar = createAvatar(shapes, {
+            seed,
+            backgroundColor: ['transparent'],
+            shape1Color: ['BF0004'],
+            shape2Color: ['ff4455'],
+            shape3Color: ['801518'],
+        });
+        const svg = avatar.toString();
+        const encoded = encodeURIComponent(svg);
+        dicebearImg.src = `data:image/svg+xml,${encoded}`;
+    });
+</script>
 {% endblock %}

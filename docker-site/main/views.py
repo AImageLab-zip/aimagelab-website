@@ -5,42 +5,43 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from .models import UserProfile, Post, Category
+from .models import UserProfile, Post, Category, Project
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q
+from django.db.models import Q, Case, When, IntegerField
 from datetime import datetime
 
 from django.http import FileResponse, Http404
 from django.conf import settings
 import os
-from .models import UserProfile
-from .tasks import sync_user_task
+from .models import UserProfile, IRISImportLog
+from .tasks import sync_user_task, import_iris_publications, is_import_running
 import os
 
-POST_PER_PAGE = 5
+from PIL import Image
+from io import BytesIO
+
+POST_PER_PAGE = 10
 
 def home(request):
     """Home page view."""
-    # Get upcoming events (posts with event_date, ordered by event_date)
-    upcoming_events = Post.objects.filter(
-        is_published=True,
-        event_date__isnull=False
-    ).order_by('event_date')[:4]
-    
     # Get latest posts without event_date
     latest_posts = Post.objects.filter(
         is_published=True,
-        event_date__isnull=True
-    ).order_by('-created_at')[:4]
+    ).order_by('-is_pinned', '-created_at')[:10]
+    
     
     return render(request, 'main/home.html', {
-        'upcoming_events': upcoming_events,
-        'latest_posts': latest_posts,
+        'latest_posts': latest_posts
     })
+
+def contacts(request):
+    """Contacts page view."""
+    return render(request, 'main/contacts.html')
 
 def news(request):
     """News/Blog page view with pagination and search."""
     search_query = request.GET.get('search', '')
+    category_query = request.GET.get('category', '')
     
     # Filter posts based on authentication
     if request.user.is_authenticated:
@@ -55,6 +56,9 @@ def news(request):
             Q(description__icontains=search_query) |
             Q(content__icontains=search_query)
         )
+        
+    if category_query:
+        posts = posts.filter(categories__name__iexact=category_query)
     
     # Order by creation date and prefetch categories for efficiency
     posts = posts.order_by('is_published', '-is_pinned', '-created_at').prefetch_related('categories')
@@ -70,15 +74,87 @@ def news(request):
     except EmptyPage:
         posts_page = paginator.page(paginator.num_pages)
     
+    # Get upcoming events (posts with event_date, ordered by event_date)
+    upcoming_events = Post.objects.filter(
+        is_published=True,
+        event_date__isnull=False,
+        event_date__gt=datetime.now()
+    ).order_by('event_date')[:5]
+    
+    categories = Category.objects.all().order_by('name')
+    
     return render(request, 'main/news.html', {
         'posts': posts_page,
         'search_query': search_query,
+        'category_query': category_query,
+        'upcoming_events': upcoming_events,
+        'categories': categories    
+    })  
+
+def projects(request):
+    """Projects page view with pagination, search, and type filter."""
+    search_query = request.GET.get('search', '')
+    type_query = request.GET.get('type', '')
+    show_all = request.GET.get('show_all', 'off') == 'on'
+
+    projects_qs = Project.objects.all()
+
+    # By default, show only active projects (end_date is null or in the future)
+    if not show_all:
+        projects_qs = projects_qs.filter(
+            Q(end_date__isnull=True) | Q(end_date__gte=datetime.now().date())
+        )
+
+    if search_query:
+        projects_qs = projects_qs.filter(
+            Q(name__icontains=search_query) |
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+
+    if type_query:
+        projects_qs = projects_qs.filter(project_type__iexact=type_query)
+
+    # Order by start date descending
+    projects_qs = projects_qs.order_by('-start_date')
+
+    paginator = Paginator(projects_qs, POST_PER_PAGE)
+    page = request.GET.get('page', 1)
+
+    try:
+        projects_page = paginator.page(page)
+    except PageNotAnInteger:
+        projects_page = paginator.page(1)
+    except EmptyPage:
+        projects_page = paginator.page(paginator.num_pages)
+
+    # Get project types with count, exclude types with ≤2 projects
+    from django.db.models import Count
+    project_types = (
+        Project.objects.exclude(project_type="")
+        .values('project_type')
+        .annotate(count=Count('id'))
+        .filter(count__gt=2)
+        .order_by('project_type')
+        .values_list('project_type', flat=True)
+    )
+
+    return render(request, 'main/projects.html', {
+        'projects': projects_page,
+        'search_query': search_query,
+        'type_query': type_query,
+        'project_types': project_types,
+        'show_all': show_all,
     })
 
 def post_single(request, slug):
     """Single post detail view."""
     post = Post.objects.get(slug=slug)
     return render(request, 'main/single.html', {'post': post})
+
+def privacy_policy(request):
+    """Privacy Policy page view."""
+    return render(request, 'main/privacy_policy.html')
 
 @login_required
 def post_form(request, slug=None):
@@ -93,15 +169,31 @@ def post_form(request, slug=None):
         description = request.POST.get('description', '')
         content = request.POST.get('content')
         cover = request.FILES.get('cover')
+        thumbnail = request.FILES.get('thumbnail')
         category_ids = request.POST.getlist('categories')
-        is_event_checked = request.POST.get('is_event') == 'on'
-        event_date_raw = request.POST.get('event_date') or None
+        is_pinned = request.POST.get('is_pinned') == 'on'
+        
+        # Handle event_date
         event_date = None
-        if is_event_checked and event_date_raw:
-            try:
-                event_date = datetime.strptime(event_date_raw, "%Y-%m-%d").date()
-            except ValueError:
-                event_date = None
+        remove_event_date = request.POST.get('remove_event_date') == 'on'
+        
+        if remove_event_date:
+            event_date = None
+        else:
+            event_date_raw = request.POST.get('event_date')
+            if event_date_raw:
+                try:
+                    # datetime-local format is "YYYY-MM-DDTHH:mm"
+                    event_date = datetime.fromisoformat(event_date_raw)
+                except (ValueError, TypeError):
+                    event_date = None
+        
+        # Handle cover image
+        remove_cover = request.POST.get('remove_cover') == 'on'
+        
+        # Handle thumbnail
+        remove_thumbnail = request.POST.get('remove_thumbnail') == 'on'
+        
         is_published = action == 'publish'
         
         if post:
@@ -111,8 +203,15 @@ def post_form(request, slug=None):
             post.description = description
             post.content = content
             post.event_date = event_date
+            post.is_pinned = is_pinned
             if cover:
                 post.cover = cover
+            if remove_cover:
+                post.cover = None
+            if thumbnail:
+                post.thumbnail = thumbnail
+            if remove_thumbnail:
+                post.thumbnail = None
             if action in ['publish', 'draft']:
                 post.is_published = is_published
             post.save()
@@ -126,7 +225,9 @@ def post_form(request, slug=None):
                 content=content,
                 is_published=is_published,
                 cover=cover,
+                thumbnail=thumbnail,
                 event_date=event_date,
+                is_pinned=is_pinned,
             )
             post.categories.set(category_ids)
         
@@ -148,13 +249,19 @@ def people(request):
     # Get visible profiles grouped by role
     profiles = UserProfile.objects.filter(is_visible=True).select_related('user')
     
-    # Group by role
+    # Create ordering based on LDAP_ROLE_PRIORITY
+    role_priority = settings.LDAP_ROLE_PRIORITY
+    role_order = Case(
+        *[When(role=role, then=priority) for role, priority in role_priority.items()],
+        default=0,
+        output_field=IntegerField()
+    )
+    
+    # Group by role and order by priority (descending), display_order, then first name
     grouped_profiles = {
-        'professors': profiles.filter(role__in=['professor', 'assoc_professor', 'asst_professor']),
-        'postdocs': profiles.filter(role='postdoc'),
-        'phd_students': profiles.filter(role='phd'),
-        'interns': profiles.filter(role='intern'),
-        'alumni': profiles.filter(role='alumni'),
+        'professors': profiles.filter(role__in=['full_professor', 'assoc_professor', 'researcher_tt', 'researcher_b', 'researcher_a']).order_by(-role_order, '-display_order', 'user__first_name'),
+        'phd_students_and_co': profiles.filter(role__in=['phd', 'research_fellow', 'postdoc', 'collaborator']).order_by(-role_order,'-display_order', 'user__first_name'),
+        'alumni': profiles.filter(role__in=['past_member']).order_by(-role_order, '-display_order', 'user__first_name'),
     }
     
     return render(request, 'main/people.html', {'grouped_profiles': grouped_profiles})
@@ -229,7 +336,14 @@ def edit_profile(request):
                 profile.avatar.delete()
             # Save new avatar
             avatar_file = request.FILES['avatar']
-            profile.avatar.save(f"{request.user.username}_{avatar_file.name}", avatar_file)
+            
+            # Open and resize image
+            img = Image.open(avatar_file)
+            img.thumbnail((256, 256), Image.Resampling.LANCZOS)
+            img_io = BytesIO()
+            img.save(img_io, format='JPEG', quality=85)
+            img_io.seek(0)
+            profile.avatar.save(f"{request.user.username}_avatar.jpg", ContentFile(img_io.getvalue()))
 
         # Handle avatar removal
         if request.POST.get('remove_avatar') == 'on' and profile.avatar:
@@ -364,3 +478,67 @@ def serve_media(request, path):
     
     # Serve the file
     return FileResponse(open(file_path, 'rb'))
+
+
+@login_required
+def trigger_iris_import(request):
+    """
+    Trigger IRIS publications import.
+    
+    This view starts a Celery task to import publications from IRIS.
+    If an import is already running, it returns a message to the user.
+    
+    Only accessible to authenticated users.
+    """
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('dashboard')
+    
+    # Check if import is already running
+    if is_import_running():
+        messages.warning(
+            request,
+            'IRIS import is already in progress. Please wait for it to complete.'
+        )
+        return redirect('dashboard')
+    
+    # Start the import task
+    task = import_iris_publications.delay()
+    
+    messages.success(
+        request,
+        f'IRIS import started successfully! Task ID: {task.id}. '
+        'You will be notified when the import is complete.'
+    )
+    
+    return redirect('dashboard')
+
+
+@login_required
+def iris_import_status(request):
+    """
+    Get the status of IRIS imports.
+    
+    Returns JSON with information about recent imports.
+    """
+    # Get the most recent import logs
+    recent_imports = IRISImportLog.objects.all()[:10]
+    
+    imports_data = []
+    for log in recent_imports:
+        imports_data.append({
+            'id': log.id,
+            'status': log.status,
+            'started_at': log.started_at.isoformat(),
+            'completed_at': log.completed_at.isoformat() if log.completed_at else None,
+            'staff_processed': log.staff_processed,
+            'publications_created': log.publications_created,
+            'publications_updated': log.publications_updated,
+            'links_created': log.links_created,
+            'error_message': log.error_message
+        })
+    
+    return JsonResponse({
+        'is_running': is_import_running(),
+        'recent_imports': imports_data
+    })

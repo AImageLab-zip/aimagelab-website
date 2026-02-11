@@ -1,85 +1,535 @@
-{% extends 'main/base.html' %}
+{% extends 'main/base_with_sidebar.html' %}
 
 {% block title %}{% if post %}Edit Post{% else %}Add Post{% endif %} - AImageLab{% endblock %}
 
-{% block content %}
-<!-- Inner Page Hero -->
-<section class="inner-page d-flex align-items-end">
-    <div class="container pb-5">
-        <h1 class="title-white">{% if post %}Edit Post{% else %}Add New Post{% endif %}</h1>
-    </div>
-</section>
+{% block hero_title %}{% if post %}Edit Post{% else %}Add New Post{% endif %}{% endblock %}
 
-<div class="container my-5">
-    <div class="custom-card p-4">
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Title:</label>
-                <input type="text" name="title" value="{{ post.title|default:'' }}" required class="form-control rounded-object">
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Slug:</label>
-                <input type="text" name="slug" value="{{ post.slug|default:'' }}" required class="form-control rounded-object">
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Pin the post:</label>
-                <select name="is_pinned" class="form-select rounded-object">
-                    <option value="False" {% if post and not post.is_pinned %}selected{% endif %}>No</option>
-                    <option value="True" {% if post and post.is_pinned %}selected{% endif %}>Yes</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Categories:</label>
-                <select name="categories" multiple class="form-select rounded-object">
-                    {% for category in categories %}
-                        <option value="{{ category.id }}" {% if post and category in post.categories.all %}selected{% endif %}>{{ category.name }}</option>
-                    {% endfor %}
-                </select>
-                <small class="title-black">Hold Ctrl (Cmd on Mac) to select multiple.</small>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Description:</label>
-                <textarea name="description" rows="3" class="form-control rounded-object">{{ post.description|default:'' }}</textarea>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Content:</label>
-                <textarea name="content" rows="10" required class="form-control rounded-object">{{ post.content|default:'' }}</textarea>
-            </div>
-            <div class="mb-3 d-flex align-items-center gap-3 flex-wrap">
-                <div class="flex-grow-1">
-                    <label class="form-label fw-bold title-bordeaux">Event date:</label>
-                    <input type="date" name="event_date" value="{% if post and post.event_date %}{{ post.event_date|date:'Y-m-d' }}{% endif %}" class="form-control rounded-object">
+{% block hero_description %}
+{% if post %}Update the content and settings for this post{% else %}Create a new news post or event{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<!-- Cropper.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+{% endblock %}
+
+{% block main_content %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="space-y-6">
+                <!-- Basic Information Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                            Basic Information
+                        </h2>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend overflow-x-scroll">Title *</legend>
+                            <input type="text" id="title" name="title" value="{{ post.title|default:'' }}" required class="input w-full" placeholder="Enter post title">
+                            <p class="label overflow-x-scroll">The main headline of your post</p>
+                        </fieldset>
+                        
+                        <fieldset class="fieldset mb-4 ">
+                            <legend class="fieldset-legend">Slug *</legend>
+                            <input type="text" id="slug" name="slug" value="{{ post.slug|default:'' }}" required class="input w-full" placeholder="my-awesome-post">
+                            <p class="label overflow-x-scroll">URL-friendly version (e.g., my-awesome-post). Use lowercase letters, numbers, and hyphens only.</p>
+                        </fieldset>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend overflow-x-scroll">Description</legend>
+                            <textarea id="description" name="description" rows="3" class="textarea w-full" placeholder="Brief summary of the post...">{{ post.description|default:'' }}</textarea>
+                            <p class="label overflow-x-scroll">Short excerpt shown in news listings and previews (recommended: 150-160 characters)</p>
+                        </fieldset>
+                    </div>
+                </div>
+                
+                <!-- Content Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="edit-3" class="w-5 h-5"></i>
+                            Content
+                        </h2>
+                        
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend overflow-x-scroll">
+                                Post Content *
+                                <span class="badge badge-sm badge-primary ml-2">Markdown supported</span>
+                            </legend>
+                            <textarea id="content" name="content" rows="20" required class="textarea w-full font-mono text-xs sm:text-base" placeholder="Write your post content here... You can use Markdown formatting.">{{ post.content|default:'' }}</textarea>
+                            <p class="label overflow-x-scroll">
+                                <strong>Markdown tips:</strong> **bold**, *italic*, [link](url), # Heading, - List item, `code`
+                            </p>
+                        </fieldset>
+                    </div>
+                </div>
+        </div>
+{% endblock %}
+
+{% block sidebar_content %}
+        <div class="space-y-6">
+                <!-- Publishing Options Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="settings" class="w-5 h-5"></i>
+                            Publishing
+                        </h2>
+                        
+                        <div class="form-control mb-4">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="is_pinned" name="is_pinned" {% if post and post.is_pinned %}checked{% endif %}>
+                                <span class="label-text break-words">Pin this post to top</span>
+                            </label>
+                        </div>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend overflow-x-scroll">Event Date (optional)</legend>
+                            <input type="datetime-local" id="event_date" name="event_date" value="{% if post and post.event_date %}{{ post.event_date|date:'Y-m-d\TH:i' }}{% endif %}" class="input w-full">
+                            <p class="label overflow-x-scroll">Set if this post is about an upcoming or past event (date and time)</p>
+                        </fieldset>
+                        
+                        {% if post and post.event_date %}
+                        <div class="form-control mb-4">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="remove_event_date" name="remove_event_date">
+                                <span class="label-text text-sm break-words">Remove event date</span>
+                            </label>
+                        </div>
+                        {% endif %}
+                        
+                        {% if post %}
+                        <div class="divider my-2"></div>
+                        <div class="alert bg-primary text-primary-content flex items-center gap-3">
+                            <i data-lucide="info" class="w-5 h-5"></i>
+                            <div class="text-xs">
+                                <strong>Status:</strong> {% if post.is_published %}Published{% else %}Draft{% endif %}<br>
+                                <strong>Created:</strong> {{ post.created_at|date:"M d, Y" }}<br>
+                                {% if post.updated_at %}
+                                <strong>Updated:</strong> {{ post.updated_at|date:"M d, Y" }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Categories Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="tags" class="w-5 h-5"></i>
+                            Categories
+                        </h2>
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend overflow-x-scroll">Select Categories</legend>
+                            <select id="categories" name="categories" multiple class="select w-full h-40">
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if post and category in post.categories.all %}selected{% endif %}>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <p class="label overflow-x-scroll">Hold Ctrl (Cmd on Mac) to select multiple categories</p>
+                        </fieldset>
+                    </div>
+                </div>
+                
+                <!-- Cover Image Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="image" class="w-5 h-5"></i>
+                            Cover Image
+                        </h2>
+                        
+                        {% if post.cover %}
+                        <div class="mb-4">
+                            <p class="text-sm font-semibold mb-2">Current Cover:</p>
+                            <img src="{{ post.cover.url }}" alt="Current cover" class="rounded-lg w-full">
+                        </div>
+                        {% endif %}
+                        
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend overflow-x-scroll">{% if post.cover %}Replace{% else %}Upload{% endif %} Image</legend>
+                            <input type="file" id="cover" name="cover" accept="image/*" class="file-input w-full">
+                            <p class="label overflow-x-scroll">Recommended: 1200x630px, JPG or PNG, max 2MB</p>
+                        </fieldset>
+                        
+                        {% if post and post.cover %}
+                        <div class="form-control">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="remove_cover" name="remove_cover">
+                                <span class="label-text text-sm break-words">Remove current cover</span>
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Thumbnail Card with Cropper -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="crop" class="w-5 h-5"></i>
+                            Thumbnail (for News Listing)
+                        </h2>
+                        
+                        {% if post.thumbnail %}
+                        <div class="mb-4" id="current-thumbnail-preview">
+                            <p class="text-sm font-semibold mb-2">Current Thumbnail:</p>
+                            <img src="{{ post.thumbnail.url }}" alt="Current thumbnail" class="rounded-lg w-full">
+                        </div>
+                        {% endif %}
+
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend overflow-x-scroll">Create Thumbnail from Image</legend>
+                            <input type="file" id="thumbnail-source" accept="image/*" class="file-input w-full">
+                            <p class="label overflow-x-scroll">Upload an image to crop for thumbnail (480x200px, 2.4:1 ratio)</p>
+                        </fieldset>
+
+                        <!-- Use Cover as Thumbnail Source Button -->
+                        <div class="mb-4">
+                            <button type="button" id="use-cover-button" class="btn btn-outline btn-sm w-full">
+                                <i data-lucide="image" class="w-4 h-4"></i>
+                                {% if post.thumbnail %}Re-crop from Cover Image{% else %}Use Cover as Thumbnail{% endif %}
+                            </button>
+                            <p class="label overflow-x-scroll text-xs">Crop the cover image to create a thumbnail</p>
+                        </div>
+
+                        <!-- Cropper Section (hidden by default) -->
+                        <div id="cropper-section" style="display: none;">
+                            <div class="mb-4">
+                                <p class="text-sm font-semibold mb-2">Crop Image (drag to adjust):</p>
+                                <div class="border border-base-300 rounded-lg overflow-hidden" style="max-height: 300px;">
+                                    <img id="cropper-image" class="max-w-full">
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <button type="button" id="crop-button" class="btn btn-success btn-sm">
+                                    <i data-lucide="crop" class="w-4 h-4"></i>
+                                    Apply Crop
+                                </button>
+                                <button type="button" id="reset-crop-button" class="btn btn-outline btn-sm">
+                                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Cropped Preview -->
+                        <div id="cropped-preview" style="display: none;">
+                            <p class="text-sm font-semibold mb-2">Cropped Thumbnail Preview:</p>
+                            <img id="cropped-preview-image" class="rounded-lg w-full mb-2">
+                            <button type="button" id="change-crop-button" class="btn btn-outline btn-sm">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                Re-crop
+                            </button>
+                        </div>
+
+                        <!-- Hidden input for the cropped thumbnail -->
+                        <input type="file" id="thumbnail" name="thumbnail" style="display: none;">
+                        
+                        {% if post and post.thumbnail %}
+                        <div class="form-control mt-4">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="remove_thumbnail" name="remove_thumbnail">
+                                <span class="label-text text-sm break-words">Remove current thumbnail</span>
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold title-bordeaux">Cover Image:</label>
-                {% if post.cover %}
-                <div class="mb-2">
-                    <img src="{{ post.cover.url }}" alt="Current cover" class="img-fluid rounded-object" style="max-width: 300px;">
-                </div>
-                {% endif %}
-                <input type="file" name="cover" accept="image/*" class="form-control rounded-object">
-            </div>
-            <div class="mb-3">
-                <div class="d-flex gap-2 flex-wrap">
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="card bg-base-200 mt-6">
+            <div class="card-body">
+                <div class="flex flex-wrap gap-2 sm:gap-3 justify-end">
                     {% if post %}
                         {% if post.is_published %}
-                        <button type="submit" name="action" value="publish" class="red-btn">Save</button>
-                        <button type="submit" name="action" value="draft" class="white-btn">Turn to Draft</button>
+                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Save Changes</span>
+                            <span class="sm:hidden">Save</span>
+                        </button>
+                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
+                            <i data-lucide="archive" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Move to Draft</span>
+                            <span class="sm:hidden">Draft</span>
+                        </button>
                         {% else %}
-                        <button type="submit" name="action" value="draft" class="white-btn">Save Draft</button>
-                        <button type="submit" name="action" value="publish" class="red-btn">Publish</button>
+                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Save Draft</span>
+                            <span class="sm:hidden">Save</span>
+                        </button>
+                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Publish Now</span>
+                            <span class="sm:hidden">Publish</span>
+                        </button>
                         {% endif %}
-                        <a href="{% url 'single' post.slug %}" class="white-btn">Cancel</a>
+                        <a href="{% url 'single' post.slug %}" class="btn btn-ghost btn-sm sm:btn-md">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Cancel</span>
+                        </a>
                     {% else %}
-                        <button type="submit" name="action" value="draft" class="white-btn">Create Draft</button>
-                        <button type="submit" name="action" value="publish" class="red-btn">Publish</button>
-                        <a href="{% url 'news' %}" class="white-btn">Cancel</a>
+                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Create as Draft</span>
+                            <span class="sm:hidden">Draft</span>
+                        </button>
+                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Publish Now</span>
+                            <span class="sm:hidden">Publish</span>
+                        </button>
+                        <a href="{% url 'news' %}" class="btn btn-ghost btn-sm sm:btn-md">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Cancel</span>
+                        </a>
                     {% endif %}
                 </div>
             </div>
-        </form>
-    </div>
-</div>
+        </div>
+    </form>
+
+<!-- Cropper.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Thumbnail cropping with Cropper.js
+    const thumbnailSourceInput = document.getElementById('thumbnail-source');
+    const coverInput = document.getElementById('cover');
+    const useCoverButton = document.getElementById('use-cover-button');
+    const cropperSection = document.getElementById('cropper-section');
+    const cropperImage = document.getElementById('cropper-image');
+    const cropButton = document.getElementById('crop-button');
+    const resetCropButton = document.getElementById('reset-crop-button');
+    const croppedPreview = document.getElementById('cropped-preview');
+    const croppedPreviewImage = document.getElementById('cropped-preview-image');
+    const changeCropButton = document.getElementById('change-crop-button');
+    const thumbnailInput = document.getElementById('thumbnail');
+    const currentThumbnailPreview = document.getElementById('current-thumbnail-preview');
+    
+    let cropper = null;
+    let originalFile = null;
+    let coverImageUrl = null; // Track the current cover image URL
+    
+    // Store existing cover URL if it exists
+    const coverElement = document.querySelector('img[alt="Current cover"]');
+    if (coverElement) {
+        coverImageUrl = coverElement.src;
+    }
+    
+    // Function to initialize cropper with image
+    function initializeCropper(file, imageDataUrl) {
+        originalFile = file;
+        cropperImage.src = imageDataUrl;
+        cropperSection.style.display = 'block';
+        croppedPreview.style.display = 'none';
+        
+        // Hide current thumbnail preview when cropping new one
+        if (currentThumbnailPreview) {
+            currentThumbnailPreview.style.display = 'none';
+        }
+        
+        // Destroy existing cropper instance if any
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        
+        // Initialize Cropper.js with 2.4:1 aspect ratio (480x200)
+        cropper = new Cropper(cropperImage, {
+            aspectRatio: 480 / 200, // 2.4:1 ratio
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 1,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: true,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+            minContainerHeight: 100,
+        });
+    }
+    
+    // Function to load image from URL and initialize cropper
+    function loadImageFromUrl(imageUrl) {
+        // Fetch the image and convert to blob
+        fetch(imageUrl)
+            .then(response => response.blob())
+            .then(blob => {
+                const fileName = imageUrl.split('/').pop();
+                const file = new File([blob], fileName, { type: blob.type });
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    initializeCropper(file, event.target.result);
+                };
+                reader.readAsDataURL(blob);
+            })
+            .catch(error => {
+                console.error('Error loading cover image:', error);
+                alert('Could not load cover image. Please try uploading a new image.');
+            });
+    }
+    
+    // Handle "Use Cover" button click
+    useCoverButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (coverImageUrl) {
+            loadImageFromUrl(coverImageUrl);
+        } else {
+            alert('No cover image available. Please upload a cover image first.');
+        }
+    });
+    
+    // Handle cover image upload - auto-load into thumbnail cropper AND update coverImageUrl
+    coverInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                coverImageUrl = event.target.result; // Update the cover URL for later use
+                initializeCropper(file, event.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Handle thumbnail source image upload
+    thumbnailSourceInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                initializeCropper(file, event.target.result);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            cropperSection.style.display = 'none';
+            croppedPreview.style.display = 'none';
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }
+    });
+    
+    // Apply crop button
+    cropButton.addEventListener('click', function() {
+        if (cropper) {
+            // Get canvas at appropriate resolution
+            const canvas = cropper.getCroppedCanvas({
+                width: 480,
+                height: 200,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            });
+            
+            canvas.toBlob(function(blob) {
+                // Create a File object from the blob
+                const fileName = 'thumbnail_' + (originalFile ? originalFile.name : 'cropped.jpg');
+                const croppedFile = new File([blob], fileName, { type: blob.type });
+                
+                // Create a DataTransfer to set the file input
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(croppedFile);
+                thumbnailInput.files = dataTransfer.files;
+                
+                // Show preview
+                const previewUrl = URL.createObjectURL(blob);
+                croppedPreviewImage.src = previewUrl;
+                croppedPreview.style.display = 'block';
+                cropperSection.style.display = 'none';
+                
+            }, originalFile ? originalFile.type : 'image/jpeg', 0.9);
+        }
+    });
+    
+    // Reset crop button
+    resetCropButton.addEventListener('click', function() {
+        if (cropper) {
+            cropper.reset();
+        }
+    });
+    
+    // Change crop button (re-open cropper)
+    changeCropButton.addEventListener('click', function() {
+        croppedPreview.style.display = 'none';
+        cropperSection.style.display = 'block';
+        
+        // Re-initialize cropper if needed
+        if (!cropper && cropperImage.src) {
+            cropper = new Cropper(cropperImage, {
+                aspectRatio: 480 / 200,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: true,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+                minContainerHeight: 100,
+            });
+        }
+    });
+    
+    // Auto-generate slug from title for new posts
+    const titleInput = document.getElementById('title');
+    const slugInput = document.getElementById('slug');
+    const isNewPost = !slugInput.value || slugInput.value === '';
+    
+    if (isNewPost && titleInput && slugInput) {
+        let manuallyEdited = false;
+        
+        // Function to generate slug from title
+        function generateSlug(title) {
+            return title
+                .toLowerCase()
+                .trim()
+                .replace(/[^\w\s-]/g, '') // Remove special characters
+                .replace(/\s+/g, '-')      // Replace spaces with hyphens
+                .replace(/-+/g, '-')       // Replace multiple hyphens with single hyphen
+                .replace(/^-+|-+$/g, '');  // Remove leading/trailing hyphens
+        }
+        
+        // Auto-generate slug when title changes
+        titleInput.addEventListener('input', function() {
+            if (!manuallyEdited) {
+                slugInput.value = generateSlug(this.value);
+            }
+        });
+        
+        // Mark as manually edited if user modifies the slug
+        slugInput.addEventListener('input', function() {
+            manuallyEdited = true;
+        });
+        
+        // Reset manual edit flag if slug is cleared
+        slugInput.addEventListener('blur', function() {
+            if (this.value === '') {
+                manuallyEdited = false;
+                this.value = generateSlug(titleInput.value);
+            }
+        });
+    }
+    
+    // Re-initialize lucide icons after DOM changes
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+});
+</script>
 {% endblock %}

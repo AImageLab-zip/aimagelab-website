@@ -15,6 +15,8 @@ build/
 notes.txt
 media/
 
+*.csv
+
 # Django
 *.log
 local_settings.py

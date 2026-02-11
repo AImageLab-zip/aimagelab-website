@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('', views.home, name='home'),
     path('people/', views.people, name='people'),
+    path('contacts/', views.contacts, name='contacts'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard, name='dashboard'),
@@ -11,8 +12,13 @@ urlpatterns = [
     path('add-user/', views.add_user, name='add_user'),
     path('sync-ldap/', views.sync_ldap, name='sync_ldap'),
     path('media/<path:path>', views.serve_media, name='serve_media'),
+    path('iris/import/', views.trigger_iris_import, name='trigger_iris_import'),
+    path('iris/status/', views.iris_import_status, name='iris_import_status'),
     path('news/', views.news, name='news'),
+    path('projects/', views.projects, name='projects'),
     path('news/add/', views.post_form, name='post_add'),
     path('news/<slug:slug>/', views.post_single, name='single'),
     path('news/<slug:slug>/edit/', views.post_form, name='post_edit'),
+    path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
 ]
+

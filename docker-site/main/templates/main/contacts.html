@@ -1,0 +1,143 @@
+{% extends 'main/base_with_hero.html' %}
+
+{% block title %}Contact Us - AImageLab{% endblock %}
+
+{% block hero_title %}Contact Us{% endblock %}
+
+{% block hero_description %}
+Get in touch with AImageLab - Find directions, contact information, and how to reach us.
+{% endblock %}
+
+{% block page_content %}
+<section class="py-16">
+    <div class="container mx-auto px-6">
+        <div class="mb-12">
+            <h2 class="h2-home mb-2">Connect with Us</h2>
+            <div class="mb-8 text-lg text-base-content/70">
+                We're here to assist you. Whether you have questions about our research, collaborations, or any other inquiries, feel free to reach out using the contact information below or visit us at our location.
+            </div>
+            <div class="flex gap-4 mb-8">
+                <a href="https://www.linkedin.com/company/aimagelab" target="_blank" aria-label="LinkedIn" class="btn btn-primary">
+                    <i data-lucide="linkedin" class="w-6 h-6"></i> LinkedIn
+                </a>
+                <a href="https://github.com/aimagelab" target="_blank" aria-label="GitHub" class="btn btn-primary">
+                    <i data-lucide="github" class="w-6 h-6"></i> GitHub
+                </a>
+                <a href="https://www.youtube.com/@aimagelab" target="_blank" aria-label="YouTube" class="btn btn-primary">
+                    <i data-lucide="youtube" class="w-6 h-6"></i> YouTube
+                </a>
+            </div>
+
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Column: Contact Info and Accordion -->
+            <div>
+                <!-- Contact Information -->
+                <h2 class="h2-home mb-8">How to Reach AImageLab</h2>
+
+                <div class="card bg-base-200 mb-6">
+                    <div class="card-body">
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Via Vivarelli 10/1, 41125 Modena, Italy</strong></p>
+                            <p class="pt-2">
+                                <strong>Tel:</strong> <a href="tel:+39-059-2056270" class="text-primary hover:underline">+39-059-2056270</a>
+                            </p>
+                            <p>
+                                <strong>Fax:</strong> +39-059-2056129
+                            </p>
+                            <p class="pt-2">
+                                <strong>Email:</strong> <a href="mailto:segreteria.aimagelab@unimore.it" class="text-primary hover:underline">segreteria.aimagelab@unimore.it</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accordion for Travel Directions -->
+                <div class="space-y-4">
+                    <div tabindex="0" class="collapse collapse-arrow bg-base-100 border-base-300 border">
+                        <div class="collapse-title font-semibold after:start-5 after:end-auto pe-4 ps-12">
+                            <i data-lucide="plane" class="w-5 h-5 inline mr-2"></i>
+                            By Plane
+                        </div>
+                        <div class="collapse-content text-sm">
+                            <div class="space-y-3 pt-2">
+                                <p>The nearest airport is the <strong>Airport of Bologna Guglielmo Marconi</strong>.</p>
+                                <p>The airport of Bologna has very frequent direct connections to all major European Hubs (Milan, Rome, Frankfurt, Brussels, Paris, London, Amsterdam).</p>
+                                <p><strong>Shuttle Service to Modena:</strong></p>
+                                <p>Departure times: 6:15, 8:15, 9:15, 10:15, 12:15, 16:15, 18:15, 21:15</p>
+                                <p><strong>Duration:</strong> About 1 hour</p>
+                                <p><strong>Cost:</strong> Approximately €10 (10% discount available for return tickets)</p>
+                                <p><strong>Ticket:</strong> Purchase aboard the shuttle</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div tabindex="0" class="collapse collapse-arrow bg-base-100 border-base-300 border">
+                        <div class="collapse-title font-semibold after:start-5 after:end-auto pe-4 ps-12">
+                            <i data-lucide="train" class="w-5 h-5 inline mr-2"></i>
+                            By Train
+                        </div>
+                        <div class="collapse-content text-sm">
+                            <div class="space-y-3 pt-2">
+                                <p>Modena has direct train connections to/from:</p>
+                                <ul class="list-disc list-inside">
+                                    <li>Milan</li>
+                                    <li>Zurich</li>
+                                    <li>Frankfurt</li>
+                                    <li>Paris</li>
+                                </ul>
+                                <p class="pt-2">Visit <a href="https://www.raileurope.com" target="_blank" class="text-primary hover:underline">www.raileurope.com</a> to plan your journey.</p>
+                                <p><strong>From the railway station:</strong> Take bus <strong>7N</strong> or <strong>9</strong> to "GOTTARDI"</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div tabindex="0" class="collapse collapse-arrow bg-base-100 border-base-300 border">
+                        <div class="collapse-title font-semibold after:start-5 after:end-auto pe-4 ps-12">
+                            <i data-lucide="car" class="w-5 h-5 inline mr-2"></i>
+                            By Car
+                        </div>
+                        <div class="collapse-content text-sm">
+                            <div class="space-y-3 pt-2">
+                                <p>Take the <strong>A1 Motorway</strong> and exit at <strong>"Modena Sud"</strong>.</p>
+                                <p>After the toll booth, turn right at the junction onto <strong>Via Vignolese</strong>.</p>
+                                <p>Drive straight for approximately <strong>10 km</strong> until you reach a junction with traffic lights.</p>
+                                <p>Cross the road and turn right into <strong>Via Gelmini</strong>.</p>
+                                <p>You will see the Faculty buildings ahead on your left.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Map -->
+            <div>
+                <div class="card bg-base-200 h-full max-h-144">
+                    <div class="card-body p-0 overflow-hidden rounded-xl">
+                        <div id="map" class="min-h-96 h-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const map = new maplibregl.Map({
+        style: 'https://tiles.openfreemap.org/styles/positron',
+        center: [10.950360, 44.628829],
+        zoom: 5,
+        container: 'map',
+        attributionControl: true,
+        cooperativeGestures: true,
+    });
+
+    let marker = new maplibregl.Marker({
+        color: window.getComputedStyle(document.body).getPropertyValue('--color-primary')
+    })
+        .setLngLat([10.950360, 44.628829])
+        .addTo(map);
+</script>
+{% endblock %}
