@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from .models import UserProfile, Post, Category, Project
+from .models import UserProfile, Post, Category, Project, PublicationIRIS
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField
 from datetime import datetime
@@ -21,6 +21,7 @@ from PIL import Image
 from io import BytesIO
 
 POST_PER_PAGE = 10
+PUBLICATION_PER_PAGE = 50
 
 def home(request):
     """Home page view."""
@@ -145,6 +146,121 @@ def projects(request):
         'type_query': type_query,
         'project_types': project_types,
         'show_all': show_all,
+    })
+
+def publications(request):
+    """Publications page view with pagination, search, and filters."""
+    search_query = request.GET.get('search', '')
+    year_query = request.GET.get('year', '')
+    journal_query = request.GET.get('journal', '')
+    type_query = request.GET.get('type', '')
+    author_username = request.GET.get('author', '')
+    
+    # Start with all non-hidden publications
+    publications_qs = PublicationIRIS.objects.filter(hidden=False)
+    
+    # Apply search filter (title or authors)
+    if search_query:
+        publications_qs = publications_qs.filter(
+            Q(titolo__icontains=search_query) |
+            Q(autori__icontains=search_query) |
+            Q(abstract__icontains=search_query)
+        )
+    
+    # Apply year filter
+    if year_query:
+        publications_qs = publications_qs.filter(anno=year_query)
+    
+    # Apply journal filter
+    if journal_query:
+        publications_qs = publications_qs.filter(rivista__icontains=journal_query)
+    
+    # Apply type filter
+    if type_query:
+        publications_qs = publications_qs.filter(tipo__icontains=type_query)
+    
+    # Apply author filter using UserProfile through UserProfilePublicationIRIS
+    if author_username:
+        publications_qs = publications_qs.filter(authors__user__username=author_username)
+    
+    # Order by year descending, then by title
+    publications_qs = publications_qs.order_by('-anno', 'titolo')
+    
+    # Pagination
+    paginator = Paginator(publications_qs, PUBLICATION_PER_PAGE)
+    page = request.GET.get('page', 1)
+    
+    try:
+        publications_page = paginator.page(page)
+    except PageNotAnInteger:
+        publications_page = paginator.page(1)
+    except EmptyPage:
+        publications_page = paginator.page(paginator.num_pages)
+    
+    # Get available years (for sidebar filter)
+    from django.db.models import Count
+    available_years = (
+        PublicationIRIS.objects.filter(hidden=False, anno__isnull=False)
+        .values('anno')
+        .annotate(count=Count('id'))
+        .order_by('-anno')
+        .values_list('anno', flat=True)
+    )
+    
+    # Get available journals (top journals with > 2 publications)
+    available_journals = (
+        PublicationIRIS.objects.filter(hidden=False)
+        .exclude(rivista='')
+        .values('rivista')
+        .annotate(count=Count('id'))
+        .filter(count__gt=2)
+        .order_by('rivista')
+        .values_list('rivista', flat=True)
+    )
+    
+    # Get available types (with > 2 publications)
+    available_types = (
+        PublicationIRIS.objects.filter(hidden=False)
+        .exclude(tipo='')
+        .values('tipo')
+        .annotate(count=Count('id'))
+        .filter(count__gt=2)
+        .order_by('tipo')
+        .values_list('tipo', flat=True)
+    )
+    
+    # Get available authors (UserProfiles that have publications)
+    available_authors = (
+        UserProfile.objects.filter(
+            publication_links__publication__hidden=False
+        )
+        .annotate(pub_count=Count('publication_links', distinct=True))
+        .filter(pub_count__gt=0)
+        .order_by('user__first_name', 'user__last_name')
+        .select_related('user')
+        .distinct()
+    )
+    
+    # Get the selected author object if any
+    selected_author = None
+    if author_username:
+        try:
+            selected_author = UserProfile.objects.select_related('user').get(user__username=author_username)
+        except UserProfile.DoesNotExist:
+            pass
+    
+    return render(request, 'main/publications.html', {
+        'publications': publications_page,
+        'search_query': search_query,
+        'year_query': year_query,
+        'journal_query': journal_query,
+        'type_query': type_query,
+        'author_username': author_username,
+        'selected_author': selected_author,
+        'available_years': available_years,
+        'available_journals': available_journals,
+        'available_types': available_types,
+        'available_authors': available_authors,
     })
 
 def post_single(request, slug):

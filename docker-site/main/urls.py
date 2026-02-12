@@ -15,6 +15,7 @@ urlpatterns = [
     path('iris/import/', views.trigger_iris_import, name='trigger_iris_import'),
     path('iris/status/', views.iris_import_status, name='iris_import_status'),
     path('news/', views.news, name='news'),
+    path('publications/', views.publications, name='publications'),
     path('projects/', views.projects, name='projects'),
     path('news/add/', views.post_form, name='post_add'),
     path('news/<slug:slug>/', views.post_single, name='single'),

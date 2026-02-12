@@ -30,7 +30,7 @@ Stay updated with the latest research breakthroughs, events, and announcements f
             <div class="card bg-base-200 mb-6">
                 <div class="card-body">
                     <form method="get" action="{% url 'news' %}" class="flex flex-col md:flex-row gap-3">
-                        <input type="text" name="search" class="input input-bordered flex-1" placeholder="Search news by title, description, or content..." value="{{ search_query }}" />
+                        <input type="text" name="search" class="input input-bordered p-3 flex-1" placeholder="Search news by title, description, or content..." value="{{ search_query }}" />
                         <button type="submit" class="btn btn-primary">
                             <i data-lucide="search" class="w-4 h-4"></i>
                             Search
