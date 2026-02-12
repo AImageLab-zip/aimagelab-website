@@ -10,7 +10,6 @@ set -e
 
 STACK_NAME="${1:-default}"
 COMMAND="${2:-up}"
-CUSTOM_PORT="${3}"
 
 if [ -z "$STACK_NAME" ]; then
     echo "Usage: $0 <stack-name> <command> [port]"
@@ -28,24 +27,27 @@ if [ -z "$STACK_NAME" ]; then
 fi
 
 # Generate project name
-PROJECT_NAME="aimagelab-dev-${STACK_NAME}"
+PROJECT_NAME="${STACK_NAME}"
+ENV_FILE=".env.${PROJECT_NAME}"
 
-# Auto-assign port based on stack name hash if not provided
-if [ -z "$CUSTOM_PORT" ]; then
-    # Generate port between 8080-8999 based on stack name
-    HASH=$(echo -n "$STACK_NAME" | md5sum | head -c 8)
-    PORT=$((8080 + (0x$HASH % 920)))
-else
-    PORT=$CUSTOM_PORT
+
+# Always load base .env file first
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
+# Check if custom env file exists and override with its values
+if [ -f "${ENV_FILE}" ]; then
+    echo "Using custom environment file: ${ENV_FILE}"
+    export $(grep -v '^#' ${ENV_FILE} | xargs)
 fi
 
 echo "🚀 Development Stack: $STACK_NAME"
 echo "📦 Project Name: $PROJECT_NAME"
-echo "🌐 Apache Port: $PORT"
+echo "🌐 Apache Port: $DEV_APACHE_PORT"
 echo ""
 
-# Export environment variable for docker-compose
-export DEV_APACHE_PORT=$PORT
+PORT=$DEV_APACHE_PORT
 
 case "$COMMAND" in
     up)
@@ -101,6 +103,11 @@ case "$COMMAND" in
     migrate)
         echo "Running migrations for stack '$STACK_NAME'..."
         sudo DEV_APACHE_PORT=$PORT docker compose -p "$PROJECT_NAME" exec dev-django-app python manage.py migrate
+        ;;
+
+    manage)
+        echo "Running migrations for stack '$STACK_NAME'..."
+        sudo DEV_APACHE_PORT=$PORT docker compose -p "$PROJECT_NAME" exec dev-django-app python manage.py "${@:3}"
         ;;
     
     build)
