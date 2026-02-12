@@ -160,13 +160,19 @@ def publications(request):
     publications_qs = PublicationIRIS.objects.filter(hidden=False)
     
     # Apply search filter (title or authors)
+    # Apply search filter (title or authors)
     if search_query:
-        publications_qs = publications_qs.filter(
-            Q(titolo__icontains=search_query) |
-            Q(autori__icontains=search_query) |
-            Q(abstract__icontains=search_query)
-        )
-    
+        # Split search query into individual words
+        words = search_query.split()
+        query = Q()
+        for word in words:
+            query &= (
+                Q(titolo__icontains=word) |
+                Q(autori__icontains=word) |
+                Q(abstract__icontains=word)
+            )
+        publications_qs = publications_qs.filter(query)
+        
     # Apply year filter
     if year_query:
         publications_qs = publications_qs.filter(anno=year_query)
