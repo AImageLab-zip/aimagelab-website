@@ -89,6 +89,22 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                             <i data-lucide="settings" class="w-4 h-4"></i>
                             Admin Panel
                         </a>
+                          {% if user.is_staff %}
+                    <form method="post" action="{% url 'sync_ldap' %}">
+                        {% csrf_token %}
+
+                        <button type="submit" class="btn btn-secondary text-secondary-content btn-block justify-start">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            Sync LDAP</button>
+                    </form>
+                    <form method="post" action="{% url 'trigger_iris_import' %}" >
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary text-secondary-content btn-block justify-start" title="Import publications from IRIS">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            Import IRIS
+                        </button>
+                    </form>
+                {% endif %}
                     </div>
                 </div>
             </div>
