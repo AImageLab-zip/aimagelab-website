@@ -25,11 +25,11 @@ fi
 
 # Build production containers
 echo "Building Docker containers..."
-docker-compose build django-app mysql-db redis celery-worker celery-beat apache-prod
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
 
 # Start production services
 echo "Starting services..."
-docker-compose up -d django-app mysql-db redis celery-worker celery-beat apache-prod
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Wait for services to be ready
 echo "Waiting for services to start..."
@@ -37,7 +37,7 @@ sleep 15
 
 # Run migrations
 echo "Running database migrations..."
-docker-compose exec -T django-app python manage.py migrate
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec -T django-app python manage.py migrate
 
 # Collect static files
 echo "Collecting static files..."

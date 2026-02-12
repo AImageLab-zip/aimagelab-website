@@ -96,19 +96,35 @@ def import_iris_publications(self):
                 logger.error(error_msg)
                 stats['errors'].append(error_msg)
         
+        # Determine final status based on errors
+        if stats['errors']:
+            # Check if there are authentication errors (401)
+            has_auth_error = any('401' in str(err) for err in stats['errors'])
+            if has_auth_error or stats['staff_processed'] == 0:
+                final_status = 'failed'
+            else:
+                final_status = 'completed'  # Partial success
+        else:
+            final_status = 'completed'
+        
         # Update import log
-        import_log.status = 'completed'
+        import_log.status = final_status
         import_log.completed_at = timezone.now()
         import_log.staff_processed = stats['staff_processed']
         import_log.publications_created = stats['publications_created']
         import_log.publications_updated = stats['publications_updated']
         import_log.links_created = stats['links_created']
+        
+        # Store errors if any
+        if stats['errors']:
+            import_log.error_message = '\n'.join(stats['errors'])
+        
         import_log.save()
         
-        logger.info(f"IRIS import completed: {stats}")
+        logger.info(f"IRIS import {final_status}: {stats}")
         
         return {
-            'status': 'completed',
+            'status': final_status,
             'stats': stats
         }
         

@@ -3,7 +3,7 @@ services:
   dev-redis:
     image: redis:7-alpine
     ports:
-      - "6380:6379"  # Use port 6380 for development to avoid conflicts
+      - "${DEV_REDIS_PORT:-6380}:6379"  # Use port 6380 for development to avoid conflicts
     restart: unless-stopped
     volumes:
       - dev_redis_data:/data
@@ -27,7 +27,7 @@ services:
       - dev_mysql_data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
     ports:
-      - "0.0.0.0:3308:3306"  # Use port 3308 for development to avoid conflicts
+      - "0.0.0.0:${DEV_MYSQL_PORT:-3308}:3306"  # Use port 3308 for development to avoid conflicts
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
@@ -45,15 +45,18 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - "8001:8000"  # Use port 8001 for development to avoid conflicts
-      - "5678:5678"  # Debugpy port for VS Code debugging
+      - "${DEV_DJANGO_PORT:-8001}:8000"  # Use port 8001 for development to avoid conflicts
+      - "${DEV_DEBUGPY_PORT:-5678}:5678"  # Debugpy port for VS Code debugging
     volumes:
       # Mount the entire project directory for development - live code reloading
       - ./docker-site:/app
       # Mount static volume so Apache can serve static files
       - dev_static_volume:/app/static
+    env_file:
+      - .env
+      - .env.oidc
     environment:
-      - DEBUG=${DEBUG}
+      - DEBUG=1
       - DB_HOST=dev-mysql-db
       - DB_NAME=${DB_NAME}_dev
       - DB_USER=${DB_USER}
@@ -62,8 +65,12 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - TZ=${TZ}
-      - CELERY_BROKER_URL=redis://dev-redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://dev-redis:6379/1
+      - CELERY_BROKER_URL=redis://dev-redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://dev-redis:6379/0
+      - CACHE_URL=${CACHE_URL:-redis://dev-redis:6379/1}
+      - IRIS_API_BASE_URL=${IRIS_API_BASE_URL}
+      - IRIS_API_USERNAME=${IRIS_API_USERNAME}
+      - IRIS_API_PASSWORD=${IRIS_API_PASSWORD}
     depends_on:
       dev-mysql-db:
         condition: service_healthy
@@ -81,17 +88,23 @@ services:
       dockerfile: Dockerfile.celery
     volumes:
       - ./docker-site:/app
+    env_file:
+      - .env
     environment:
-      - DEBUG=${DEBUG}
+      - DEBUG=1
       - DB_HOST=dev-mysql-db
       - DB_NAME=${DB_NAME}_dev
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT}
       - SECRET_KEY=${SECRET_KEY}
-      - CELERY_BROKER_URL=redis://dev-redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://dev-redis:6379/1
+      - CELERY_BROKER_URL=redis://dev-redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://dev-redis:6379/0
+      - CACHE_URL=${CACHE_URL:-redis://dev-redis:6379/1}
       - TZ=${TZ}
+      - IRIS_API_BASE_URL=${IRIS_API_BASE_URL}
+      - IRIS_API_USERNAME=${IRIS_API_USERNAME}
+      - IRIS_API_PASSWORD=${IRIS_API_PASSWORD}
     depends_on:
       dev-mysql-db:
         condition: service_healthy
@@ -110,17 +123,23 @@ services:
       dockerfile: Dockerfile.beat
     volumes:
       - ./docker-site:/app
+    env_file:
+      - .env
     environment:
-      - DEBUG=${DEBUG}
+      - DEBUG=1
       - DB_HOST=dev-mysql-db
       - DB_NAME=${DB_NAME}_dev
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT}
       - SECRET_KEY=${SECRET_KEY}
-      - CELERY_BROKER_URL=redis://dev-redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://dev-redis:6379/1
+      - CELERY_BROKER_URL=redis://dev-redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://dev-redis:6379/0
+      - CACHE_URL=${CACHE_URL:-redis://dev-redis:6379/1}
       - TZ=${TZ}
+      - IRIS_API_BASE_URL=${IRIS_API_BASE_URL}
+      - IRIS_API_USERNAME=${IRIS_API_USERNAME}
+      - IRIS_API_PASSWORD=${IRIS_API_PASSWORD}
     depends_on:
       dev-mysql-db:
         condition: service_healthy
@@ -130,13 +149,18 @@ services:
     networks:
       - dev-network
 
-volumes:
-  dev_mysql_data:
-  dev_redis_data:
-  dev_static_volume:
+  # Development Apache (HTTP only, configurable host port)
+  apache-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.apache.dev
+    ports:
+      - "${DEV_APACHE_PORT:-8080}:80"
+    volumes:
+      - dev_static_volume:/var/www/html/static-dev
+    depends_on:
+      - dev-django-app
+    restart: unless-stopped
+    networks:
+      - shared-network
 
-networks:
-  dev-network:
-    driver: bridge
-  shared-network:
-    driver: bridge

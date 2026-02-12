@@ -13,13 +13,13 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-# Build all containers
-echo "Building all Docker containers..."
-docker-compose build
+# Build and start production
+echo "Building and starting production services..."
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-# Start all services
-echo "Starting all services..."
-docker-compose up -d
+# Build and start development
+echo "Building and starting development services..."
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 # Wait for services to be ready
 echo "Waiting for services to start..."
@@ -27,7 +27,7 @@ sleep 15
 
 # Run migrations for both databases
 echo "Running database migrations (Production)..."
-docker-compose exec -T django-app python manage.py migrate
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec -T django-app python manage.py migrate
 
 echo "Running database migrations (Development)..."
 docker-compose exec -T dev-django-app python manage.py migrate

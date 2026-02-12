@@ -1,3 +1,6 @@
+# Production docker-compose override
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
 services:
   # Redis Service for Celery (Production)
   redis:
@@ -50,6 +53,9 @@ services:
       - ./docker-site:/app
       - static_volume:/app/static
       - media_volume:/app/media
+    env_file:
+      - .env
+      - .env.oidc
     environment:
       - DEBUG=0
       - DB_HOST=mysql-db
@@ -62,6 +68,10 @@ services:
       - TZ=${TZ}
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CACHE_URL=${CACHE_URL:-redis://redis:6379/1}
+      - IRIS_API_BASE_URL=${IRIS_API_BASE_URL}
+      - IRIS_API_USERNAME=${IRIS_API_USERNAME}
+      - IRIS_API_PASSWORD=${IRIS_API_PASSWORD}
     depends_on:
       mysql-db:
         condition: service_healthy
@@ -90,6 +100,10 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CACHE_URL=${CACHE_URL:-redis://redis:6379/1}
+      - IRIS_API_BASE_URL=${IRIS_API_BASE_URL}
+      - IRIS_API_USERNAME=${IRIS_API_USERNAME}
+      - IRIS_API_PASSWORD=${IRIS_API_PASSWORD}
       - TZ=${TZ}
     depends_on:
       mysql-db:
@@ -120,6 +134,10 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CACHE_URL=${CACHE_URL:-redis://redis:6379/1}
+      - IRIS_API_BASE_URL=${IRIS_API_BASE_URL}
+      - IRIS_API_USERNAME=${IRIS_API_USERNAME}
+      - IRIS_API_PASSWORD=${IRIS_API_PASSWORD}
       - TZ=${TZ}
     depends_on:
       mysql-db:
@@ -130,53 +148,43 @@ services:
     networks:
       - prod-network
 
-  # Apache Service (Unified - handles both production and development)
-  apache:
+  # Production Apache (HTTPS + Let's Encrypt)
+  apache-prod:
     build:
       context: .
-      dockerfile: Dockerfile.apache.unified
+      dockerfile: Dockerfile.apache.prod
     ports:
-      - "80:80"       # HTTP
-      - "443:443"     # HTTPS Production
-      - "8443:8443"   # HTTPS Development
+      - "80:80"
+      - "443:443"
     volumes:
       - static_volume:/var/www/html/static
-      - dev_static_volume:/var/www/html/static-dev
       - letsencrypt_data:/etc/letsencrypt
-      - letsencrypt_webroot:/var/www/html/.well-known/acme-challenge
+      - letsencrypt_webroot:/var/www/html
+    environment:
+      - DOMAIN=aimagelab-app.ing.unimore.it
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
     depends_on:
       - django-app
-      - dev-django-app
     restart: unless-stopped
     networks:
       - shared-network
 
-  # Certbot Service (for SSL certificates)
-  certbot:
+  # Certificate renewal service (runs every 12 hours)
+  certbot-renew:
     build:
       context: .
       dockerfile: Dockerfile.certbot
     volumes:
       - letsencrypt_data:/etc/letsencrypt
-      - letsencrypt_webroot:/var/www/html/.well-known/acme-challenge
+      - letsencrypt_webroot:/var/www/html
     environment:
       - DOMAIN=aimagelab-app.ing.unimore.it
       - EMAIL=${CERTBOT_EMAIL}
-    command: certonly --webroot -w /var/www/html -d aimagelab-app.ing.unimore.it --non-interactive --agree-tos --email ${CERTBOT_EMAIL}
+      - WEBROOT=/var/www/html
+    depends_on:
+      - apache-prod
     networks:
       - shared-network
+    command: ["/usr/local/bin/auto-renew.sh"]
+    restart: unless-stopped
 
-volumes:
-  mysql_data:
-  redis_data:
-  static_volume:
-  media_volume:
-  dev_static_volume:
-  letsencrypt_data:
-  letsencrypt_webroot:
-
-networks:
-  prod-network:
-    driver: bridge
-  shared-network:
-    driver: bridge
