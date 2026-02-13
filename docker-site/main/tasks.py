@@ -300,6 +300,11 @@ def process_publication_json(pub_data, user_profile, stats):
     # Language
     publication.language = pub_data.get('language', '')[:10]
     
+    # Keywords (if available)
+    keywords = pub_data.get('dc.subject.keywords', "").split(';')
+    if len(keywords) > 0:
+        publication.keywords = [kw.strip() for kw in keywords if kw.strip()]    
+    
     # URL/Link
     publication.url = pub_data.get('link', '')[:500]
     
