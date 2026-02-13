@@ -8,6 +8,10 @@
 Explore our research publications: papers, articles, and conference proceedings from AImageLab.
 {% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/tributejs@5.1.3/dist/tribute.css" />
+{% endblock %}
+
 {% block page_content %}
 <div class="container p-6 mx-auto">
 
@@ -18,12 +22,16 @@ Explore our research publications: papers, articles, and conference proceedings 
             <div class="card bg-base-200 mb-6">
                 <div class="card-body">
                     <form method="get" action="{% url 'publications' %}" class="flex md:flex-row flex-col gap-3">
-                        <input type="text" name="search" class="input input-bordered p-3 flex-1 w-full" placeholder="Search by title, author, or abstract..." value="{{ search_query }}" />
+                        <input type="text" id="publications-search" name="search" class="input input-bordered p-3 flex-1 w-full" placeholder="Search by title, author, or abstract..." value="{{ search_query }}" />
                         <button type="submit" class="btn btn-primary">
                             <i data-lucide="search" class="w-4 h-4"></i>
                             Search
                         </button>
                     </form>
+
+                    <p class="text-xs text-base-content/60">
+                        Tip: type @ to pick an author and # to pick a keyword.
+                    </p>
 
 
                     <div class="flex gap-2 justify-end">
@@ -88,7 +96,7 @@ Explore our research publications: papers, articles, and conference proceedings 
                     
 
                     <!-- Active Filters Display -->
-                    {% if year_query or journal_query or type_query or selected_author %}
+                    {% if year_query or journal_query or type_query or selected_author or keyword_tokens %}
                     <div class="flex flex-wrap gap-2">
                         <p class="text-sm font-bold">Active filters  <a href="{% url 'publications' %}" class="link link-primary font-normal">(Clear)</a>:</p>
                         {% if year_query %}
@@ -112,7 +120,13 @@ Explore our research publications: papers, articles, and conference proceedings 
                         {% if selected_author %}
                         <span class="badge badge-primary gap-2">
                             Author: {{ selected_author.user.get_full_name }}
-                            <a href="?search={{ search_query }}&year={{ year_query }}&journal={{ journal_query }}&type={{ type_query }}" class="text-xs hover:text-white">✕</a>
+                            <a href="?search={{ search_query_without_author }}&year={{ year_query }}&journal={{ journal_query }}&type={{ type_query }}" class="text-xs hover:text-white">✕</a>
+                        </span>
+                        {% endif %}
+                        {% if keyword_tokens %}
+                        <span class="badge badge-primary gap-2">
+                            Keywords: {{ keyword_tokens|join:", " }}
+                            <a href="?search={{ search_query_without_keywords }}&year={{ year_query }}&journal={{ journal_query }}&type={{ type_query }}&author={{ author_username }}" class="text-xs hover:text-white">✕</a>
                         </span>
                         {% endif %}
                        
@@ -237,4 +251,55 @@ Explore our research publications: papers, articles, and conference proceedings 
             {% endif %}
 
             </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/tributejs@5.1.3/dist/tribute.min.js"></script>
+{{ available_authors_data|json_script:"pub-authors-data" }}
+{{ available_keywords|json_script:"pub-keywords-data" }}
+<script>
+    const searchInput = document.getElementById('publications-search');
+    if (searchInput) {
+        const authorsData = JSON.parse(document.getElementById('pub-authors-data').textContent || '[]');
+        const keywordsData = JSON.parse(document.getElementById('pub-keywords-data').textContent || '[]');
+
+        const tribute = new Tribute({
+            collection: [
+                {
+                    trigger: '@',
+                    values: authorsData.map(author => ({
+                        key: author.name,
+                        value: author.username
+                    })),
+                    lookup: 'key',
+                    fillAttr: 'key',
+                    selectTemplate: function (item) {
+                        return item && item.original ? `@${item.original.value} ` : '';
+                    },
+                    menuItemTemplate: function (item) {
+                        return item && item.original ? item.original.key : '';
+                    }
+                },
+                {
+                    trigger: '#',
+                    values: keywordsData.map(keyword => ({
+                        key: keyword,
+                        value: keyword
+                    })),
+                    lookup: 'key',
+                    fillAttr: 'key',
+                    selectTemplate: function (item) {
+                        return item && item.original ? `#${item.original.value} ` : '';
+                    },
+                    menuItemTemplate: function (item) {
+                        return item && item.original ? item.original.key : '';
+                    }
+                }
+            ],
+            allowSpaces: false
+        });
+
+        tribute.attach(searchInput);
+    }
+</script>
 {% endblock %}

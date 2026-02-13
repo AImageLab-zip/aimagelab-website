@@ -10,6 +10,8 @@ from django.utils import timezone
 from django.db import transaction
 from django.conf import settings
 import logging
+import re
+
 
 from .models import UserProfile, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog
 from .services import add_or_update_user, bulk_add_or_update_users
@@ -303,7 +305,15 @@ def process_publication_json(pub_data, user_profile, stats):
     # Keywords (if available)
     keywords = pub_data.get('dc.subject.keywords', "").split(';')
     if len(keywords) > 0:
-        publication.keywords = [kw.strip() for kw in keywords if kw.strip()]    
+        
+        def clean_kw(kw):
+            cleaned = kw.strip().lower()
+            cleaned = re.sub(r'\s*-\s*', '-', cleaned)  # ' - ', ' -', '- ' -> '-'
+            cleaned = re.sub(r'\s+', '-', cleaned)      # multiple spaces -> '-'
+            return cleaned
+        
+        publication.keywords = [clean_kw(kw) for kw in keywords if clean_kw(kw)] 
+           
     
     # URL/Link
     publication.url = pub_data.get('link', '')[:500]
@@ -489,7 +499,7 @@ def populate_users_from_ldap():
     Celery task to populate users from LDAP server daily.
     """
     from django.core.management import call_command
-    from django.utils import timezone
+    from django.utils import timezone   
 
     try:
         logger.info(f"Starting LDAP user population at {timezone.now()}")
