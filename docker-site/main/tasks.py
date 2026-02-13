@@ -272,9 +272,11 @@ def process_publication_json(pub_data, user_profile, stats):
     
     # Get collection/type information
     collection = pub_data.get('collection', {})
+    if isinstance(collection, str):
+        publication.tipo = collection[:200]
     if isinstance(collection, dict):
         publication.tipo = collection.get('description', '')[:200]
-        publication.tipologia = pub_data.get('dc.type.miur', '')[:200]
+    publication.tipologia = pub_data.get('dc.type.miur', '')[:200]
     
     # Journal information
     journal = pub_data.get('journal', {})
