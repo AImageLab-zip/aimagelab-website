@@ -1,14 +1,16 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
+from django.contrib import messages as django_messages
 from django.http import JsonResponse
+from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from .models import UserProfile, Post, Category, Project, PublicationIRIS
+import json
+from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.http import FileResponse, Http404
 from django.conf import settings
@@ -353,11 +355,11 @@ def post_form(request, slug=None):
             post.categories.set(category_ids)
         
         if action == 'publish':
-            messages.success(request, 'Post published successfully!')
+            django_messages.success(request, 'Post published successfully!')
         elif action == 'draft':
-            messages.success(request, 'Post saved as draft!')
+            django_messages.success(request, 'Post saved as draft!')
         else:
-            messages.success(request, 'Post updated successfully!')
+            django_messages.success(request, 'Post updated successfully!')
         
         return redirect('single', slug=post.slug)
     
@@ -397,10 +399,10 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            messages.success(request, 'Login successful!')
+            django_messages.success(request, 'Login successful!')
             return redirect('home')
         else:
-            messages.error(request, 'Invalid username or password.')
+            django_messages.error(request, 'Invalid username or password.')
     
     context = {
         'OIDC_PROVIDER_NAME': getattr(settings, 'OIDC_PROVIDER_NAME', 'OIDC Provider')
@@ -411,7 +413,7 @@ def login_view(request):
 def logout_view(request):
     """Logout view."""
     logout(request)
-    messages.info(request, 'You have been logged out.')
+    django_messages.info(request, 'You have been logged out.')
     return redirect('home')
 
 
@@ -435,7 +437,7 @@ def edit_profile(request):
     
     # Check if user profile is visible - only visible users can edit their profile
     if not profile.is_visible:
-        messages.error(
+        django_messages.error(
             request,
             'Your profile is not yet visible. Please contact an administrator to activate your account.'
         )
@@ -472,7 +474,7 @@ def edit_profile(request):
             profile.avatar = None
 
         profile.save()
-        messages.success(request, 'Profile updated successfully!')
+        django_messages.success(request, 'Profile updated successfully!')
         return redirect('edit_profile')
 
     return render(request, 'main/edit_profile.html', {
@@ -518,7 +520,7 @@ def add_user(request):
             # Launch Celery task asynchronously
             task = sync_user_task.delay(user_data)
             
-            messages.success(
+            django_messages.success(
                 request, 
                 f'User creation/update task started! Task ID: {task.id}'
             )
@@ -534,7 +536,7 @@ def add_user(request):
             return redirect('add_user')
             
         except Exception as e:
-            messages.error(request, f'Error starting task: {str(e)}')
+            django_messages.error(request, f'Error starting task: {str(e)}')
             
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
@@ -554,7 +556,7 @@ def sync_ldap(request):
     
     # Only allow staff members to trigger sync
     if not request.user.is_staff:
-        messages.error(request, 'You do not have permission to perform this action.')
+        django_messages.error(request, 'You do not have permission to perform this action.')
         return redirect('home')
     
     if request.method == 'POST':
@@ -562,12 +564,12 @@ def sync_ldap(request):
             # Launch LDAP sync task asynchronously
             task = populate_users_from_ldap.delay()
             
-            messages.success(
+            django_messages.success(
                 request,
                 f'LDAP synchronization started! Task ID: {task.id}. This may take a few moments.'
             )
         except Exception as e:
-            messages.error(request, f'Error starting LDAP sync: {str(e)}')
+            django_messages.error(request, f'Error starting LDAP sync: {str(e)}')
     
     # Redirect back to the previous page or home
     return redirect(request.META.get('HTTP_REFERER', 'home'))
@@ -612,12 +614,12 @@ def trigger_iris_import(request):
     Only accessible to authenticated users.
     """
     if request.method != 'POST':
-        messages.error(request, 'Invalid request method.')
+        django_messages.error(request, 'Invalid request method.')
         return redirect('dashboard')
     
     # Check if import is already running
     if is_import_running():
-        messages.warning(
+        django_messages.warning(
             request,
             'IRIS import is already in progress. Please wait for it to complete.'
         )
@@ -626,7 +628,7 @@ def trigger_iris_import(request):
     # Start the import task
     task = import_iris_publications.delay()
     
-    messages.success(
+    django_messages.success(
         request,
         f'IRIS import started successfully! Task ID: {task.id}. '
         'This may take a few minutes.'
@@ -675,16 +677,222 @@ def trigger_iris_photo_import(request):
     Only accessible to authenticated users.
     """
     if request.method != 'POST':
-        messages.error(request, 'Invalid request method.')
+        django_messages.error(request, 'Invalid request method.')
         return redirect('dashboard')
     
     # Start the import task
     task = import_iris_profile_photos.delay()
     
-    messages.success(
+    django_messages.success(
         request,
         f'IRIS profile photo import started successfully! Task ID: {task.id}. '
         'This may take a few minutes.'
     )
     
     return redirect('dashboard')
+
+
+# Meeting Room Reservation Views
+
+@login_required
+def rooms_calendar(request):
+    """Display calendar view of all meeting rooms and their reservations."""
+    rooms = MeetingRoom.objects.filter(is_active=True).order_by('name')
+    
+    # Get date range from query params or default to current week
+    start_date = request.GET.get('start')
+    end_date = request.GET.get('end')
+    
+    if start_date and end_date:
+        try:
+            start_date = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            end_date = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+        except ValueError:
+            # Default to current week if parsing fails
+            today = datetime.now()
+            start_date = today - timedelta(days=today.weekday())
+            end_date = start_date + timedelta(days=7)
+    else:
+        today = datetime.now()
+        start_date = today - timedelta(days=today.weekday())
+        end_date = start_date + timedelta(days=7)
+    
+    # Get all reservations in the date range
+    reservations = RoomReservation.objects.filter(
+        start_time__lte=end_date,
+        end_time__gte=start_date
+    ).select_related('room', 'user')
+    
+    # Format events for FullCalendar
+    events = []
+    for reservation in reservations:
+        user_name = reservation.user.get_full_name() or reservation.user.username
+        events.append({
+            'id': reservation.id,
+            'title': f'{reservation.title} - {user_name}',
+            'start': reservation.start_time.isoformat(),
+            'end': reservation.end_time.isoformat(),
+            'backgroundColor': reservation.room.color,
+            'borderColor': reservation.room.color,
+            'extendedProps': {
+                'room': reservation.room.name,
+                'user': user_name,
+                'userId': reservation.user.id,
+                'description': reservation.description,
+            }
+        })
+    
+    return render(request, 'main/rooms_calendar.html', {
+        'rooms': rooms,
+        'events': json.dumps(events),
+    })
+
+
+@login_required
+def rooms_list(request):
+    """List all meeting rooms."""
+    rooms = MeetingRoom.objects.filter(is_active=True).order_by('name')
+    return render(request, 'main/rooms_list.html', {'rooms': rooms})
+
+
+@login_required
+def room_detail(request, room_id):
+    """Display details and reservations for a specific room."""
+    room = get_object_or_404(MeetingRoom, pk=room_id, is_active=True)
+    
+    # Get upcoming reservations for this room
+    now = datetime.now()
+    upcoming_reservations = RoomReservation.objects.filter(
+        room=room,
+        end_time__gte=now
+    ).select_related('user').order_by('start_time')[:10]
+    
+    return render(request, 'main/room_detail.html', {
+        'room': room,
+        'upcoming_reservations': upcoming_reservations,
+    })
+
+
+@login_required
+def create_reservation(request):
+    """Create a new room reservation."""
+    if request.method == 'POST':
+        room_id = request.POST.get('room')
+        title = request.POST.get('title')
+        description = request.POST.get('description', '')
+        start_time = request.POST.get('start_time')
+        end_time = request.POST.get('end_time')
+        
+        try:
+            room = MeetingRoom.objects.get(pk=room_id, is_active=True)
+            
+            # Parse datetimes
+            start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+            end_time = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+            
+            # Create reservation
+            reservation = RoomReservation(
+                room=room,
+                user=request.user,
+                title=title,
+                description=description,
+                start_time=start_time,
+                end_time=end_time
+            )
+            
+            # Validate (will check for overlaps)
+            reservation.full_clean()
+            reservation.save()
+            
+            django_messages.success(request, f'Room "{room.name}" reserved successfully!')
+            return JsonResponse({'success': True, 'message': 'Reservation created successfully'})
+            
+        except MeetingRoom.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Room not found'}, status=404)
+        except ValidationError as e:
+            # Format validation errors nicely
+            error_list = []
+            if hasattr(e, 'message_dict'):
+                for field, field_errors in e.message_dict.items():
+                    error_list.extend(field_errors)
+            elif hasattr(e, 'messages'):
+                error_list = list(e.messages)
+            else:
+                error_list = [str(e)]
+            return JsonResponse({'success': False, 'error': ' '.join(error_list)}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+    # GET request - show form
+    rooms = MeetingRoom.objects.filter(is_active=True).order_by('name')
+    return render(request, 'main/create_reservation.html', {'rooms': rooms})
+
+
+@login_required
+def edit_reservation(request, reservation_id):
+    """Edit an existing reservation."""
+    reservation = get_object_or_404(RoomReservation, pk=reservation_id)
+    
+    # Only allow editing own reservations (or superusers)
+    if reservation.user != request.user and not request.user.is_superuser:
+        django_messages.error(request, 'You can only edit your own reservations.')
+        return redirect('rooms_calendar')
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description', '')
+        start_time = request.POST.get('start_time')
+        end_time = request.POST.get('end_time')
+        
+        try:
+            # Update fields
+            reservation.title = title
+            reservation.description = description
+            reservation.start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+            reservation.end_time = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+            
+            # Validate
+            reservation.full_clean()
+            reservation.save()
+            
+            django_messages.success(request, 'Reservation updated successfully!')
+            return JsonResponse({'success': True, 'message': 'Reservation updated successfully'})
+            
+        except ValidationError as e:
+            # Format validation errors nicely
+            error_list = []
+            if hasattr(e, 'message_dict'):
+                for field, field_errors in e.message_dict.items():
+                    error_list.extend(field_errors)
+            elif hasattr(e, 'messages'):
+                error_list = list(e.messages)
+            else:
+                error_list = [str(e)]
+            return JsonResponse({'success': False, 'error': ' '.join(error_list)}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+    # GET request - show form
+    rooms = MeetingRoom.objects.filter(is_active=True).order_by('name')
+    return render(request, 'main/edit_reservation.html', {
+        'reservation': reservation,
+        'rooms': rooms,
+    })
+
+
+@login_required
+def delete_reservation(request, reservation_id):
+    """Delete a reservation."""
+    reservation = get_object_or_404(RoomReservation, pk=reservation_id)
+    
+    # Only allow deleting own reservations (or superusers)
+    if reservation.user != request.user and not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+    
+    if request.method == 'POST':
+        reservation.delete()
+        django_messages.success(request, 'Reservation deleted successfully!')
+        return JsonResponse({'success': True, 'message': 'Reservation deleted successfully'})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+

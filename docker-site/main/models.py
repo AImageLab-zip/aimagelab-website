@@ -231,6 +231,81 @@ class Category(models.Model):
         return self.name
 
 
+class MeetingRoom(models.Model):
+    """Meeting room available for reservation"""
+    name = models.CharField(max_length=100, unique=True, help_text="Room name (e.g., Conference Room A)")
+    location = models.CharField(max_length=200, blank=True, help_text="Building and floor")
+    capacity = models.IntegerField(help_text="Maximum number of people")
+    description = models.TextField(blank=True, help_text="Room features and equipment")
+    image = models.ImageField(upload_to='room_images/', blank=True, null=True, help_text="Room photo or icon")
+    is_active = models.BooleanField(default=True, help_text="Is the room available for booking?")
+    color = models.CharField(max_length=7, default="#3b82f6", help_text="Color for calendar display (hex format)")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+
+class RoomReservation(models.Model):
+    """Room reservation made by a user"""
+    room = models.ForeignKey(MeetingRoom, on_delete=models.CASCADE, related_name='reservations')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='room_reservations')
+    title = models.CharField(max_length=200, help_text="Meeting/event title")
+    description = models.TextField(blank=True, help_text="Purpose or details of the meeting")
+    start_time = models.DateTimeField(help_text="Start date and time")
+    end_time = models.DateTimeField(help_text="End date and time")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-start_time']
+        indexes = [
+            models.Index(fields=['start_time', 'end_time']),
+            models.Index(fields=['room', 'start_time']),
+        ]
+    
+    def __str__(self):
+        return f"{self.room.name} - {self.title} ({self.start_time.strftime('%Y-%m-%d %H:%M')})"
+    
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        from datetime import timedelta
+        
+        # Validate end time is after start time
+        if self.end_time <= self.start_time:
+            raise ValidationError("End time must be after start time.")
+        
+        # Validate duration is in 30-minute increments
+        duration = self.end_time - self.start_time
+        if duration.total_seconds() % 1800 != 0:  # 1800 seconds = 30 minutes
+            raise ValidationError("Reservations must be in 30-minute increments.")
+        
+        # Validate times are on 30-minute intervals (00 or 30 minutes)
+        if self.start_time.minute not in [0, 30] or self.start_time.second != 0:
+            raise ValidationError("Reservations must start at 00 or 30 minutes past the hour.")
+        
+        if self.end_time.minute not in [0, 30] or self.end_time.second != 0:
+            raise ValidationError("Reservations must end at 00 or 30 minutes past the hour.")
+        
+        # Check for overlapping reservations
+        overlapping = RoomReservation.objects.filter(
+            room=self.room,
+            start_time__lt=self.end_time,
+            end_time__gt=self.start_time
+        ).exclude(pk=self.pk if self.pk else None)
+        
+        if overlapping.exists():
+            raise ValidationError(f"This room is already booked during the selected time.")
+    
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
 class Post(models.Model):
     """Blog post model"""
     

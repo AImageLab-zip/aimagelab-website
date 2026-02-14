@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog
+from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation
 
 
 @admin.register(UserProfile)
@@ -161,3 +161,47 @@ class IRISImportLogAdmin(admin.ModelAdmin):
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(Project, ProjectAdmin)
+
+
+@admin.register(MeetingRoom)
+class MeetingRoomAdmin(admin.ModelAdmin):
+    list_display = ('name', 'location', 'capacity', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name', 'location', 'description')
+    list_editable = ('is_active',)
+    fieldsets = (
+        ('Room Information', {
+            'fields': ('name', 'location', 'capacity', 'description', 'image')
+        }),
+        ('Display Settings', {
+            'fields': ('is_active', 'color')
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(RoomReservation)
+class RoomReservationAdmin(admin.ModelAdmin):
+    list_display = ('room', 'user', 'title', 'start_time', 'end_time', 'created_at')
+    list_filter = ('room', 'created_at', 'start_time')
+    search_fields = ('title', 'description', 'user__username', 'user__first_name', 'user__last_name')
+    date_hierarchy = 'start_time'
+    autocomplete_fields = ['user']
+    fieldsets = (
+        ('Reservation Details', {
+            'fields': ('room', 'user', 'title', 'description')
+        }),
+        ('Time Slot', {
+            'fields': ('start_time', 'end_time')
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
