@@ -15,9 +15,6 @@ Explore our research publications: papers, articles, and conference proceedings 
 {% block page_content %}
 <div class="container p-6 mx-auto">
 
-
-
-
             <!-- Search Bar -->
             <div class="card bg-base-200 mb-6">
                 <div class="card-body">
@@ -56,12 +53,11 @@ Explore our research publications: papers, articles, and conference proceedings 
                         <input type="hidden" name="year" value="{{ year_query }}" />
                         <input type="hidden" name="type" value="{{ type_query }}" />
                         <select name="journal" class="select select-bordered select-sm w-full" onchange="this.form.submit()">
-                            <option value=""> All Journals</option>
+                            <option value="">All Journals</option>
                             {% for journal in available_journals %}
                             <option value="{{ journal }}" {% if journal_query == journal %}selected{% endif %}>{{ journal|truncatewords:8 }}</option>
                             {% endfor %}
 
-                                                    
                         </select>
                     </form>
 
