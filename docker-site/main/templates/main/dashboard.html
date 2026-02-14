@@ -67,7 +67,28 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                 </div>
             </div>
             {% endif %}
-{% endblock %}
+
+            <h2 class="text-2xl font-bold text-primary mt-8 mb-4">
+                At a Glance:
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                {% include 'main/dashboard_card.html' with link='https://missioni.ing.unimore.it/' title='UNIMORE Missioni' description='Applications to compile documents for mission reimbursements.' logo='https://github.com/prittt/missioni-unimore/raw/master/RimborsiApp/static/RimborsiApp/imgs/missioni_logo.png' %}
+                {% include 'main/dashboard_card.html' with link='https://richieste.ing.unimore.it/' title='Richieste DIEF' description='Digital platform for automated management of requests and approval processes.' logo='https://richieste.ing.unimore.it/static/images/logo.png' %}
+                {% include 'main/dashboard_card.html' with link='https://ailb-web.ing.unimore.it/coldfront' title='AILB SRV Coldfront' description='Access to AImageLab services via Coldfront.' logo='https://ailb-web.ing.unimore.it//coldfront/static/common/images/apple-touch-icon.png' %}
+                {% include 'main/dashboard_card.html' with link='https://ailb-web.ing.unimore.it/tickets/' title='AILB Tickets' description='Ticketing system for inquiries related to our cluster.' logo='https://ailb-web.ing.unimore.it//coldfront/static/common/images/apple-touch-icon.png' %}
+                {% include 'main/dashboard_card.html' with link='https://web.ing.unimo.it/wiki/index.php/Intranet_DIEF' title='DIEF Intranet' description='Quick access to the DIEF intranet.' logo='https://web.ing.unimo.it/wiki/skins/dief/sigillo_small.png?118bf' %}
+                {% include 'main/dashboard_card.html' with link='https://web.ing.unimo.it/wiki/index.php/Intranet_DIEF#Prenotazione_sale_riunioni' title='Meeting Room Booking' description='Book meeting rooms at DIEF' logo='https://web.ing.unimo.it/wiki/skins/dief/sigillo_small.png?118bf' %}
+                {% include 'main/dashboard_card.html' with link='https://web.ing.unimo.it/DocumentiPubblici/dief/altre-attivita/rimborso%20piccole%20spese/' title='Small Expense Reimbursement' description='Forms for small expense reimbursements.' logo='lucide:coins' %}
+            </div>
+
+            <h2 class="text-2xl font-bold text-primary mt-8 mb-4">
+                Common graphical tools:
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                Under construction...
+            </div>
+
+{% endblock %}  
 
 {% block sidebar_content %}
             <div class="card bg-base-200">
