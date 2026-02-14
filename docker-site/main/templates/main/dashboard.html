@@ -85,33 +85,41 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                             <i data-lucide="user-cog" class="w-4 h-4"></i>
                             Edit Profile
                         </a>
-                        <a href="/admin/" class="btn btn-primary btn-block justify-start">
+                        <a href="{% url 'rooms_calendar' %}" class="btn btn-primary btn-block justify-start">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                            Meeting Rooms
+                        </a>
+                        
+                        {% if user.is_staff %}
+                        <!-- Admin Actions -->
+                        <div class="divider my-2">Admin Actions</div>
+                        
+                        <a href="/admin/" class="btn btn-secondary text-secondary-content btn-block justify-start">
                             <i data-lucide="settings" class="w-4 h-4"></i>
                             Admin Panel
                         </a>
-                          {% if user.is_staff %}
-                    <form method="post" action="{% url 'sync_ldap' %}">
-                        {% csrf_token %}
-
-                        <button type="submit" class="btn btn-secondary text-secondary-content btn-block justify-start">
-                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                            Sync LDAP</button>
-                    </form>
-                    <form method="post" action="{% url 'trigger_iris_import' %}" >
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-secondary text-secondary-content btn-block justify-start" title="Import publications from IRIS">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            Import IRIS Publications
-                        </button>
-                    </form>
-                    <form method="post" action="{% url 'trigger_iris_photo_import' %}" >
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-secondary text-secondary-content btn-block justify-start" title="Import profile photos from IRIS">
-                            <i data-lucide="image" class="w-4 h-4"></i>
-                            Import IRIS Photos
-                        </button>
-                    </form>
-                {% endif %}
+                        <form method="post" action="{% url 'sync_ldap' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary text-secondary-content btn-block justify-start">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                                Sync LDAP
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'trigger_iris_import' %}" >
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary text-secondary-content btn-block justify-start" title="Import publications from IRIS">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                Import IRIS Publications
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'trigger_iris_photo_import' %}" >
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary text-secondary-content btn-block justify-start" title="Import profile photos from IRIS">
+                                <i data-lucide="image" class="w-4 h-4"></i>
+                                Import IRIS Photos
+                            </button>
+                        </form>
+                        {% endif %}
                     </div>
                 </div>
             </div>
