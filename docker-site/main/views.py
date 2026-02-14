@@ -160,7 +160,6 @@ def publications(request):
     publications_qs = PublicationIRIS.objects.filter(hidden=False)
     
     # Apply search filter (title or authors)
-    # Apply search filter (title or authors)
     if search_query:
         # Split search query into individual words
         words = search_query.split()
