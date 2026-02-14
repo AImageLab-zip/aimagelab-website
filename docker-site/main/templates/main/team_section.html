@@ -68,13 +68,7 @@
                         </a>
                         {% endif %}
 
-                        {% if profile.website %}
-                        <a href="{{ profile.website }}" target="_blank" class="text-primary hover:text-secondary" title="Website">
-                            <i data-lucide="globe" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
-                        </a>
-                        {% endif %}
-
-                        {% if profile.google_scholar and not is_alumni %}
+                        {% if profile.google_scholar %}
                         <a href="{{ profile.google_scholar }}" target="_blank" class="text-primary hover:text-secondary" title="Google Scholar">
                             <i data-lucide="book-open" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
                         </a>
@@ -92,7 +86,16 @@
                         </a>
                         {% endif %}
                     </div>
-
+                  
+                    <a href="{% url 'publications' %}?author={{ profile.user }}" target="_blank" class="text-primary hover:text-secondary" title="Publications">
+                        Read publications →
+                    </a>
+                    {% if profile.website %}
+                    <a href="{{ profile.website }}" target="_blank" class="text-primary hover:text-secondary" title="Website">
+                        Personal website →
+                    </a>
+                    {% endif %}
+                  
                                         <!-- More Details Link (only for professors with website)
                                         {% if card_size == 'large' and profile.website %}
                                         <div class="mt-3">

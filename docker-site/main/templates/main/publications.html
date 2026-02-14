@@ -2,7 +2,13 @@
 {% load static %}
 {% block title %}Publications - AImageLab{% endblock %}
 
-{% block hero_title %}Publications{% endblock %}
+{% block hero_title %}
+{% if selected_author %}
+Publications by {{ selected_author.user.get_full_name }}
+{% else %}
+Publications
+{% endif %}
+{% endblock %}
 
 {% block hero_description %}
 Explore our research publications: papers, articles, and conference proceedings from AImageLab.
