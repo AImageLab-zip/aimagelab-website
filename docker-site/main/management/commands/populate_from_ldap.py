@@ -116,6 +116,7 @@ class Command(BaseCommand):
                     first_name = to_camel_case(self._get_attr_value(attrs, 'givenName'))
                     last_name = to_camel_case(self._get_attr_value(attrs, 'sn'))
                     email = self._get_attr_value(attrs, 'mail')
+                    cf = self._get_attr_value(attrs, 'employeeNumber').upper() if self._get_attr_value(attrs, 'employeeNumber') else None
 
                     if not username:
                         self.stdout.write(self.style.WARNING(f'Skipping user {user_dn} - no uid'))
@@ -188,13 +189,16 @@ class Command(BaseCommand):
                             'role': role,
                             'is_visible': True,
                             'display_order': 0,
+                            'codice_fiscale': cf,
                         }
                     )
 
                     if not profile_created and update_existing:
                         profile.role = role
                         profile.is_visible = True
+                        profile.codice_fiscale = cf
                         profile.save()
+                    print(profile.codice_fiscale)
 
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f'Error processing user {uid}: {e}'))
