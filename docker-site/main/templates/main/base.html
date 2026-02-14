@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="aimagelab-theme">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,70 +24,45 @@
     <!-- Navigation -->
     <div id="navbar" class="fixed top-0 z-20 w-full px-4 transition-colors duration-300">
         <div class="navbar container mx-auto">
-            <div class="navbar-start">
+            <a class="navbar-start" href="{% url 'home' %}">
                 <img src="{% static 'main/assets/logo.svg' %}" alt="AImageLab Logo" class="h-10 mr-2" />
-            </div>
-            <div class="navbar-end gap-2">
+            </a>
+            <div class="navbar-end gap-2 w-fit ml-auto">
                 <div class="hidden lg:flex">
                     <ul class="menu menu-horizontal px-1">
-                        <li><a class="font-bold" href="{% url 'home' %}">Home</a></li>
-                        <li><a class="font-bold" href="{% url 'people' %}">People</a></li>
-                        <li><a class="font-bold" href="{% url 'news' %}">News</a></li>
-                        <li><a class="font-bold" href="{% url 'projects' %}">Projects</a></li>
-                        <li><a class="font-bold" href="{% url 'contacts' %}">Contacts</a></li>
-                       
+                        <li><a class="font-bold {% if request.resolver_match.url_name == 'home' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'home' %}">Home</a></li>
+                        <li><a class="font-bold {% if request.resolver_match.url_name == 'people' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'people' %}">People</a></li>
+                        <li><a class="font-bold {% if request.resolver_match.url_name == 'news' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'news' %}">News</a></li>
+                        <li><a class="font-bold {% if request.resolver_match.url_name == 'publications' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'publications' %}">Publications</a></li>
+                        <li><a class="font-bold {% if request.resolver_match.url_name == 'projects' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'projects' %}">Projects</a></li>
+                        <li><a class="font-bold {% if request.resolver_match.url_name == 'contacts' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'contacts' %}">Contacts</a></li>
+                        {% if user.is_authenticated %}
+                        <li> <a class="font-bold text-secondary {% if request.resolver_match.url_name == 'dashboard' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
+                        </li>
+                        <li><a class="font-bold text-secondary {% if request.resolver_match.url_name == 'logout' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'logout' %}">Logout</a></li>
+                        {% endif %}
+
                     </ul>
                 </div>
-                 {% if user.is_authenticated %}
-                            <a class="btn btn-primary btn-sm btn-outline " href="{% url 'dashboard' %}">Dashboard</a>
-                        {% endif %}
-                
-                {% if user.is_authenticated %}
-                    <a href="{% url 'logout' %}" class="btn btn-primary btn-sm hidden lg:flex">Logout</a>
-                {% endif %}
-                
-                {% if user.is_staff %}
-                    <form method="post" action="{% url 'sync_ldap' %}" class="hidden lg:flex">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-secondary btn-sm">Sync LDAP</button>
-                    </form>
-                    <form method="post" action="{% url 'trigger_iris_import' %}" class="hidden lg:flex">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-accent btn-sm" title="Import publications from IRIS">
-                            Import IRIS
-                        </button>
-                    </form>
-                {% endif %}
-                
+
+
+
                 <div class="dropdown dropdown-end lg:hidden">
-                    <div tabindex="0" role="button" class="btn btn-ghost border-base-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
+                    <div tabindex="0" role="button" class="btn btn-ghost">
+                          <i data-lucide="menu"></i>
+
                     </div>
-                    <ul tabindex="-1" class="menu menu-sm dropdown-content bg-base-100 z-1 mt-2 w-48 p-2">
+                    <ul tabindex="-1" class="menu menu-md dropdown-content text-primary-content bg-primary rounded-box z-1 mt-2 w-48 p-2">
                         <li><a href="{% url 'home' %}">Home</a></li>
                         <li><a href="{% url 'people' %}">People</a></li>
                         <li><a href="{% url 'news' %}">News</a></li>
+                        <li><a href="{% url 'publications' %}">Publications</a></li>
                         <li><a href="{% url 'projects' %}">Projects</a></li>
                         <li><a href="{% url 'contacts' %}">Contacts</a></li>
                         {% if user.is_authenticated %}
-                            <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                            <li><a href="{% url 'logout' %}">Logout</a></li>
-                            {% if user.is_staff %}
-                                <li>
-                                    <form method="post" action="{% url 'sync_ldap' %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="w-full text-left">Sync LDAP</button>
-                                    </form>
-                                </li>
-                                <li>
-                                    <form method="post" action="{% url 'trigger_iris_import' %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="w-full text-left">Import IRIS</button>
-                                    </form>
-                                </li>
-                            {% endif %}
+                        <li></li>
+                        <li><a href="{% url 'dashboard' %}"> Dashboard</a></li>
+                        <li><a href="{% url 'logout' %}"> Logout</a></li>
                         {% endif %}
                     </ul>
                 </div>
@@ -96,16 +72,16 @@
 
     <!-- Messages -->
     {% if messages %}
-        <div class="fixed top-20 right-4 z-50 space-y-2">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }} shadow-lg max-w-md">
-                    <div>
-                        <span>{{ message }}</span>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">✕</button>
-                </div>
-            {% endfor %}
+    <div class="fixed top-20 right-4 z-50 space-y-2">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} shadow-lg max-w-md">
+            <div>
+                <span>{{ message }}</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">✕</button>
         </div>
+        {% endfor %}
+    </div>
     {% endif %}
 
     <!-- Main Content -->
@@ -119,25 +95,25 @@
             <aside class="grid-flow-col items-center">
                 <img src="{% static 'main/assets/logo_w.svg' %}" alt="AImageLab Logo" class="h-12" />
                 <p>
-                    1998-{% now "Y" %} &copy;  AImageLab<br/>University of Modena and Reggio Emilia
+                    1998-{% now "Y" %} &copy; AImageLab<br />University of Modena and Reggio Emilia
 
-                    <br/> 
+                    <br />
                     {% if user.is_authenticated %}
-                    <a class="link text-xs text-current/50" href="{% url 'logout' %}">Logout</a> | 
+                    <a class="link text-xs text-current/50" href="{% url 'logout' %}">Logout</a> |
                     {% else %}
-                    <a class="link text-xs text-current/50" href="{% url 'login' %}">Login</a> | 
+                    <a class="link text-xs text-current/50" href="{% url 'login' %}">Login</a> |
                     {% endif %}
-                    <a class="link text-xs text-current/50" href="{% url 'privacy_policy' %}">Privacy Policy</a>  |
+                    <a class="link text-xs text-current/50" href="{% url 'privacy_policy' %}">Privacy Policy</a> |
                     <a class="link text-xs text-current/50" href="{% url 'contacts' %}">Contacts</a>
                 </p>
             </aside>
 
             <div class="grid-flow-col gap-4 md:place-self-center justify-self-center md:justify-self-end">
                 <a href="https://www.youtube.com/@aimagelab" target="_blank" aria-label="YouTube">
-                                        <i data-lucide="youtube" class="w-6 h-6 stroke-1"></i>
+                    <i data-lucide="youtube" class="w-6 h-6 stroke-1"></i>
                 </a>
                 <a href="https://www.linkedin.com/company/aimagelab" target="_blank" aria-label="LinkedIn">
-                                                           <i data-lucide="linkedin" class="w-6 h-6 stroke-1"></i>
+                    <i data-lucide="linkedin" class="w-6 h-6 stroke-1"></i>
 
                 </a>
                 <a href="https://github.com/aimagelab" target="_blank" aria-label="GitHub">
@@ -164,7 +140,7 @@
         // Navbar scroll effect
         const navbar = document.getElementById('navbar');
         let scrollTimeout;
-        
+
         window.addEventListener('scroll', () => {
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
@@ -179,8 +155,9 @@
         });
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
-  <script>
-    lucide.createIcons();
-  </script>
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
+
 </html>
