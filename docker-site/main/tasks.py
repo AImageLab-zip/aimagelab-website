@@ -9,6 +9,7 @@ from django.core.cache import cache
 from django.utils import timezone
 from django.db import transaction
 from django.conf import settings
+from django.core.files.base import ContentFile
 import logging
 
 from .models import UserProfile, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog
@@ -147,6 +148,77 @@ def import_iris_publications(self):
     finally:
         # Release lock
         cache.delete(IRIS_IMPORT_LOCK_KEY)
+
+
+@shared_task(bind=True)
+def import_iris_profile_photos(self):
+    """
+    Import profile photos from IRIS for all staff members with Codice Fiscale.
+    
+    This task:
+    1. Fetches all staff members with valid Codice Fiscale
+    2. For each staff member, retrieves their profile photo from IRIS API
+    3. Downloads and saves the photo to their avatar field
+    
+    Returns:
+        dict: Statistics about the import operation
+    """
+    logger.info("Starting IRIS profile photos import...")
+    
+    stats = {
+        'processed': 0,
+        'updated': 0,
+        'skipped': 0,
+        'errors': []
+    }
+    
+    # Set up authentication
+    auth = HTTPBasicAuth(settings.IRIS_API_USERNAME, settings.IRIS_API_PASSWORD)
+    
+    # Get all user profiles with Codice Fiscale
+    user_profiles = UserProfile.objects.filter(
+        is_visible=True,
+        codice_fiscale__isnull=False
+    ).exclude(codice_fiscale='').select_related('user')
+    
+    logger.info(f"Found {user_profiles.count()} user profiles to process")
+    
+    for user_profile in user_profiles:
+        try:
+            stats['processed'] += 1
+            logger.info(f"Processing photo for {user_profile.user.get_full_name()} (CF: {user_profile.codice_fiscale})")
+            
+            # Fetch profile photo from IRIS
+            photo_data = fetch_profile_photo_from_iris(user_profile.codice_fiscale, auth)
+            
+            if photo_data:
+                # Save the photo to the user's avatar field
+                filename = f"{user_profile.user.username}_iris_photo.jpg"
+                user_profile.avatar.save(filename, ContentFile(photo_data), save=True)
+                stats['updated'] += 1
+                logger.info(f"Updated profile photo for {user_profile.user.get_full_name()}")
+            else:
+                stats['skipped'] += 1
+                logger.info(f"No photo available in IRIS for {user_profile.user.get_full_name()}")
+            
+            # Update task progress
+            self.update_state(
+                state='PROGRESS',
+                meta={
+                    'current': stats['processed'],
+                    'total': user_profiles.count(),
+                    'updated': stats['updated'],
+                    'status': f"Processing {user_profile.user.get_full_name()}..."
+                }
+            )
+            
+        except Exception as e:
+            error_msg = f"Error processing photo for user {user_profile.user.username}: {str(e)}"
+            logger.error(error_msg)
+            stats['errors'].append(error_msg)
+    
+    logger.info(f"IRIS profile photos import completed. Stats: {stats}")
+    return stats
 
 
 def fetch_user_publications(user_profile, import_log):
@@ -348,7 +420,7 @@ def fetch_person_by_cf(codice_fiscale, auth):
     Returns:
         dict: Person data or None if not found
     """
-    api_url = f"{settings.IRIS_API_BASE_URL}/people"
+    api_url = f"{settings.IRIS_API_BASE_URL}/people;full"
     params = {'cf': codice_fiscale}
     headers = {
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -371,6 +443,70 @@ def fetch_person_by_cf(codice_fiscale, auth):
         
     except requests.RequestException as e:
         logger.error(f"Failed to fetch person data for CF {codice_fiscale}: {str(e)}")
+        return None
+
+
+def fetch_profile_photo_from_iris(codice_fiscale, auth):
+    """
+    Fetch profile photo from IRIS by Codice Fiscale.
+    
+    Args:
+        codice_fiscale: Italian fiscal code
+        auth: HTTPBasicAuth instance
+        
+    Returns:
+        bytes: Image data or None if not found
+    """
+    # First, fetch the person data to get the photo blob ID
+    person_data = fetch_person_by_cf(codice_fiscale, auth)
+    
+    if not person_data:
+        logger.warning(f"Person data not found for CF: {codice_fiscale}")
+        return None
+    
+    # Look for photo blob ID in person data
+    # The IRIS API stores the photo blob ID in the 'picture' field
+    photo_blob_id = None
+    
+    # Check various possible locations for photo blob ID
+    if 'picture' in person_data and person_data['picture']:
+        photo_blob_id = person_data.get('picture')
+    elif 'photoBlob' in person_data:
+        photo_blob_id = person_data.get('photoBlob')
+    elif 'photo' in person_data and isinstance(person_data['photo'], dict):
+        photo_blob_id = person_data['photo'].get('blobId')
+    elif 'attachmentSet' in person_data:
+        # Look for photo in attachment set
+        for attachment in person_data.get('attachmentSet', []):
+            if attachment.get('attachmentType', {}).get('code') == 'photo':
+                photo_blob_id = attachment.get('attachmentBlob')
+                break
+    
+    if not photo_blob_id:
+        logger.info(f"No profile photo found in IRIS for CF: {codice_fiscale}")
+        return None
+    
+    # Fetch the photo file using the blob ID
+    file_url = f"{settings.IRIS_API_BASE_URL}/files/{photo_blob_id}"
+    params = {
+        'autoexport': 'true',
+        'source': 'rm'
+    }
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    }
+    
+    try:
+        logger.info(f"Downloading profile photo for CF: {codice_fiscale} (blob: {photo_blob_id})")
+        response = requests.get(file_url, params=params, auth=auth, headers=headers, timeout=30)
+        response.raise_for_status()
+        
+        # Return the image data
+        return response.content
+        
+    except requests.RequestException as e:
+        logger.error(f"Failed to download profile photo for CF {codice_fiscale}: {str(e)}")
         return None
 
 

@@ -101,7 +101,14 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                         {% csrf_token %}
                         <button type="submit" class="btn btn-secondary text-secondary-content btn-block justify-start" title="Import publications from IRIS">
                             <i data-lucide="download" class="w-4 h-4"></i>
-                            Import IRIS
+                            Import IRIS Publications
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'trigger_iris_photo_import' %}" >
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary text-secondary-content btn-block justify-start" title="Import profile photos from IRIS">
+                            <i data-lucide="image" class="w-4 h-4"></i>
+                            Import IRIS Photos
                         </button>
                     </form>
                 {% endif %}

@@ -14,7 +14,7 @@ from django.http import FileResponse, Http404
 from django.conf import settings
 import os
 from .models import UserProfile, IRISImportLog
-from .tasks import sync_user_task, import_iris_publications, is_import_running
+from .tasks import sync_user_task, import_iris_publications, import_iris_profile_photos, is_import_running
 import os
 
 from PIL import Image
@@ -629,7 +629,7 @@ def trigger_iris_import(request):
     messages.success(
         request,
         f'IRIS import started successfully! Task ID: {task.id}. '
-        'You will be notified when the import is complete.'
+        'This may take a few minutes.'
     )
     
     return redirect('dashboard')
@@ -663,3 +663,28 @@ def iris_import_status(request):
         'is_running': is_import_running(),
         'recent_imports': imports_data
     })
+
+
+@login_required
+def trigger_iris_photo_import(request):
+    """
+    Trigger IRIS profile photos import.
+    
+    This view starts a Celery task to import profile photos from IRIS.
+    
+    Only accessible to authenticated users.
+    """
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('dashboard')
+    
+    # Start the import task
+    task = import_iris_profile_photos.delay()
+    
+    messages.success(
+        request,
+        f'IRIS profile photo import started successfully! Task ID: {task.id}. '
+        'This may take a few minutes.'
+    )
+    
+    return redirect('dashboard')
