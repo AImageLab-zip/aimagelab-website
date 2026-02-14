@@ -70,7 +70,7 @@
                             1100+
                         </div>
                         <span class="block ml-1 my-auto text-xs text-neutral text-center">publications <br> in top venues </span>
-                        <button class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">Papers&nbsp;↗</button>
+                        <a href="{% url 'publications' %}" class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">Papers&nbsp;↗</a>
                     </div>
                     <div class="divider divider-horizontal hidden md:flex"></div>
                     <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
@@ -78,7 +78,7 @@
                             50+
                         </div>
                         <span class="block ml-1 my-auto text-xs text-neutral text-center">research <br> projects </span>
-                        <button class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">More&nbsp;↗</button>
+                        <a href="{% url 'projects' %}" class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">More&nbsp;↗</a>
                     </div>
                 </div>
             </div>
@@ -233,7 +233,7 @@
                 Discover our latest findings, methodologies, and innovations that are shaping the future of AI and Computer Vision.
             </p>
             <div class="flex flex-col sm:flex-row gap-4">
-                <a href="#" class="btn btn-primary btn-lg">
+                <a href="{% url 'publications' %}" class="btn btn-primary btn-lg">
                     Latest Publications
                     <i data-lucide="external-link" class="w-5 h-5 ml-2"></i>
                 </a>
@@ -242,7 +242,8 @@
         <!-- Right Column: Image (masked squircle, bigger) -->
         <div class="w-full md:w-1/2 flex justify-center">
             <div class="mask mask-squircle overflow-hidden shadow-xl" style="width: 340px; height: 340px;">
-                <img src="https://aimagelab.ing.unimore.it/imagelab/carousel/immagine2.png" alt="Lab Environment 2" class="object-cover w-full h-full" />
+                <img src="{% static 'main/assets/tecnopolo2.jpg' %}" alt="Lab Environment 2" class="hidden md:block object-cover w-full h-full" />
+                <img src="{% static 'main/assets/aicenter-mod.jpg' %}" alt="Lab Environment 2" class="block md:hidden object-cover w-full h-full" />
             </div>
         </div>
     </div>
