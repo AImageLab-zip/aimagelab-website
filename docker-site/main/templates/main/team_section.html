@@ -15,7 +15,9 @@
     <h2 class="h2-home mb-6">{{ section_title }}</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 2xl:grid-cols-{{ grid_cols|default:'4' }} gap-6">
         {% for profile in profiles %}
-        <div class="card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-shadow duration-300 {% if is_alumni %}opacity-90{% endif %}">
+        <!-- Card that opens modal -->
+        <div class="card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-shadow duration-300 cursor-pointer {% if is_alumni %}opacity-90{% endif %}"
+             onclick="document.getElementById('modal_{{ profile.id }}').showModal()">
             <div class="card-body flex flex-row gap-4 {% if card_size == 'small' %}p-4{% endif %}">
                 <!-- Avatar -->
                 <div>
@@ -54,60 +56,166 @@
                     </div>
                     {% endif %}
 
-                        <div class="flex flex-wrap gap-{% if card_size == 'small' %}2{% else %}3{% endif %} text-sm mt-{% if card_size == 'small' %}2{% else %}3{% endif %}">
+                    <div class="flex flex-wrap gap-{% if card_size == 'small' %}2{% else %}3{% endif %} text-sm mt-{% if card_size == 'small' %}2{% else %}3{% endif %}">
                         {% if profile.user.email %}
-                        <a href="mailto:{{ profile.user.email }}" class="text-primary hover:text-secondary" title="Email">
+                        <a href="mailto:{{ profile.user.email }}" class="text-primary hover:text-secondary" title="Email" onclick="event.stopPropagation()">
                             <i data-lucide="mail" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
-
                         </a>
                         {% endif %}
                         
                         {% if profile.phone_number and card_size == 'large' %}
-                        <a href="tel:{{ profile.phone_number }}" class="text-primary hover:text-secondary" title="Phone">
+                        <a href="tel:{{ profile.phone_number }}" class="text-primary hover:text-secondary" title="Phone" onclick="event.stopPropagation()">
                             <i data-lucide="phone" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
                         </a>
                         {% endif %}
 
                         {% if profile.google_scholar %}
-                        <a href="{{ profile.google_scholar }}" target="_blank" class="text-primary hover:text-secondary" title="Google Scholar">
+                        <a href="{{ profile.google_scholar }}" target="_blank" class="text-primary hover:text-secondary" title="Google Scholar" onclick="event.stopPropagation()">
                             <i data-lucide="book-open" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
                         </a>
                         {% endif %}
 
                         {% if profile.github %}
-                        <a href="{{ profile.github }}" target="_blank" class="text-primary hover:text-secondary" title="GitHub">
+                        <a href="{{ profile.github }}" target="_blank" class="text-primary hover:text-secondary" title="GitHub" onclick="event.stopPropagation()">
                             <i data-lucide="github" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
                         </a>
                         {% endif %}
 
                         {% if profile.linkedin %}
-                        <a href="{{ profile.linkedin }}" target="_blank" class="text-primary hover:text-secondary" title="LinkedIn">
+                        <a href="{{ profile.linkedin }}" target="_blank" class="text-primary hover:text-secondary" title="LinkedIn" onclick="event.stopPropagation()">
                             <i data-lucide="linkedin" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
                         </a>
                         {% endif %}
                     </div>
                   
-                    <a href="{% url 'publications' %}?author={{ profile.user }}" target="_blank" class="text-primary hover:text-secondary" title="Publications">
+                    <a href="{% url 'publications' %}?author={{ profile.user }}" target="_blank" class="text-primary hover:text-secondary" title="Publications" onclick="event.stopPropagation()">
                         Read publications →
                     </a>
                     {% if profile.website %}
-                    <a href="{{ profile.website }}" target="_blank" class="text-primary hover:text-secondary" title="Website">
+                    <a href="{{ profile.website }}" target="_blank" class="text-primary hover:text-secondary" title="Website" onclick="event.stopPropagation()">
                         Personal website →
                     </a>
                     {% endif %}
-                  
-                                        <!-- More Details Link (only for professors with website)
-                                        {% if card_size == 'large' and profile.website %}
-                                        <div class="mt-3">
-                                            <a href="{{ profile.website }}" target="_blank" class="inline-flex items-center gap-2 text-sm text-primary hover:underline transition-all">
-                                                More details
-                                                <i data-lucide="arrow-right" class="h-3 w-3"></i>
-                                            </a>
-                                        </div>
-                                        {% endif %} -->
                 </div>
             </div>
         </div>
+
+        <!-- Modal for enlarged view -->
+        <dialog id="modal_{{ profile.id }}" class="modal">
+            <div class="modal-box max-w-2xl">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                
+                <div class="flex flex-col items-center md:flex-row gap-6 mt-4">
+                    <!-- Large Avatar -->
+                    <div class="flex-shrink-0">
+                        <div class="avatar">
+                            {% if profile.avatar %}
+                            <div class="mask mask-squircle w-48 md:w-64">
+                                <img src="{{ profile.avatar.url }}" alt="{{ profile.get_full_name }}" />
+                            </div>
+                            {% else %}
+                            <div class="mask mask-squircle w-48 md:w-64 bg-base-300">
+                                <img id="dicebear-avatar-img" data-seed="{{ profile.get_full_name|default:profile.user.username|urlencode }}" alt="Default avatar" />
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Details -->
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold text-primary mb-2">{{ profile.get_full_name }}</h3>
+                        <p class="text-sm text-secondary mb-4">
+                            {% if is_alumni and profile.current_position %}
+                                {{ profile.current_position }}
+                            {% else %}
+                                {{ profile.get_role_display }}
+                            {% endif %}
+                        </p>
+
+                        <!-- Full Bio -->
+                        {% if profile.bio %}
+                        <div class="text-sm mb-4">
+                            <h4 class="font-semibold mb-2">About</h4>
+                            <p>{{ profile.bio }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Contact Information -->
+                        <div class="mb-4">
+                            <h4 class="font-semibold mb-2 text-sm">Contact & Links</h4>
+                            <div class="space-y-2">
+                                {% if profile.user.email %}
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="mail" class="h-4 w-4 text-primary"></i>
+                                    <a href="mailto:{{ profile.user.email }}" class="text-primary hover:text-secondary text-sm">
+                                        {{ profile.user.email }}
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                {% if profile.phone_number %}
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="phone" class="h-4 w-4 text-primary"></i>
+                                    <a href="tel:{{ profile.phone_number }}" class="text-primary hover:text-secondary text-sm">
+                                        {{ profile.phone_number }}
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                {% if profile.google_scholar %}
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="book-open" class="h-4 w-4 text-primary"></i>
+                                    <a href="{{ profile.google_scholar }}" target="_blank" class="text-primary hover:text-secondary text-sm">
+                                        Google Scholar Profile
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                {% if profile.github %}
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="github" class="h-4 w-4 text-primary"></i>
+                                    <a href="{{ profile.github }}" target="_blank" class="text-primary hover:text-secondary text-sm">
+                                        GitHub Profile
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                {% if profile.linkedin %}
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="linkedin" class="h-4 w-4 text-primary"></i>
+                                    <a href="{{ profile.linkedin }}" target="_blank" class="text-primary hover:text-secondary text-sm">
+                                        LinkedIn Profile
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                {% if profile.website %}
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="globe" class="h-4 w-4 text-primary"></i>
+                                    <a href="{{ profile.website }}" target="_blank" class="text-primary hover:text-secondary text-sm">
+                                        Personal Website
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Publications Link -->
+                        <div class="mt-4">
+                            <a href="{% url 'publications' %}?author={{ profile.user }}" target="_blank" class="btn btn-primary btn-sm">
+                                <i data-lucide="book" class="h-4 w-4"></i>
+                                View Publications
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+            </form>
+        </dialog>
         {% endfor %}
     </div>
 </div>
