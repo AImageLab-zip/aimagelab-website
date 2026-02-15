@@ -40,24 +40,18 @@
                 <div class="flex flex-col md:flex-row w-full gap-3 align-items-center mt-6">
                     <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
                         <div class="avatar-group -space-x-5 mb-1">
-                            <div class="avatar">
+                            {% for profile in featured_profiles %}
+                            {% if profile.avatar %}
+                            <div class="avatar border-3">
                                 <div class="w-8">
-                                    <img src="https://aimagelab.ing.unimore.it/imagelab/uploadedImages/001016_thumb.jpg" />
+                                    <img src="{{ profile.avatar.url }}" alt="{{ profile.get_full_name }}" />
                                 </div>
                             </div>
-                            <div class="avatar">
-                                <div class="w-8">
-                                    <img src="https://aimagelab.ing.unimore.it/imagelab/uploadedImages/001016_thumb.jpg" />
-                                </div>
-                            </div>
-                            <div class="avatar">
-                                <div class="w-8">
-                                    <img src="https://aimagelab.ing.unimore.it/imagelab/uploadedImages/001016_thumb.jpg" />
-                                </div>
-                            </div>
-                            <div class="avatar avatar-placeholder">
+                            {% endif %}
+                            {% endfor %}
+                            <div class="avatar avatar-placeholder border-3">
                                 <div class="bg-primary text-primary-content text-xs w-8">
-                                    <span>99+</span>
+                                    <span>{{ total_users }}</span>
                                 </div>
                             </div>
                         </div>
@@ -67,17 +61,17 @@
                     <div class="divider md:divider-horizontal hidden md:flex"></div>
                     <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
                         <div class="badge badge-primary my-2">
-                            1100+
+                            {{ total_publications }}+
                         </div>
-                        <span class="block ml-1 my-auto text-xs text-neutral text-center">publications <br> in top venues </span>
+                        <span class="block ml-1 my-auto text-xs text-neutral text-center">publications <br> and articles  </span>
                         <a href="{% url 'publications' %}" class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">Papers&nbsp;↗</a>
                     </div>
                     <div class="divider divider-horizontal hidden md:flex"></div>
                     <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
                         <div class="badge badge-primary my-2">
-                            50+
+                            {{ active_projects }}+
                         </div>
-                        <span class="block ml-1 my-auto text-xs text-neutral text-center">research <br> projects </span>
+                        <span class="block ml-1 my-auto text-xs text-neutral text-center">active financied <br> projects </span>
                         <a href="{% url 'projects' %}" class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">More&nbsp;↗</a>
                     </div>
                 </div>

@@ -32,9 +32,33 @@ def home(request):
         is_published=True,
     ).order_by('-is_pinned', '-created_at')[:10]
     
+    # Calculate actual counts
+    total_users = UserProfile.objects.filter(is_visible=True).count()
+    total_publications = PublicationIRIS.objects.filter(hidden=False).count()
+    active_projects = Project.objects.filter(
+        Q(end_date__isnull=True) | Q(end_date__gte=datetime.now().date())
+    ).count()
+    
+    featured_profiles = []
+    
+    rcucchiara_profile = UserProfile.objects.select_related('user').get(
+            user__username='rcucchiara'
+        )
+    
+    if rcucchiara_profile.avatar and hasattr(rcucchiara_profile.avatar, 'url') and rcucchiara_profile.avatar.url:
+            featured_profiles.append(rcucchiara_profile)
+    
+    featured_profiles.extend(UserProfile.objects.select_related('user').filter(
+        avatar__isnull=False,
+        is_visible=True
+    ).exclude(user__username='rcucchiara').exclude(avatar='').order_by('?')[:2])
     
     return render(request, 'main/home.html', {
-        'latest_posts': latest_posts
+        'latest_posts': latest_posts,
+        'total_users': total_users,
+        'total_publications': total_publications,
+        'active_projects': active_projects,
+        'featured_profiles': featured_profiles,
     })
 
 def contacts(request):
