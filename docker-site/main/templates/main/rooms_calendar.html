@@ -1,0 +1,491 @@
+{% extends 'main/base_with_hero.html' %}
+{% load static %}
+
+{% block title %}Meeting Rooms Calendar - AImageLab{% endblock %}
+
+{% block hero_title %}Meeting Rooms Calendar{% endblock %}
+{% block hero_description %}Reserve and view meeting room availability{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-8">
+    <div>
+    <!-- Room Legend -->
+    <div class="card bg-base-200 shadow-sm mb-6">
+        <div class="card-body">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="card-title text-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Meeting Rooms
+                </h2>
+                <div class="flex gap-2">
+                    <button id="selectAllRooms" class="btn btn-xs btn-ghost">Select All</button>
+                    <button id="selectNoneRooms" class="btn btn-xs btn-ghost">None</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                {% for room in rooms %}
+                <label class="flex items-center gap-3 p-3 bg-base-100 rounded-lg hover:shadow-md transition-shadow cursor-pointer">
+                    <input type="checkbox" class="checkbox checkbox-primary room-filter" data-room-id="{{ room.id }}" checked>
+                    {% if room.image %}
+                    <div class="avatar">
+                        <div class="w-12 h-12 rounded-lg ring ring-primary ring-offset-base-100 ring-offset-2">
+                            <img src="{{ room.image.url }}" alt="{{ room.name }}" class="object-cover" />
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="avatar placeholder">
+                        <div class="w-12 h-12 rounded-lg ring ring-primary ring-offset-base-100 ring-offset-2" style="background-color: {{ room.color }}">
+                            <span class="text-white text-xl font-bold">{{ room.name|slice:":1" }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="flex-1">
+                        <div class="font-semibold text-base-content">{{ room.name }}</div>
+                        <div class="text-xs text-base-content/60 flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            {{ room.capacity }} seats
+                        </div>
+                    </div>
+                    <div class="w-4 h-4 rounded" style="background-color: {{ room.color }}"></div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mb-6 flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center">
+        <button id="newReservationBtn" class="btn btn-primary gap-2 btn-sm sm:btn-md">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span class="hidden sm:inline">New Reservation</span>
+            <span class="sm:hidden">New</span>
+        </button>
+        <a href="{% url 'rooms_list' %}" class="btn btn-outline gap-2 btn-sm sm:btn-md">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            List View
+        </a>
+        
+        <!-- Date Picker -->
+        <div class="flex items-center gap-2 sm:ml-4 w-full sm:w-auto">
+            <label for="dateJump" class="text-sm font-medium whitespace-nowrap">Jump to date:</label>
+            <input type="date" id="dateJump" class="input input-bordered input-sm flex-1 sm:flex-initial" />
+        </div>
+        
+        <div class="badge badge-info gap-2 sm:ml-auto hidden md:flex">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            Click a time slot or drag to select and create a reservation
+        </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body p-2 sm:p-6">
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- New Reservation Modal -->
+<dialog id="reservationModal" class="modal">
+    <div class="modal-box w-11/12 max-w-2xl">
+        <form method="dialog">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        <h3 id="modalTitle" class="font-bold text-2xl mb-6">New Reservation</h3>
+        
+        <!-- Error Alert -->
+        <div id="errorAlert" class="alert alert-error hidden mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="errorMessage"></span>
+        </div>
+        
+        <form id="reservationForm">
+            {% csrf_token %}
+            <input type="hidden" id="reservationId" name="reservation_id">
+            
+            <div class="form-control mb-4">
+                <label class="label" for="room">
+                    <span class="label-text font-semibold">Meeting Room *</span>
+                </label>
+                <select id="room" name="room" required class="select select-bordered w-full">
+                    <option value="">Select a room</option>
+                    {% for room in rooms %}
+                    <option value="{{ room.id }}" data-color="{{ room.color }}">
+                        {{ room.name }} - {{ room.location }} ({{ room.capacity }} seats)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-control mb-4">
+                <label class="label" for="title">
+                    <span class="label-text font-semibold">Title *</span>
+                </label>
+                <input type="text" id="title" name="title" required class="input input-bordered w-full" placeholder="Team meeting, Workshop, etc.">
+            </div>
+            
+            <div class="form-control mb-4">
+                <label class="label" for="description">
+                    <span class="label-text font-semibold">Description / Motivation</span>
+                </label>
+                <textarea id="description" name="description" rows="3" class="textarea textarea-bordered w-full" placeholder="Brief description of the meeting purpose"></textarea>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div class="form-control">
+                    <label class="label" for="start_time">
+                        <span class="label-text font-semibold">Start Time *</span>
+                    </label>
+                    <input type="datetime-local" id="start_time" name="start_time" required class="input input-bordered w-full text-sm sm:text-base">
+                </div>
+                <div class="form-control">
+                    <label class="label" for="end_time">
+                        <span class="label-text font-semibold">End Time *</span>
+                    </label>
+                    <input type="datetime-local" id="end_time" name="end_time" required class="input input-bordered w-full text-sm sm:text-base">
+                </div>
+            </div>
+            
+            <div class="modal-action">
+                <button type="button" id="deleteBtn" class="btn btn-error gap-2 hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Delete
+                </button>
+                <button type="submit" class="btn btn-primary gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Save Reservation
+                </button>
+            </div>
+        </form>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+
+<!-- FullCalendar CSS & JS -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const modal = document.getElementById('reservationModal');
+    const form = document.getElementById('reservationForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const reservationIdInput = document.getElementById('reservationId');
+    
+    // Store all events
+    const allEvents = {{ events|safe }};
+    
+    // Get selected room IDs
+    function getSelectedRoomIds() {
+        const checkboxes = document.querySelectorAll('.room-filter:checked');
+        return Array.from(checkboxes).map(cb => cb.dataset.roomId);
+    }
+    
+    // Filter events by selected rooms
+    function getFilteredEvents() {
+        const selectedRoomIds = getSelectedRoomIds();
+        return allEvents.filter(event => {
+            // Extract room ID from event (we need to map room name to ID)
+            const roomSelect = document.getElementById('room');
+            for (let option of roomSelect.options) {
+                if (option.text.startsWith(event.extendedProps.room) && selectedRoomIds.includes(option.value)) {
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+    
+    // Initialize FullCalendar
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: window.innerWidth < 768 ? 'timeGridDay' : 'timeGridWeek',
+        firstDay: 1, // Start week on Monday
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: window.innerWidth < 768 ? 'timeGridDay' : 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        buttonText: {
+            today: 'Today',
+            month: 'Month',
+            week: 'Week',
+            day: 'Day'
+        },
+        aspectRatio: window.innerWidth < 768 ? 1.0 : 1.8,
+        contentHeight: 'auto',
+        handleWindowResize: true,
+        windowResizeDelay: 100,
+        slotMinTime: '07:00:00',
+        slotMaxTime: '21:00:00',
+        slotDuration: '00:30:00',
+        snapDuration: '00:30:00',
+        allDaySlot: false,
+        height: 'auto',
+        selectable: true,
+        selectMirror: true,
+        selectMinDistance: 5,
+        selectLongPressDelay: 250,  // Mobile long press delay in ms
+        selectOverlap: false,  // Don't allow selecting over existing events
+        selectConstraint: {
+            start: '00:00',
+            end: '24:00',
+        },
+        // Better touch interaction
+        longPressDelay: 250,
+        eventLongPressDelay: 250,
+        events: function(info, successCallback, failureCallback) {
+            successCallback(getFilteredEvents());
+        },
+        
+        // Enable drag-to-select to create reservations
+        select: function(info) {
+            // Use the actual selected duration
+            openNewReservationModal(info.start, info.end);
+        },
+        
+        eventClick: function(info) {
+            // Open edit modal
+            const event = info.event;
+            const currentUserId = {{ request.user.id }};
+            const eventUserId = event.extendedProps.userId;
+            const isSuperuser = {{ request.user.is_superuser|yesno:"true,false" }};
+            
+            // Check if user can edit
+            const canEdit = (currentUserId === eventUserId) || isSuperuser;
+            
+            if (canEdit) {
+                modalTitle.textContent = 'Edit Reservation';
+                reservationIdInput.value = event.id;
+                hideError();
+                
+                // Extract title without the user name appended
+                const titleParts = event.title.split(' - ');
+                const actualTitle = titleParts.length > 1 ? titleParts.slice(0, -1).join(' - ') : event.title;
+                
+                // Populate form
+                document.getElementById('title').value = actualTitle;
+                document.getElementById('description').value = event.extendedProps.description || '';
+                
+                // Find room by name
+                const roomSelect = document.getElementById('room');
+                for (let option of roomSelect.options) {
+                    if (option.text.startsWith(event.extendedProps.room)) {
+                        option.selected = true;
+                        break;
+                    }
+                }
+                
+                // Set times
+                document.getElementById('start_time').value = formatDateTimeLocal(event.start);
+                document.getElementById('end_time').value = formatDateTimeLocal(event.end);
+                
+                deleteBtn.classList.remove('hidden');
+                modal.showModal();
+            } else {
+                // Show read-only info
+                alert(`Reservation: ${event.title}\nRoom: ${event.extendedProps.room}\nTime: ${formatDateTimeLocal(event.start)} - ${formatDateTimeLocal(event.end)}\nReserved by: ${event.extendedProps.user}\n${event.extendedProps.description ? '\nDescription: ' + event.extendedProps.description : ''}`);
+            }
+        },
+        
+        dateClick: function(info) {
+            // Open new reservation modal with pre-filled date
+            const endDate = new Date(info.date);
+            endDate.setHours(endDate.getHours() + 1);
+            openNewReservationModal(info.date, endDate);
+        }
+    });
+    
+    calendar.render();
+    
+    // New reservation button
+    document.getElementById('newReservationBtn').addEventListener('click', function() {
+        openNewReservationModal();
+    });
+    
+    // Room filter checkboxes
+    document.querySelectorAll('.room-filter').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            calendar.refetchEvents();
+        });
+    });
+    
+    // Select all rooms
+    document.getElementById('selectAllRooms').addEventListener('click', function() {
+        document.querySelectorAll('.room-filter').forEach(cb => cb.checked = true);
+        calendar.refetchEvents();
+    });
+    
+    // Select none
+    document.getElementById('selectNoneRooms').addEventListener('click', function() {
+        document.querySelectorAll('.room-filter').forEach(cb => cb.checked = false);
+        calendar.refetchEvents();
+    });
+    
+    // Date picker jump to date
+    document.getElementById('dateJump').addEventListener('change', function() {
+        if (this.value) {
+            calendar.gotoDate(this.value);
+        }
+    });
+    
+    // Form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Hide any previous errors
+        hideError();
+        
+        const formData = new FormData(form);
+        const reservationId = reservationIdInput.value;
+        const url = reservationId ? 
+            `/rooms/reservation/${reservationId}/edit/` : 
+            '{% url "create_reservation" %}';
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            });
+            
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                showError('Server returned an invalid response. Please try again.');
+                return;
+            }
+            
+            if (response.ok && data.success) {
+                window.location.reload();
+            } else {
+                showError(data.error || 'An error occurred while saving the reservation.');
+            }
+        } catch (error) {
+            showError('Network error: ' + error.message);
+        }
+    });
+    
+    // Delete button
+    deleteBtn.addEventListener('click', async function() {
+        if (!confirm('Are you sure you want to delete this reservation?')) {
+            return;
+        }
+        
+        // Hide any previous errors
+        hideError();
+        
+        const reservationId = reservationIdInput.value;
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        try {
+            const response = await fetch(`/rooms/reservation/${reservationId}/delete/`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                window.location.reload();
+            } else {
+                showError(data.error || 'An error occurred while deleting the reservation.');
+            }
+        } catch (error) {
+            showError('An error occurred: ' + error.message);
+        }
+    });
+    
+    function openNewReservationModal(startDate = null, endDate = null) {
+        modalTitle.textContent = 'New Reservation';
+        reservationIdInput.value = '';
+        form.reset();
+        deleteBtn.classList.add('hidden');
+        hideError();
+        
+        if (startDate) {
+            // Use the selected times directly (already snapped to 30-minute intervals by FullCalendar)
+            const start = new Date(startDate);
+            start.setSeconds(0);
+            start.setMilliseconds(0);
+            
+            document.getElementById('start_time').value = formatDateTimeLocal(start);
+            
+            // Use provided endDate or default to 30 minutes after start
+            let end;
+            if (endDate) {
+                end = new Date(endDate);
+                end.setSeconds(0);
+                end.setMilliseconds(0);
+            } else {
+                end = new Date(start.getTime() + 30 * 60000); // Default to 30 minutes
+            }
+            
+            document.getElementById('end_time').value = formatDateTimeLocal(end);
+        }
+        
+        modal.showModal();
+    }
+    
+    function showError(message) {
+        const errorAlert = document.getElementById('errorAlert');
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.textContent = message;
+        errorAlert.classList.remove('hidden');
+    }
+    
+    function hideError() {
+        const errorAlert = document.getElementById('errorAlert');
+        errorAlert.classList.add('hidden');
+    }
+    
+    function formatDateTimeLocal(date) {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+});
+</script>
+</div>
+</div>
+{% endblock %}

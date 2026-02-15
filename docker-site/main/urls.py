@@ -22,5 +22,13 @@ urlpatterns = [
     path('news/<slug:slug>/', views.post_single, name='single'),
     path('news/<slug:slug>/edit/', views.post_form, name='post_edit'),
     path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
+    
+    # Meeting room reservations
+    path('rooms/', views.rooms_calendar, name='rooms_calendar'),
+    path('rooms/list/', views.rooms_list, name='rooms_list'),
+    path('rooms/<int:room_id>/', views.room_detail, name='room_detail'),
+    path('rooms/reserve/', views.create_reservation, name='create_reservation'),
+    path('rooms/reservation/<int:reservation_id>/edit/', views.edit_reservation, name='edit_reservation'),
+    path('rooms/reservation/<int:reservation_id>/delete/', views.delete_reservation, name='delete_reservation'),
 ]
 
