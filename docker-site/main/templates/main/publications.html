@@ -131,28 +131,12 @@ Explore our research publications: papers, articles, and conference proceedings 
     <div class="space-y-4">
         {% for pub in publications %}
         <article class="card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-all">
-            <div class="card-body">
+            <div class="card-body py-4 px-6">
                 <!-- Title -->
                 <h2 class="card-title text-xl">
                     {{ pub.titolo }}
                 </h2>
-
-                <!-- Meta Info -->
-                <div class="flex flex-wrap items-center gap-2 text-sm text-base-content/60 mb-2">
-                    {% if pub.anno %}
-                    <span class="badge badge-outline">
-                        <i data-lucide="calendar" class="h-4 w-4 inline mr-1"></i>
-                        {{ pub.anno }}
-                    </span>
-                    {% endif %}
-                    {% if pub.tipo %}
-                    <span class="badge badge-outline">
-                        <i data-lucide="file-text" class="h-4 w-4 inline mr-1"></i>
-                        {{ pub.tipo }}
-                    </span>
-                    {% endif %}
-                </div>
-
+              
                 <!-- Authors -->
                 {% if pub.autori %}
                 <p class="text-sm text-base-content/80">
@@ -168,7 +152,7 @@ Explore our research publications: papers, articles, and conference proceedings 
                 {% endif %}
 
                 {% if pub.abstract %}
-                <details class="mt-2">
+                <details>
                     <summary>{{ pub.abstract|truncatewords:20 }} <span class="link link-primary text-sm cursor-pointer">
                             (Read full abstract) </span></summary>
                     <p class="text-base-content/80 text-sm mt-2">
@@ -178,25 +162,43 @@ Explore our research publications: papers, articles, and conference proceedings 
                 {% endif %}
 
                 <!-- Links -->
-                <div class="card-actions justify-end items-center mt-3">
-                    {% if pub.doi %}
-                    <a href="https://doi.org/{{ pub.doi }}" target="_blank" class="btn btn-sm btn-ghost gap-2">
-                        <i data-lucide="external-link" class="h-4 w-4"></i>
-                        DOI
-                    </a>
-                    {% endif %}
-                    {% if pub.pdf %}
-                    <a href="{{ pub.pdf }}" target="_blank" class="btn btn-sm btn-primary gap-2">
-                        <i data-lucide="file-down" class="h-4 w-4"></i>
-                        PDF
-                    </a>
-                    {% endif %}
-                    {% if pub.handle %}
-                    <a href="https://iris.unimore.it/handle/{{ pub.handle }}" target="_blank" class="btn btn-sm btn-ghost gap-2">
-                        <i data-lucide="link" class="h-4 w-4"></i>
-                        IRIS
-                    </a>
-                    {% endif %}
+                <div class="card-actions mt-3 items-center">
+                    <div class="flex flex-wrap items-center gap-2 text-base-content/60">
+                        {% if pub.anno %}
+                        <span class="badge badge-sm badge-outline">
+                            <i data-lucide="calendar" class="h-4 w-4"></i>
+                            {{ pub.anno }}
+                        </span>
+                        {% endif %}
+                        {% if pub.tipo %}
+                        <span class="badge badge-sm badge-outline">
+                            <i data-lucide="file-text" class="h-4 w-4"></i>
+                            {{ pub.tipo }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="ml-auto flex flex-wrap items-center gap-2 justify-end text-base-content/60"> 
+                        
+                    
+                        {% if pub.doi %}
+                        <a href="https://doi.org/{{ pub.doi }}" target="_blank" class="btn btn-xs btn-outline btn-secondary">
+                            <i data-lucide="external-link" class="h-4 w-4"></i>
+                            DOI
+                        </a>
+                        {% endif %}
+                        {% if pub.pdf %}
+                        <a href="{{ pub.pdf }}" target="_blank" class="btn btn-xs btn-primary btn-outline btn-secondary">
+                            <i data-lucide="file-down" class="h-4 w-4"></i>
+                            PDF
+                        </a>
+                        {% endif %}
+                        {% if pub.handle %}
+                        <a href="https://iris.unimore.it/handle/{{ pub.handle }}" target="_blank" class="btn btn-xs btn-outline btn-secondary">
+                            <i data-lucide="link" class="h-4 w-4"></i>
+                            IRIS
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </article>

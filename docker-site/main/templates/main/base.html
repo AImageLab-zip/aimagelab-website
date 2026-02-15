@@ -37,9 +37,9 @@
                         <li><a class="font-bold {% if request.resolver_match.url_name == 'projects' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'projects' %}">Projects</a></li>
                         <li><a class="font-bold {% if request.resolver_match.url_name == 'contacts' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'contacts' %}">Contacts</a></li>
                         {% if user.is_authenticated %}
-                        <li> <a class="font-bold text-secondary {% if request.resolver_match.url_name == 'dashboard' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
+                        <li> <a class="font-bold text-primary {% if request.resolver_match.url_name == 'dashboard' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
                         </li>
-                        <li><a class="font-bold text-secondary {% if request.resolver_match.url_name == 'logout' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'logout' %}">Logout</a></li>
+                        <li><a class="font-bold text-primary {% if request.resolver_match.url_name == 'logout' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'logout' %}">Logout</a></li>
                         {% endif %}
 
                     </ul>

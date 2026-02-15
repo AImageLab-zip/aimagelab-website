@@ -21,7 +21,7 @@ from PIL import Image
 from io import BytesIO
 
 POST_PER_PAGE = 10
-PUBLICATION_PER_PAGE = 50
+PUBLICATION_PER_PAGE = 10
 
 def home(request):
     """Home page view."""
