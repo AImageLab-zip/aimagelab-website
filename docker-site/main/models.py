@@ -91,6 +91,17 @@ class UserProfile(models.Model):
     
     def get_full_name(self):
         return self.user.get_full_name() or self.user.username
+    
+    def get_title(self):
+        match self.role:
+            # case 'professor_special':
+            #     return "Full Professor (University Dean)"
+            case 'full_professor' | 'assoc_professor':
+                return "Prof."
+            case 'researcher_tt' | 'researcher_a' | 'researcher_b' | 'postdoc':
+                return "Dr."
+            case _:
+                return ""
 
 
 class PublicationIRIS(models.Model):

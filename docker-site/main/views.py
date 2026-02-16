@@ -528,7 +528,7 @@ def edit_profile(request):
         profile.google_scholar = request.POST.get('google_scholar', '').strip()
         profile.github = request.POST.get('github', '').strip()
         profile.linkedin = request.POST.get('linkedin', '').strip()
-        profile.phone_number = request.POST.get('phone_number', '').strip() or None
+        profile.phone_number = request.POST.get('phone_number', '').strip()
 
         # Handle avatar upload
         if 'avatar' in request.FILES and request.FILES['avatar']:
