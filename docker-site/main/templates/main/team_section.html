@@ -34,13 +34,13 @@
                     </div>
                 </div>
                 <!-- Info -->
-                <div class="flex flex-col justify-between flex-1">
+                <div class="flex flex-col justify-start gap-2 flex-1">
                     <!-- Name & Role -->
                     <div>
-                        <h3 class="card-title text-primary {% if card_size == 'small' %}text-sm{% else %}text-base{% endif %}">
+                        <h3 class="card-title {% if card_size == 'small' %}text-sm{% else %}text-base{% endif %}">
                             {{ profile.get_full_name }}
                         </h3>
-                        <p class="text-xs {% if is_alumni %}text-neutral{% else %}text-primary{% endif %}">
+                        <p class="text-xs  text-base-content/60 ">
                             {% if is_alumni and profile.current_position %}
                                 {{ profile.current_position }}
                             {% else %}
@@ -50,20 +50,15 @@
                     </div>
 
                     <!-- Bio (not shown for small cards or alumni) -->
-                    {% if profile.bio and card_size != 'small' and not is_alumni %}
-                    <div class="text-sm mt-2 line-clamp-2">
-                        {{ profile.bio|truncatewords:15 }}
-                    </div>
-                    {% endif %}
 
-                    <div class="flex flex-wrap gap-{% if card_size == 'small' %}2{% else %}3{% endif %} text-sm mt-{% if card_size == 'small' %}2{% else %}3{% endif %}">
+                    <div class="flex flex-wrap gap-2 text-sm">
                         {% if profile.user.email %}
                         <a href="mailto:{{ profile.user.email }}" class="text-primary hover:text-secondary" title="Email" onclick="event.stopPropagation()">
                             <i data-lucide="mail" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
                         </a>
                         {% endif %}
                         
-                        {% if profile.phone_number and card_size == 'large' %}
+                        {% if profile.phone_number %}
                         <a href="tel:{{ profile.phone_number }}" class="text-primary hover:text-secondary" title="Phone" onclick="event.stopPropagation()">
                             <i data-lucide="phone" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
                         </a>
@@ -88,14 +83,16 @@
                         {% endif %}
                     </div>
                   
-                    <a href="{% url 'publications' %}?author={{ profile.user }}" target="_blank" class="text-primary hover:text-secondary" title="Publications" onclick="event.stopPropagation()">
+                    <div class="mt-2">
+                    <a href="{% url 'publications' %}?author={{ profile.user }}" target="_blank" class="block text-primary hover:text-secondary text-xs" title="Publications" onclick="event.stopPropagation()">
                         Read publications →
                     </a>
                     {% if profile.website %}
-                    <a href="{{ profile.website }}" target="_blank" class="text-primary hover:text-secondary" title="Website" onclick="event.stopPropagation()">
+                    <a href="{{ profile.website }}" target="_blank" class="block text-primary hover:text-secondary text-xs" title="Website" onclick="event.stopPropagation()">
                         Personal website →
                     </a>
                     {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -125,8 +122,8 @@
 
                     <!-- Details -->
                     <div class="flex-1">
-                        <h3 class="text-2xl font-bold text-primary mb-2">{{ profile.get_full_name }}</h3>
-                        <p class="text-sm text-secondary mb-4">
+                        <h3 class="text-2xl font-bold text-base-content">{{ profile.get_full_name }}</h3>
+                        <p class="text-sm text-base-content/60 mb-4">
                             {% if is_alumni and profile.current_position %}
                                 {{ profile.current_position }}
                             {% else %}
@@ -191,14 +188,7 @@
                                 </div>
                                 {% endif %}
 
-                                {% if profile.website %}
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="globe" class="h-4 w-4 text-primary"></i>
-                                    <a href="{{ profile.website }}" target="_blank" class="text-primary hover:text-secondary text-sm">
-                                        Personal Website
-                                    </a>
-                                </div>
-                                {% endif %}
+                                
                             </div>
                         </div>
 
@@ -208,6 +198,12 @@
                                 <i data-lucide="book" class="h-4 w-4"></i>
                                 View Publications
                             </a>
+                            {% if profile.website %}
+                                    <a href="{{ profile.website }}" target="_blank" class="btn btn-secondary btn-sm">
+                                                                            <i data-lucide="globe" class="h-4 w-4"></i>
+Personal Website
+                                    </a>
+                                {% endif %}
                         </div>
                     </div>
                 </div>
