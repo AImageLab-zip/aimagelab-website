@@ -23,7 +23,7 @@ from PIL import Image
 from io import BytesIO
 
 POST_PER_PAGE = 10
-PUBLICATION_PER_PAGE = 50
+PUBLICATION_PER_PAGE = 10
 
 def home(request):
     """Home page view."""
@@ -32,9 +32,33 @@ def home(request):
         is_published=True,
     ).order_by('-is_pinned', '-created_at')[:10]
     
+    # Calculate actual counts
+    total_users = UserProfile.objects.filter(is_visible=True).count()
+    total_publications = PublicationIRIS.objects.filter(hidden=False).count()
+    active_projects = Project.objects.filter(
+        Q(end_date__isnull=True) | Q(end_date__gte=datetime.now().date())
+    ).count()
+    
+    featured_profiles = []
+    
+    rcucchiara_profile = UserProfile.objects.select_related('user').get(
+            user__username='rcucchiara'
+        )
+    
+    if rcucchiara_profile.avatar and hasattr(rcucchiara_profile.avatar, 'url') and rcucchiara_profile.avatar.url:
+            featured_profiles.append(rcucchiara_profile)
+    
+    featured_profiles.extend(UserProfile.objects.select_related('user').filter(
+        avatar__isnull=False,
+        is_visible=True
+    ).exclude(user__username='rcucchiara').exclude(avatar='').order_by('?')[:2])
     
     return render(request, 'main/home.html', {
-        'latest_posts': latest_posts
+        'latest_posts': latest_posts,
+        'total_users': total_users,
+        'total_publications': total_publications,
+        'active_projects': active_projects,
+        'featured_profiles': featured_profiles,
     })
 
 def contacts(request):
@@ -157,14 +181,35 @@ def publications(request):
     journal_query = request.GET.get('journal', '')
     type_query = request.GET.get('type', '')
     author_username = request.GET.get('author', '')
+
+    # Parse @author and #keyword tokens from the search query
+    tokens = search_query.split()
+    author_tokens = []
+    keyword_tokens = []
+    text_tokens = []
+    for token in tokens:
+        if token.startswith('@') and len(token) > 1:
+            author_tokens.append(token[1:].strip(' ,.;:'))
+        elif token.startswith('#') and len(token) > 1:
+            keyword_tokens.append(token[1:].strip(' ,.;:'))
+        else:
+            text_tokens.append(token)
+
+    # Use the first @author token when explicit author filter is not provided
+    if not author_username and author_tokens:
+        author_username = author_tokens[0]
+
+    # Keep variants for clearing filters in the UI
+    search_query_without_author = " ".join([t for t in tokens if not t.startswith('@')])
+    search_query_without_keywords = " ".join([t for t in tokens if not t.startswith('#')])
     
     # Start with all non-hidden publications
     publications_qs = PublicationIRIS.objects.filter(hidden=False)
     
     # Apply search filter (title or authors)
-    if search_query:
+    if text_tokens:
         # Split search query into individual words
-        words = search_query.split()
+        words = text_tokens
         query = Q()
         for word in words:
             query &= (
@@ -173,6 +218,12 @@ def publications(request):
                 Q(abstract__icontains=word)
             )
         publications_qs = publications_qs.filter(query)
+
+    # Apply keyword filter from #tokens
+    if keyword_tokens:
+        for keyword in keyword_tokens:
+            if keyword:
+                publications_qs = publications_qs.filter(keywords__contains=[keyword])
         
     # Apply year filter
     if year_query:
@@ -247,6 +298,28 @@ def publications(request):
         .select_related('user')
         .distinct()
     )
+
+    # Build autocomplete data for authors and keywords
+    available_authors_data = [
+        {
+            'username': profile.user.username,
+            'name': profile.get_full_name()
+        }
+        for profile in available_authors
+    ]
+
+    from collections import Counter
+    keywords_counter = Counter()
+    keywords_lists = PublicationIRIS.objects.filter(hidden=False).values_list('keywords', flat=True)
+    for keywords_list in keywords_lists:
+        if isinstance(keywords_list, list):
+            for keyword in keywords_list:
+                if isinstance(keyword, str) and keyword:
+                    keywords_counter[keyword] += 1
+    available_keywords = sorted(
+        [keyword for keyword, count in keywords_counter.items() if count > 2],
+        key=lambda k: k.lower()
+    )
     
     # Get the selected author object if any
     selected_author = None
@@ -264,10 +337,15 @@ def publications(request):
         'type_query': type_query,
         'author_username': author_username,
         'selected_author': selected_author,
+        'keyword_tokens': keyword_tokens,
+        'search_query_without_author': search_query_without_author,
+        'search_query_without_keywords': search_query_without_keywords,
         'available_years': available_years,
         'available_journals': available_journals,
         'available_types': available_types,
         'available_authors': available_authors,
+        'available_authors_data': available_authors_data,
+        'available_keywords': available_keywords,
     })
 
 def post_single(request, slug):

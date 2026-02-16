@@ -1,0 +1,28 @@
+    <a href="{{ link }}" class="group card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-all">
+    <div class="card-body gap-4">
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-base-300 flex items-center justify-center overflow-hidden">
+                {% if logo %}
+                    {% if logo|slice:":7" == "lucide:" %}
+                        <i data-lucide="{{ logo|slice:"7:" }}" class="w-6 h-6 text-primary"></i>
+                    {% else %}
+                        <img src="{{ logo }}" alt="{{ title }} logo" class="w-full h-full object-contain" loading="lazy">
+                    {% endif %}
+                {% else %}
+                    <i data-lucide="sparkles" class="w-6 h-6 text-primary"></i>
+                {% endif %}
+            </div>
+            <div class="flex-1">
+                <h3 class="card-title text-primary group-hover:text-primary-focus">
+                    {{ title }}
+                </h3>
+                <p class="text-sm opacity-80 mt-1">
+                    {{ description }}
+                </p>
+            </div>
+        </div>
+        <div class="card-actions justify-end">
+            <span class="text-sm text-primary group-hover:underline">Go to the resource ↗</span>
+        </div>
+    </div>
+</a>

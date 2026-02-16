@@ -11,6 +11,8 @@ from django.db import transaction
 from django.conf import settings
 from django.core.files.base import ContentFile
 import logging
+import re
+
 
 from .models import UserProfile, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog
 from .services import add_or_update_user, bulk_add_or_update_users
@@ -344,9 +346,11 @@ def process_publication_json(pub_data, user_profile, stats):
     
     # Get collection/type information
     collection = pub_data.get('collection', {})
+    if isinstance(collection, str):
+        publication.tipo = collection[:200]
     if isinstance(collection, dict):
         publication.tipo = collection.get('description', '')[:200]
-        publication.tipologia = pub_data.get('dc.type.miur', '')[:200]
+    publication.tipologia = pub_data.get('dc.type.miur', '')[:200]
     
     # Journal information
     journal = pub_data.get('journal', {})
@@ -369,6 +373,19 @@ def process_publication_json(pub_data, user_profile, stats):
     
     # Language
     publication.language = pub_data.get('language', '')[:10]
+    
+    # Keywords (if available)
+    keywords = pub_data.get('dc.subject.keywords', "").split(';')
+    if len(keywords) > 0:
+        
+        def clean_kw(kw):
+            cleaned = kw.strip().lower()
+            cleaned = re.sub(r'\s*-\s*', '-', cleaned)  # ' - ', ' -', '- ' -> '-'
+            cleaned = re.sub(r'\s+', '-', cleaned)      # multiple spaces -> '-'
+            return cleaned
+        
+        publication.keywords = [clean_kw(kw) for kw in keywords if clean_kw(kw)] 
+           
     
     # URL/Link
     publication.url = pub_data.get('link', '')[:500]
@@ -618,7 +635,7 @@ def populate_users_from_ldap():
     Celery task to populate users from LDAP server daily.
     """
     from django.core.management import call_command
-    from django.utils import timezone
+    from django.utils import timezone   
 
     try:
         logger.info(f"Starting LDAP user population at {timezone.now()}")

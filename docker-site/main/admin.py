@@ -74,7 +74,7 @@ class PublicationIRISAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Info', {
-            'fields': ('id_iris', 'titolo', 'anno', 'autori')
+            'fields': ('id_iris', 'titolo', 'anno', 'autori', 'keywords')
         }),
         ('Publication Details', {
             'fields': ('tipo', 'tipologia', 'rivista', 'abstract')

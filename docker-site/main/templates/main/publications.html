@@ -2,235 +2,301 @@
 {% load static %}
 {% block title %}Publications - AImageLab{% endblock %}
 
-{% block hero_title %}Publications{% endblock %}
+{% block hero_title %}
+{% if selected_author %}
+Publications by {{ selected_author.user.get_full_name }}
+{% else %}
+Publications
+{% endif %}
+{% endblock %}
 
 {% block hero_description %}
 Explore our research publications: papers, articles, and conference proceedings from AImageLab.
 {% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/tributejs@5.1.3/dist/tribute.css" />
+{% endblock %}
+
 {% block page_content %}
 <div class="container p-6 mx-auto">
 
-            <!-- Search Bar -->
-            <div class="card bg-base-200 mb-6">
-                <div class="card-body">
-                    <form method="get" action="{% url 'publications' %}" class="flex md:flex-row flex-col gap-3">
-                        <input type="text" name="search" class="input input-bordered p-3 flex-1 w-full" placeholder="Search by title, author, or abstract..." value="{{ search_query }}" />
-                        <button type="submit" class="btn btn-primary">
-                            <i data-lucide="search" class="w-4 h-4"></i>
-                            Search
-                        </button>
-                    </form>
+    <!-- Search Bar -->
+    <div class="card bg-base-200 mb-6">
+        <div class="card-body">
+            <form method="get" action="{% url 'publications' %}" class="flex md:flex-row flex-col gap-3">
+                <input type="text" id="publications-search" name="search" class="input input-bordered p-3 flex-1 w-full" placeholder="Search by title, author, or abstract..." value="{{ search_query }}" />
+                <button type="submit" class="btn btn-primary">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                    Search
+                </button>
+            </form>
+
+            <p class="text-xs text-base-content/60">
+                Tip: type @ to pick an author and # to pick a keyword.
+            </p>
 
 
-                    <div class="flex gap-2 justify-end">
-                        
-                    
-                         <form method="get" action="{% url 'publications' %}" class="space-y-2">
-                            <input type="hidden" name="search" value="{{ search_query }}" />
-                            <input type="hidden" name="journal" value="{{ journal_query }}" />
-                            <input type="hidden" name="type" value="{{ type_query }}" />
-                       
-                        <select name="year" class="select select-bordered select-sm w-full" onchange="this.form.submit()">
-                            <option value="">All Years</option>
-                            {% for year in available_years %}
+            <div class="flex gap-2 justify-end">
+
+
+                <form method="get" action="{% url 'publications' %}" class="space-y-2">
+                    <input type="hidden" name="search" value="{{ search_query }}" />
+                    <input type="hidden" name="journal" value="{{ journal_query }}" />
+                    <input type="hidden" name="type" value="{{ type_query }}" />
+
+                    <select name="year" class="select select-bordered select-sm w-full" onchange="this.form.submit()">
+                        <option value="">All Years</option>
+                        {% for year in available_years %}
                             <option value="{{ year }}" {% if year_query == year|stringformat:'s' %}selected{% endif %}>{{ year }}</option>
-                            {% endfor %}
-                        </select>
-        
-                    </form>
-                    
-                     <form method="get" action="{% url 'publications' %}" class="space-y-2">
-                        <input type="hidden" name="search" value="{{ search_query }}" />
-                        <input type="hidden" name="year" value="{{ year_query }}" />
-                        <input type="hidden" name="type" value="{{ type_query }}" />
-                        <select name="journal" class="select select-bordered select-sm w-full" onchange="this.form.submit()">
-                            <option value="">All Journals</option>
-                            {% for journal in available_journals %}
+                        {% endfor %}
+                    </select>
+
+                </form>
+
+                <form method="get" action="{% url 'publications' %}" class="space-y-2">
+                    <input type="hidden" name="search" value="{{ search_query }}" />
+                    <input type="hidden" name="year" value="{{ year_query }}" />
+                    <input type="hidden" name="type" value="{{ type_query }}" />
+                    <select name="journal" class="select select-bordered select-sm w-full" onchange="this.form.submit()">
+                        <option value="">All Journals</option>
+                        {% for journal in available_journals %}
                             <option value="{{ journal }}" {% if journal_query == journal %}selected{% endif %}>{{ journal|truncatewords:8 }}</option>
-                            {% endfor %}
+                        {% endfor %}
 
-                        </select>
-                    </form>
+                    </select>
+                </form>
 
-                    <form method="get" action="{% url 'publications' %}" class="space-y-2">
-                        <input type="hidden" name="search" value="{{ search_query }}" />
-                        <input type="hidden" name="year" value="{{ year_query }}" />
-                        <input type="hidden" name="journal" value="{{ journal_query }}" />
-                        <select name="type" class="select select-bordered select-sm w-full" onchange="this.form.submit()">
-                            <option value="">All Types</option>
-                            {% for type in available_types %}
+                <form method="get" action="{% url 'publications' %}" class="space-y-2">
+                    <input type="hidden" name="search" value="{{ search_query }}" />
+                    <input type="hidden" name="year" value="{{ year_query }}" />
+                    <input type="hidden" name="journal" value="{{ journal_query }}" />
+                    <select name="type" class="select select-bordered select-sm w-full" onchange="this.form.submit()">
+                        <option value="">All Types</option>
+                        {% for type in available_types %}
                             <option value="{{ type }}" {% if type_query == type %}selected{% endif %}>{{ type }}</option>
-                            {% endfor %}
-                        </select>
-                    </form>
-                    
-                    </div>
+                        {% endfor %}
+                    </select>
+                </form>
 
-
-
-
-                    {% if search_query %}
-                    <div class="mt-3">
-                        <p class="text-sm">
-                            Showing results for: <strong class="text-primary">"{{ search_query }}"</strong>
-                            <a href="{% url 'publications' %}" class="link link-primary font-normal ml-2">(Clear)</a>
-                        </p>
-                    </div>
-                    {% endif %}
-
-
-
-                    
-
-                    <!-- Active Filters Display -->
-                    {% if year_query or journal_query or type_query or selected_author %}
-                    <div class="flex flex-wrap gap-2">
-                        <p class="text-sm font-bold">Active filters  <a href="{% url 'publications' %}" class="link link-primary font-normal">(Clear)</a>:</p>
-                        {% if year_query %}
-                        <span class="badge badge-primary gap-2">
-                            Year: {{ year_query }}
-                            <a href="?search={{ search_query }}&journal={{ journal_query }}&type={{ type_query }}&author={{ author_username }}" class="text-xs hover:text-white">✕</a>
-                        </span>
-                        {% endif %}
-                        {% if journal_query %}
-                        <span class="badge badge-primary gap-2">
-                            Journal: {{ journal_query }}
-                            <a href="?search={{ search_query }}&year={{ year_query }}&type={{ type_query }}&author={{ author_username }}" class="text-xs hover:text-white">✕</a>
-                        </span>
-                        {% endif %}
-                        {% if type_query %}
-                        <span class="badge badge-primary gap-2">
-                            Type: {{ type_query }}
-                            <a href="?search={{ search_query }}&year={{ year_query }}&journal={{ journal_query }}&author={{ author_username }}" class="text-xs hover:text-white">✕</a>
-                        </span>
-                        {% endif %}
-                        {% if selected_author %}
-                        <span class="badge badge-primary gap-2">
-                            Author: {{ selected_author.user.get_full_name }}
-                            <a href="?search={{ search_query }}&year={{ year_query }}&journal={{ journal_query }}&type={{ type_query }}" class="text-xs hover:text-white">✕</a>
-                        </span>
-                        {% endif %}
-                       
-                    </div>
-                    {% endif %}
-                </div>
             </div>
+            <!-- Active Filters Display -->
+            {% if year_query or journal_query or type_query or selected_author or keyword_tokens or search_query %}
+            <div class="flex flex-wrap justify-end align-middle gap-2">
+                        <span class="badge badge-base-200 border border-1 border-neutral/20 font-bold">Active filters  <a href="{% url 'publications' %}" class="link link-primary font-normal">(Clear)</a>:</span>
+                {% if search_query %}
+                <span class="badge badge-primary gap-2">
+                    Search: "{{ search_query }}"
+                    <a href="?&journal={{ journal_query }}&type={{ type_query }}&author={{ author_username }}&year={{ year_query }}" class="text-xs hover:text-white">✕</a>
+                </span>
+                {% endif %}
 
-            <!-- Publications List -->
-            <div class="space-y-4">
-                {% for pub in publications %}
-                <article class="card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-all">
-                    <div class="card-body">
-                        <!-- Title -->
-                        <h2 class="card-title text-xl">
-                            {{ pub.titolo }}
-                        </h2>
+                {% if year_query %}
+                <span class="badge badge-primary gap-2">
+                    Year: {{ year_query }}
+                    <a href="?search={{ search_query }}&journal={{ journal_query }}&type={{ type_query }}&author={{ author_username }}" class="text-xs hover:text-white">✕</a>
+                </span>
+                {% endif %}
+                {% if journal_query %}
+                <span class="badge badge-primary gap-2">
+                    Journal: {{ journal_query }}
+                    <a href="?search={{ search_query }}&year={{ year_query }}&type={{ type_query }}&author={{ author_username }}" class="text-xs hover:text-white">✕</a>
+                </span>
+                {% endif %}
+                {% if type_query %}
+                <span class="badge badge-primary gap-2">
+                    Type: {{ type_query }}
+                    <a href="?search={{ search_query }}&year={{ year_query }}&journal={{ journal_query }}&author={{ author_username }}" class="text-xs hover:text-white">✕</a>
+                </span>
+                {% endif %}
+                {% if selected_author %}
+                <span class="badge badge-primary gap-2">
+                    Author: {{ selected_author.user.get_full_name }}
+                    <a href="?search={{ search_query_without_author }}&year={{ year_query }}&journal={{ journal_query }}&type={{ type_query }}" class="text-xs hover:text-white">✕</a>
+                </span>
+                {% endif %}
+                {% if keyword_tokens %}
+                <span class="badge badge-primary gap-2">
+                    Keywords: {{ keyword_tokens|join:", " }}
+                    <a href="?search={{ search_query_without_keywords }}&year={{ year_query }}&journal={{ journal_query }}&type={{ type_query }}&author={{ author_username }}" class="text-xs hover:text-white">✕</a>
+                </span>
+                {% endif %}
 
-                        <!-- Meta Info -->
-                        <div class="flex flex-wrap items-center gap-2 text-sm text-base-content/60 mb-2">
-                            {% if pub.anno %}
-                            <span class="badge badge-outline">
-                                <i data-lucide="calendar" class="h-4 w-4 inline mr-1"></i>
-                                {{ pub.anno }}
-                            </span>
-                            {% endif %}
-                            {% if pub.tipo %}
-                            <span class="badge badge-outline">
-                                <i data-lucide="file-text" class="h-4 w-4 inline mr-1"></i>
-                                {{ pub.tipo }}
-                            </span>
-                            {% endif %}
-                        </div>
-
-                        <!-- Authors -->
-                        {% if pub.autori %}
-                        <p class="text-sm text-base-content/80">
-                            <strong>Authors:</strong> {{ pub.autori }}
-                        </p>
-                        {% endif %}
-
-                        <!-- Journal/Conference -->
-                        {% if pub.rivista %}
-                        <p class="text-sm text-base-content/80">
-                            <strong>Published in:</strong> {{ pub.rivista }}
-                        </p>
-                        {% endif %}
-
-                        <!-- Abstract (truncated) -->
-                        {% if pub.abstract %}
-                        <p class="text-base-content/70 text-sm mt-2">
-                            {{ pub.abstract|truncatewords:30 }}
-                        </p>
-                        {% endif %}
-
-                        <!-- Links -->
-                        <div class="card-actions justify-end items-center mt-3">
-                            {% if pub.doi %}
-                            <a href="https://doi.org/{{ pub.doi }}" target="_blank" class="btn btn-sm btn-ghost gap-2">
-                                <i data-lucide="external-link" class="h-4 w-4"></i>
-                                DOI
-                            </a>
-                            {% endif %}
-                            {% if pub.pdf %}
-                            <a href="{{ pub.pdf }}" target="_blank" class="btn btn-sm btn-primary gap-2">
-                                <i data-lucide="file-down" class="h-4 w-4"></i>
-                                PDF
-                            </a>
-                            {% endif %}
-                            {% if pub.handle %}
-                            <a href="https://iris.unimore.it/handle/{{ pub.handle }}" target="_blank" class="btn btn-sm btn-ghost gap-2">
-                                <i data-lucide="link" class="h-4 w-4"></i>
-                                IRIS
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </article>
-                {% empty %}
-                <div class="card bg-base-200">
-                    <div class="card-body">
-                        <p class="text-center text-base-content/60">
-                            {% if search_query or year_query or journal_query or type_query or selected_author %}
-                            No publications found matching your search criteria.
-                            {% else %}
-                            No publications available.
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-
-            <!-- Pagination -->
-            {% if publications.has_other_pages %}
-            <div class="flex flex-col items-center mt-8 gap-4">
-                <div class="join">
-                    {% if publications.has_previous %}
-                    <a href="?page={{ publications.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if year_query %}&year={{ year_query }}{% endif %}{% if journal_query %}&journal={{ journal_query }}{% endif %}{% if type_query %}&type={{ type_query }}{% endif %}{% if author_username %}&author={{ author_username }}{% endif %}" class="join-item btn">
-                        «
-                    </a>
-                    {% endif %}
-
-                    {% for num in publications.paginator.page_range %}
-                    {% if publications.number == num %}
-                    <button class="join-item btn btn-active btn-primary">{{ num }}</button>
-                    {% elif num > publications.number|add:'-3' and num < publications.number|add:'3' %}
-                    <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if year_query %}&year={{ year_query }}{% endif %}{% if journal_query %}&journal={{ journal_query }}{% endif %}{% if type_query %}&type={{ type_query }}{% endif %}{% if author_username %}&author={{ author_username }}{% endif %}" class="join-item btn">{{ num }}</a>
-                    {% endif %}
-                    {% endfor %}
-
-                    {% if publications.has_next %}
-                    <a href="?page={{ publications.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if year_query %}&year={{ year_query }}{% endif %}{% if journal_query %}&journal={{ journal_query }}{% endif %}{% if type_query %}&type={{ type_query }}{% endif %}{% if author_username %}&author={{ author_username }}{% endif %}" class="join-item btn">
-                        »
-                    </a>
-                    {% endif %}
-                </div>
-                <p class="text-sm text-base-content/60">
-                    Page {{ publications.number }} of {{ publications.paginator.num_pages }} • Total publications: {{ publications.paginator.count }}
-                </p>
             </div>
             {% endif %}
+        </div>
+    </div>
 
+    <!-- Publications List -->
+    <div class="space-y-4">
+        {% for pub in publications %}
+        <article class="card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-all">
+            <div class="card-body py-4 px-6">
+                <!-- Title -->
+                <h2 class="card-title text-xl">
+                    {{ pub.titolo }}
+                </h2>
+              
+                <!-- Authors -->
+                {% if pub.autori %}
+                <p class="text-sm text-base-content/80">
+                    <strong>Authors:</strong> {{ pub.autori }}
+                </p>
+                {% endif %}
+
+                <!-- Journal/Conference -->
+                {% if pub.rivista %}
+                <p class="text-sm text-base-content/80">
+                    <strong>Published in:</strong> {{ pub.rivista }}
+                </p>
+                {% endif %}
+
+                {% if pub.abstract %}
+                <details>
+                    <summary>{{ pub.abstract|truncatewords:20 }} <span class="link link-primary text-sm cursor-pointer">
+                            (Read full abstract) </span></summary>
+                    <p class="text-base-content/80 text-sm mt-2">
+                        {{ pub.abstract }}
+                    </p>
+                </details>
+                {% endif %}
+
+                <!-- Links -->
+                <div class="card-actions mt-3 items-center">
+                    <div class="flex flex-wrap items-center gap-2 text-base-content/60">
+                        {% if pub.anno %}
+                        <span class="badge badge-sm badge-outline">
+                            <i data-lucide="calendar" class="h-4 w-4"></i>
+                            {{ pub.anno }}
+                        </span>
+                        {% endif %}
+                        {% if pub.tipo %}
+                        <span class="badge badge-sm badge-outline">
+                            <i data-lucide="file-text" class="h-4 w-4"></i>
+                            {{ pub.tipo }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="ml-auto flex flex-wrap items-center gap-2 justify-end text-base-content/60"> 
+                        
+                    
+                        {% if pub.doi %}
+                        <a href="https://doi.org/{{ pub.doi }}" target="_blank" class="btn btn-xs btn-outline btn-secondary">
+                            <i data-lucide="external-link" class="h-4 w-4"></i>
+                            DOI
+                        </a>
+                        {% endif %}
+                        {% if pub.pdf %}
+                        <a href="{{ pub.pdf }}" target="_blank" class="btn btn-xs btn-primary btn-outline btn-secondary">
+                            <i data-lucide="file-down" class="h-4 w-4"></i>
+                            PDF
+                        </a>
+                        {% endif %}
+                        {% if pub.handle %}
+                        <a href="https://iris.unimore.it/handle/{{ pub.handle }}" target="_blank" class="btn btn-xs btn-outline btn-secondary">
+                            <i data-lucide="link" class="h-4 w-4"></i>
+                            IRIS
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
+        </article>
+        {% empty %}
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <p class="text-center text-base-content/60">
+                    {% if search_query or year_query or journal_query or type_query or selected_author %}
+                    No publications found matching your search criteria.
+                    {% else %}
+                    No publications available.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if publications.has_other_pages %}
+    <div class="flex flex-col items-center mt-8 gap-4">
+        <div class="join">
+            {% if publications.has_previous %}
+            <a href="?page={{ publications.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if year_query %}&year={{ year_query }}{% endif %}{% if journal_query %}&journal={{ journal_query }}{% endif %}{% if type_query %}&type={{ type_query }}{% endif %}{% if author_username %}&author={{ author_username }}{% endif %}" class="join-item btn">
+                «
+            </a>
+            {% endif %}
+
+            {% for num in publications.paginator.page_range %}
+            {% if publications.number == num %}
+            <button class="join-item btn btn-active btn-primary">{{ num }}</button>
+                    {% elif num > publications.number|add:'-3' and num < publications.number|add:'3' %}
+                    <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if year_query %}&year={{ year_query }}{% endif %}{% if journal_query %}&journal={{ journal_query }}{% endif %}{% if type_query %}&type={{ type_query }}{% endif %}{% if author_username %}&author={{ author_username }}{% endif %}" class="join-item btn">{{ num }}</a>
+                {% endif %}
+                {% endfor %}
+
+                {% if publications.has_next %}
+                <a href="?page={{ publications.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if year_query %}&year={{ year_query }}{% endif %}{% if journal_query %}&journal={{ journal_query }}{% endif %}{% if type_query %}&type={{ type_query }}{% endif %}{% if author_username %}&author={{ author_username }}{% endif %}" class="join-item btn">
+                    »
+                </a>
+                {% endif %}
+        </div>
+        <p class="text-sm text-base-content/60">
+            Page {{ publications.number }} of {{ publications.paginator.num_pages }} • Total publications: {{ publications.paginator.count }}
+        </p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/tributejs@5.1.3/dist/tribute.min.js"></script>
+{{ available_authors_data|json_script:"pub-authors-data" }}
+{{ available_keywords|json_script:"pub-keywords-data" }}
+<script>
+    const searchInput = document.getElementById('publications-search');
+    if (searchInput) {
+        const authorsData = JSON.parse(document.getElementById('pub-authors-data').textContent || '[]');
+        const keywordsData = JSON.parse(document.getElementById('pub-keywords-data').textContent || '[]');
+
+        const tribute = new Tribute({
+            collection: [
+                {
+                    trigger: '@',
+                    values: authorsData.map(author => ({
+                        key: author.name,
+                        value: author.username
+                    })),
+                    lookup: 'key',
+                    fillAttr: 'key',
+                    selectTemplate: function (item) {
+                        return item && item.original ? `@${item.original.value} ` : '';
+                    },
+                    menuItemTemplate: function (item) {
+                        return item && item.original ? item.original.key : '';
+                    }
+                },
+                {
+                    trigger: '#',
+                    values: keywordsData.map(keyword => ({
+                        key: keyword,
+                        value: keyword
+                    })),
+                    lookup: 'key',
+                    fillAttr: 'key',
+                    selectTemplate: function (item) {
+                        return item && item.original ? `#${item.original.value} ` : '';
+                    },
+                    menuItemTemplate: function (item) {
+                        return item && item.original ? item.original.key : '';
+                    }
+                }
+            ],
+            allowSpaces: false
+        });
+
+        tribute.attach(searchInput);
+    }
+</script>
 {% endblock %}

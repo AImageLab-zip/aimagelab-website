@@ -102,6 +102,7 @@ class PublicationIRIS(models.Model):
     titolo = models.TextField(verbose_name="Title")
     anno = models.IntegerField(null=True, blank=True, verbose_name="Year")
     autori = models.TextField(blank=True, verbose_name="Authors")
+    keywords = models.JSONField(blank=True, verbose_name="Keywords", help_text="List of keywords (from IRIS)", default=list)
     
     # Publication details
     tipo = models.CharField(max_length=200, blank=True, verbose_name="Type")

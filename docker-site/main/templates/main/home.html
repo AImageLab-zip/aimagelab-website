@@ -40,24 +40,18 @@
                 <div class="flex flex-col md:flex-row w-full gap-3 align-items-center mt-6">
                     <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
                         <div class="avatar-group -space-x-5 mb-1">
-                            <div class="avatar">
+                            {% for profile in featured_profiles %}
+                            {% if profile.avatar %}
+                            <div class="avatar border-3">
                                 <div class="w-8">
-                                    <img src="https://aimagelab.ing.unimore.it/imagelab/uploadedImages/001016_thumb.jpg" />
+                                    <img src="{{ profile.avatar.url }}" alt="{{ profile.get_full_name }}" />
                                 </div>
                             </div>
-                            <div class="avatar">
-                                <div class="w-8">
-                                    <img src="https://aimagelab.ing.unimore.it/imagelab/uploadedImages/001016_thumb.jpg" />
-                                </div>
-                            </div>
-                            <div class="avatar">
-                                <div class="w-8">
-                                    <img src="https://aimagelab.ing.unimore.it/imagelab/uploadedImages/001016_thumb.jpg" />
-                                </div>
-                            </div>
-                            <div class="avatar avatar-placeholder">
+                            {% endif %}
+                            {% endfor %}
+                            <div class="avatar avatar-placeholder border-3">
                                 <div class="bg-primary text-primary-content text-xs w-8">
-                                    <span>99+</span>
+                                    <span>{{ total_users }}</span>
                                 </div>
                             </div>
                         </div>
@@ -67,18 +61,18 @@
                     <div class="divider md:divider-horizontal hidden md:flex"></div>
                     <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
                         <div class="badge badge-primary my-2">
-                            1100+
+                            {{ total_publications }}+
                         </div>
-                        <span class="block ml-1 my-auto text-xs text-neutral text-center">publications <br> in top venues </span>
-                        <button class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">Papers&nbsp;↗</button>
+                        <span class="block ml-1 my-auto text-xs text-neutral text-center">publications <br> and articles  </span>
+                        <a href="{% url 'publications' %}" class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">Papers&nbsp;↗</a>
                     </div>
                     <div class="divider divider-horizontal hidden md:flex"></div>
                     <div class="flex flex-row md:flex-col items-center w-full md:w-auto">
                         <div class="badge badge-primary my-2">
-                            50+
+                            {{ active_projects }}+
                         </div>
-                        <span class="block ml-1 my-auto text-xs text-neutral text-center">research <br> projects </span>
-                        <button class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">More&nbsp;↗</button>
+                        <span class="block ml-1 my-auto text-xs text-neutral text-center">active financed <br> projects </span>
+                        <a href="{% url 'projects' %}" class="btn btn-secondary btn-xs btn-ghost ml-auto my-auto md:mt-2 md:mx-auto">More&nbsp;↗</a>
                     </div>
                 </div>
             </div>
@@ -233,7 +227,7 @@
                 Discover our latest findings, methodologies, and innovations that are shaping the future of AI and Computer Vision.
             </p>
             <div class="flex flex-col sm:flex-row gap-4">
-                <a href="#" class="btn btn-primary btn-lg">
+                <a href="{% url 'publications' %}" class="btn btn-primary btn-lg">
                     Latest Publications
                     <i data-lucide="external-link" class="w-5 h-5 ml-2"></i>
                 </a>
@@ -242,7 +236,8 @@
         <!-- Right Column: Image (masked squircle, bigger) -->
         <div class="w-full md:w-1/2 flex justify-center">
             <div class="mask mask-squircle overflow-hidden shadow-xl" style="width: 340px; height: 340px;">
-                <img src="https://aimagelab.ing.unimore.it/imagelab/carousel/immagine2.png" alt="Lab Environment 2" class="object-cover w-full h-full" />
+                <img src="{% static 'main/assets/tecnopolo2.jpg' %}" alt="Lab Environment 2" class="hidden md:block object-cover w-full h-full" />
+                <img src="{% static 'main/assets/aicenter-mod.jpg' %}" alt="Lab Environment 2" class="block md:hidden object-cover w-full h-full" />
             </div>
         </div>
     </div>
@@ -257,19 +252,19 @@
         </p>
         <div class="flex flex-col md:flex-row gap-2 justify-evenly">
             <div class="text-center">
-                <img src="https://aimagelab.ing.unimore.it/imagelab/images/Sigillo2015.svg" alt="University of Modena and Reggio Emilia" class="h-12 my-2 mx-auto" />
-                <p class="font-bold">Department of Engineering<br />"Enzo Ferrari"</p>
+                    <img src="{% static 'main/assets/logo_unimore.svg' %}" alt="University of Modena and Reggio Emilia" class="h-12 my-2 mx-auto" />
+                    <p class="font-bold">Department of Engineering<br />"Enzo Ferrari"</p>
                 <a class="btn btn-xs btn-ghost btn-secondary mt-2" href="https://ingmo.unimore.it">DIEF ↗</a>
             </div>
             <div class="divider md:divider-horizontal"></div>
             <div class="text-center">
-                <img src="https://aimagelab.ing.unimore.it/imagelab/images/Sigillo2015.svg" alt="University of Modena and Reggio Emilia" class="h-12 my-2 mx-auto" />
+                <img src="{% static 'main/assets/logo_unimore.svg' %}" alt="University of Modena and Reggio Emilia" class="h-12 my-2 mx-auto" />
                 <p class="font-bold">Artificial Intelligence<br />and Research Innovation Center </p>
                 <a class="btn btn-xs btn-ghost btn-secondary mt-2" href="https://www.airi.unimore.it">AIRI ↗</a>
             </div>
             <div class="divider md:divider-horizontal"></div>
             <div class="text-center">
-                <img src="https://scai.sorbonne-universite.fr/files_app/n/1320/7081db133fc40224018d64dd92536955.png" alt="ELLIS Modena" class="h-14 my-2 mx-auto" />
+                <img src="{% static 'main/assets/logo_ellis.png' %}" alt="ELLIS Modena" class="h-14 my-2 mx-auto" />
                 <p class="font-bold font-sans">ELLIS Modena Unit </p>
                 <a class="btn btn-xs btn-ghost btn-secondary mt-2" href="https://ellis.unimore.it">ELLIS Modena ↗</a>
             </div>
