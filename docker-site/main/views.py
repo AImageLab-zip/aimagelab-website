@@ -24,6 +24,8 @@ from io import BytesIO
 
 POST_PER_PAGE = 10
 PUBLICATION_PER_PAGE = 10
+PROJECTS_PER_PAGE = 20
+
 
 def home(request):
     """Home page view."""
@@ -145,7 +147,7 @@ def projects(request):
     # Order by start date descending
     projects_qs = projects_qs.order_by('-start_date')
 
-    paginator = Paginator(projects_qs, POST_PER_PAGE)
+    paginator = Paginator(projects_qs, PROJECTS_PER_PAGE)
     page = request.GET.get('page', 1)
 
     try:

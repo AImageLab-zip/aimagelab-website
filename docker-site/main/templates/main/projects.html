@@ -16,53 +16,53 @@ Explore ongoing and completed research projects at AImageLab.
                     <div class="card-body">
                         <div class="flex flex-col">
                              {% if proj.logo %}
-                    <figure class="mr-auto">
-                        <img src="{{ proj.logo.url }}" alt="{{ proj.title }} logo" class="rounded-lg h-24 w-24 object-contain">
-                    </figure>
-                    {% endif %}
-                            <div class="flex items-center gap-2 mb-2 flex-wrap">
-                                {% if proj.project_type %}
-                                <span class="badge badge-secondary">
-                                    <i data-lucide="tag" class="h-4 w-4"></i>
-                                    {{ proj.project_type }}
-                                </span>
-                                {% endif %}
-                                
-                            </div>
+                                <figure class="mr-auto mb-1">
+                                    <img src="{{ proj.logo.url }}" alt="{{ proj.title }} logo" class="rounded-lg h-28 w-28 object-contain">
+                                </figure>
+                            {% endif %}
                             <h2 class="card-title block text-xl mb-2">
                                 {% if proj.title %}
-                                    {% if proj.name %}
-                            {{ proj.name }}:
-                            {% endif %} {{ proj.title }}
-                                {% else %}
-                                    
+                                        {% if proj.name %}
+                                            {{ proj.name }}:
+                                        {% endif %}
+                                    {{ proj.title }}                                                                
                                 {% endif %}
                             </h2>
                             {% if proj.description %}
                             <p class="text-base-content/80 text-sm mb-2 flex-grow">{{ proj.description }}</p>
                             {% endif %}
-                            {% if proj.founding_by %}
-                                <p class="text-base-content/80 text-sm mb-4 flex-grow">
-                                    <i data-lucide="banknote" class="inline h-4 w-4"></i>
+                            
+                            <div class="flex flex-col flex-wrap items-baseline text-xs text-base-content/60 gap-1 mt-auto">
+                                {% if proj.founding_by %}
+                                <span class="items-center">
+                                    <i data-lucide="banknote" class="inline h-4 w-4 mb-1"></i>
                                     Founded by {{ proj.founding_by }}
-                                </p>
+                                </span>
                                 {% endif %}
-                            {% if proj.website %}
-                            <div class="mb-4">
-                                <a href="{{ proj.website }}" target="_blank" rel="noopener noreferrer" class="link link-primary text-sm inline-flex items-center gap-2">
-                                    <i data-lucide="globe" class="h-4 w-4"></i>
-                                    Visit Project Website
-                                </a>
-                            </div>
-                            {% endif %}
-                            <div class="flex flex-wrap items-center gap-3 text-xs text-base-content/60 mt-auto">
-                                <span><i data-lucide="calendar" class="h-4 w-4 inline"></i> {{ proj.start_date|date:"M d, Y" }}
+                                <span class="items-center"><i data-lucide="calendar" class="h-4 w-4  mb-1 inline"></i> {{ proj.start_date|date:"M d, Y" }}
                                 {% if proj.end_date %}
                                 → {{ proj.end_date|date:"M d, Y" }}
                                 {% endif %}
                                 </span>
+                                {% if proj.project_type %}
+                                <span>
+                                    <i data-lucide="tag" class="h-4 w-4 inline"></i>
+                                    {{ proj.project_type }}
+                                </span>
+                                {% endif %}
+                                                    
+
                             </div>
+                            
                         </div>
+                                                    {% if proj.website %}
+                            <div class="card-actions justify-end mt-4">
+                                <a href="{{ proj.website }}" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-secondary btn-outline">
+                                    Go to the website ↗
+                                </a>
+                            </div>
+                            {% endif %}
+
                     </div>
                 </article>
                 {% empty %}
