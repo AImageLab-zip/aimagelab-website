@@ -18,7 +18,7 @@
         <!-- Card that opens modal -->
         <div class="card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-shadow duration-300 cursor-pointer {% if is_alumni %}opacity-90{% endif %}"
              onclick="document.getElementById('modal_{{ profile.id }}').showModal()">
-            <div class="card-body flex flex-row gap-4 {% if card_size == 'small' %}p-4{% endif %}">
+            <div class="card-body flex flex-row gap-4 p-5">
                 <!-- Avatar -->
                 <div>
                     <div class="avatar">
@@ -64,36 +64,26 @@
                         </a>
                         {% endif %}
 
-                        {% if profile.google_scholar %}
-                        <a href="{{ profile.google_scholar }}" target="_blank" class="text-primary hover:text-secondary" title="Google Scholar" onclick="event.stopPropagation()">
-                            <i data-lucide="book-open" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
-                        </a>
-                        {% endif %}
-
-                        {% if profile.github %}
-                        <a href="{{ profile.github }}" target="_blank" class="text-primary hover:text-secondary" title="GitHub" onclick="event.stopPropagation()">
-                            <i data-lucide="github" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
-                        </a>
-                        {% endif %}
-
                         {% if profile.linkedin %}
                         <a href="{{ profile.linkedin }}" target="_blank" class="text-primary hover:text-secondary" title="LinkedIn" onclick="event.stopPropagation()">
                             <i data-lucide="linkedin" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
                         </a>
                         {% endif %}
+
+                        {% if profile.website %}
+                        <a href="{{ profile.website }}" target="_blank" class="text-primary hover:text-secondary" title="Personal Website" onclick="event.stopPropagation()">
+                            <i data-lucide="globe" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
+                        </a>
+                        {% endif %}
+
+                        <a href="{% url 'publications' %}?author={{ profile.user }}" target="_blank" class="text-primary hover:text-secondary" title="Publications" onclick="event.stopPropagation()">
+                            <i data-lucide="book-open" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
+                        </a>
                     </div>
                   
-                    <div class="mt-2">
-                    <a href="{% url 'publications' %}?author={{ profile.user }}" target="_blank" class="block text-primary hover:text-secondary text-xs" title="Publications" onclick="event.stopPropagation()">
-                        Read publications →
-                    </a>
-                    {% if profile.website %}
-                    <a href="{{ profile.website }}" target="_blank" class="block text-primary hover:text-secondary text-xs" title="Website" onclick="event.stopPropagation()">
-                        Personal website →
-                    </a>
-                    {% endif %}
-                    </div>
+                  
                 </div>
+                
             </div>
         </div>
 
@@ -163,9 +153,9 @@
 
                                 {% if profile.google_scholar %}
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="book-open" class="h-4 w-4 text-primary"></i>
+                                    <i data-lucide="graduation-cap" class="h-4 w-4 text-primary"></i>
                                     <a href="{{ profile.google_scholar }}" target="_blank" class="text-primary hover:text-secondary text-sm">
-                                        Google Scholar Profile
+                                        Google Scholar
                                     </a>
                                 </div>
                                 {% endif %}
@@ -195,7 +185,7 @@
                         <!-- Publications Link -->
                         <div class="mt-4">
                             <a href="{% url 'publications' %}?author={{ profile.user }}" target="_blank" class="btn btn-primary btn-sm">
-                                <i data-lucide="book" class="h-4 w-4"></i>
+                                <i data-lucide="book-open" class="h-4 w-4"></i>
                                 View Publications
                             </a>
                             {% if profile.website %}
