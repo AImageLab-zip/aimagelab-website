@@ -38,7 +38,7 @@
                     <!-- Name & Role -->
                     <div>
                         <h3 class="card-title {% if card_size == 'small' %}text-sm{% else %}text-base{% endif %}">
-                            {{ profile.get_full_name }}
+                            {{ profile.get_title }} {{ profile.get_full_name }}
                         </h3>
                         <p class="text-xs  text-base-content/60 ">
                             {% if is_alumni and profile.current_position %}
@@ -122,7 +122,7 @@
 
                     <!-- Details -->
                     <div class="flex-1">
-                        <h3 class="text-2xl font-bold text-base-content">{{ profile.get_full_name }}</h3>
+                        <h3 class="text-2xl font-bold text-base-content">{{profile.get_title}} {{ profile.get_full_name }}</h3>
                         <p class="text-sm text-base-content/60 mb-4">
                             {% if is_alumni and profile.current_position %}
                                 {{ profile.current_position }}
@@ -199,11 +199,11 @@
                                 View Publications
                             </a>
                             {% if profile.website %}
-                                    <a href="{{ profile.website }}" target="_blank" class="btn btn-secondary btn-sm">
-                                                                            <i data-lucide="globe" class="h-4 w-4"></i>
-Personal Website
-                                    </a>
-                                {% endif %}
+                                <a href="{{ profile.website }}" target="_blank" class="btn btn-secondary btn-sm">
+                                    <i data-lucide="globe" class="h-4 w-4"></i>
+                                    Personal Website
+                                </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
