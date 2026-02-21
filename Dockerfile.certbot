@@ -1,7 +1,7 @@
 FROM certbot/certbot:latest
 
-# Install additional tools for the scripts
-RUN apk add --no-cache curl bash openssl
+# Install additional tools for the scripts, including docker CLI
+RUN apk add --no-cache curl bash openssl docker-cli
 
 # Copy certbot scripts
 COPY certbot-scripts/ /usr/local/bin/
