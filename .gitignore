@@ -52,3 +52,4 @@ Thumbs.db
 *.sql
 
 docker-site/media/
+.env.mmorini

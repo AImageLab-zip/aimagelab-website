@@ -194,9 +194,9 @@ def import_iris_profile_photos(self):
             photo_data = fetch_profile_photo_from_iris(user_profile.codice_fiscale, auth)
             
             if photo_data:
-                # Save the photo to the user's avatar field
+                # Save the photo to the user's avatar_iris field
                 filename = f"{user_profile.user.username}_iris_photo.jpg"
-                user_profile.avatar.save(filename, ContentFile(photo_data), save=True)
+                user_profile.avatar_iris.save(filename, ContentFile(photo_data), save=True)
                 stats['updated'] += 1
                 logger.info(f"Updated profile photo for {user_profile.user.get_full_name()}")
             else:

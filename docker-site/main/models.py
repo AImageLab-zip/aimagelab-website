@@ -29,6 +29,7 @@ class UserProfile(models.Model):
     bio = models.TextField(blank=True, help_text="Short biography")
     website = models.URLField(blank=True, help_text="Personal website or homepage")
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    avatar_iris = models.ImageField(upload_to='avatars/', blank=True, null=True)
     display_order = models.IntegerField(default=0, help_text="Order in team listing (lower first)")
     is_visible = models.BooleanField(default=True, help_text="Show on People page")
     
