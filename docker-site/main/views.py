@@ -70,6 +70,10 @@ def contacts(request):
     """Contacts page view."""
     return render(request, 'main/contacts.html')
 
+def research(request):
+    """Research areas page view."""
+    return render(request, 'main/research.html')
+
 def news(request):
     """News/Blog page view with pagination and search."""
     search_query = request.GET.get('search', '')

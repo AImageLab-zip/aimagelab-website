@@ -37,6 +37,7 @@
                     <ul class="menu menu-horizontal px-1">
                         <li><a class="font-bold {% if request.resolver_match.url_name == 'home' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'home' %}">Home</a></li>
                         <li><a class="font-bold {% if request.resolver_match.url_name == 'people' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'people' %}">People</a></li>
+                        <li><a class="font-bold {% if request.resolver_match.url_name == 'research' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'research' %}">Research</a></li>
                         <li><a class="font-bold {% if request.resolver_match.url_name == 'news' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'news' %}">News</a></li>
                         <li><a class="font-bold {% if request.resolver_match.url_name == 'publications' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'publications' %}">Publications</a></li>
                         <li><a class="font-bold {% if request.resolver_match.url_name == 'projects' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'projects' %}">Projects</a></li>
@@ -60,6 +61,7 @@
                     <ul tabindex="-1" class="menu menu-md dropdown-content text-primary-content bg-primary rounded-box z-1 mt-2 w-48 p-2">
                         <li><a href="{% url 'home' %}">Home</a></li>
                         <li><a href="{% url 'people' %}">People</a></li>
+                        <li><a href="{% url 'research' %}">Research</a></li>
                         <li><a href="{% url 'news' %}">News</a></li>
                         <li><a href="{% url 'publications' %}">Publications</a></li>
                         <li><a href="{% url 'projects' %}">Projects</a></li>
