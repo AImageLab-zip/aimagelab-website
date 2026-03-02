@@ -5,7 +5,7 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section id="hero" class="relative min-h-screen w-full overflow-hidden">
+<section id="hero" class="relative min-h-[85vh] w-full overflow-hidden">
     <!-- Parallax Layer 1 - Slowest (Background) -->
     <div class="parallax-layer absolute inset-0 w-full h-[120%] z-[1] pointer-events-none opacity-6" data-speed="0.2">
         <img src="{% static 'main/assets/bg1.svg' %}" alt="" class="w-full h-full object-cover object-center repeat-none">
@@ -30,11 +30,11 @@
         <div class="flex flex-col md:flex-row h-full items-center justify-center gap-8 md:gap-0">
             <!-- Left Content -->
             <div class="relative z-10 w-full md:w-1/2 order-1">
-                <h1 class="mb-6 text-5xl md:text-7xl">
+                <h1 class="mb-6 text-5xl md:text-6xl 2xl:text-7xl xl:mt-12">
                     <span class="text-primary">AI</span>mage<sup class="text-primary">Lab</sup>
                 </h1>
                 <p class="text-xl">
-                    Since 1998, we have been a research group at the <b class="text-primary">University of Modena and Reggio Emilia</b>, pioneering advances in <b>Artificial Intelligence</b> and Computer Vision.
+                    Since 1998, we are a research group at the <b class="text-primary">University of Modena and Reggio Emilia</b>, pioneering advances in <b>Artificial Intelligence</b> and Computer Vision.
                 </p>
 
                 <div class="flex flex-col md:flex-row w-full gap-3 align-items-center mt-6">
@@ -84,7 +84,7 @@
             </div>
 
             <!-- Right Animated Squares -->
-            <div class="relative w-full hidden ml-32 md:flex md:h-[70vh] order-2 justify-center items-center overflow-hidden">
+            <div class="relative w-full hidden lg:ml-32 md:flex md:h-[56vh] order-2 justify-stretch items-center overflow-hidden">
                 <div id="squares-container" class="relative w-full h-full z-10">
                     <!-- Squares will be generated here -->
                 </div>
@@ -96,15 +96,6 @@
     <div class="container mx-auto my-16 px-6 relative z-10">
         <div class="flex justify-between items-center mb-4">
             <h2 class="h2-home my-2">Recent News</h2>
-            <!-- Desktop Arrow Controls -->
-            <div class="hidden md:flex gap-2">
-                <button id="news-prev" class="btn btn-circle btn-sm btn-outline btn-secondary">
-                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                </button>
-                <button id="news-next" class="btn btn-circle btn-sm btn-outline btn-secondary">
-                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                </button>
-            </div>
         </div>
 
         {% if latest_posts %}
@@ -158,6 +149,16 @@
                     {% endfor %}
                 </div>
             </div>
+        </div>
+
+        <!-- Desktop Arrow Controls -->
+        <div class="hidden md:flex gap-2 justify-end mt-4">
+            <button id="news-prev" class="btn btn-circle btn-sm btn-outline btn-secondary">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
+            <button id="news-next" class="btn btn-circle btn-sm btn-outline btn-secondary">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
         </div>
         {% endif %}
 
@@ -227,7 +228,7 @@
     <div class="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
         <!-- Left Column: Text -->
         <div class="w-full md:w-1/2 mb-8 md:mb-0">
-            <h2 class="h2-home mb-6">Advancing the State of the Art</h2>
+            <h2 class="h2-home mb-6">Advancing the State of the Art:</h2>
             <p class="text-lg mb-8 max-w-3xl">
                 Our research contributes to the global knowledge base with cutting-edge publications in top-tier venues. 
                 Discover our latest findings, methodologies, and innovations that are shaping the future of AI and Computer Vision.
@@ -252,7 +253,7 @@
 <!-- Membership Section -->
 <section class="bg-base-200 pt-8 pb-16">
     <div class="container mx-auto px-6">
-        <h2 class="h2-home">Proud of our Connections</h2>
+        <h2 class="h2-home">Proud to be Part of:</h2>
         <p class="mb-8">
             AImageLab is proud to be part of a vibrant research community, collaborating with esteemed institutions and organizations to drive innovation in AI and Computer Vision.
         </p>
