@@ -465,9 +465,10 @@ def people(request):
     
     # Group by role and order by priority (descending), display_order, then first name
     grouped_profiles = {
-        'professors': profiles.filter(role__in=['full_professor', 'assoc_professor', 'researcher_tt', 'researcher_b', 'researcher_a']).order_by(-role_order, '-display_order', 'user__first_name'),
-        'phd_students_and_co': profiles.filter(role__in=['phd', 'research_fellow', 'postdoc', 'collaborator']).order_by(-role_order,'-display_order', 'user__first_name'),
-        'alumni': profiles.filter(role__in=['past_member']).order_by(-role_order, '-display_order', 'user__first_name'),
+        'professors': profiles.filter(role__in=['rector', 'full_professor', 'assoc_professor', 'researcher_tt', 'researcher_b', 'researcher_a']).order_by(-role_order, '-display_order', 'user__last_name'),
+        'phd_students_and_co': profiles.filter(role__in=['phd', 'research_fellow', 'postdoc', 'collaborator']).order_by(-role_order,'-display_order', 'user__last_name'),
+        'staff': profiles.filter(role__in=['staff']).order_by(-role_order, '-display_order', 'user__last_name'),
+        'alumni': profiles.filter(role__in=['past_member']).order_by(-role_order, '-display_order', 'user__last_name'),
     }
     
     return render(request, 'main/people.html', {'grouped_profiles': grouped_profiles})

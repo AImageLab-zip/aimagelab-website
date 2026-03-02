@@ -21,6 +21,10 @@ cutting-edge research in AI vision. Learn more about our team and their groundbr
     {% include 'main/team_section.html' with section_title='PhD Students and Research Fellows' profiles=grouped_profiles.phd_students_and_co card_size='medium' %}
     {% endif %}
 
+    {% if grouped_profiles.staff %}
+    {% include 'main/team_section.html' with section_title='Staff' profiles=grouped_profiles.staff card_size='medium' %}
+    {% endif %}
+
     {% if grouped_profiles.alumni %}
     {% include 'main/team_section.html' with section_title='Alumni' profiles=grouped_profiles.alumni card_size='medium' is_alumni=True %}
     {% endif %}

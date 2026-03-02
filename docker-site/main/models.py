@@ -8,7 +8,7 @@ class UserProfile(models.Model):
     """Extended user profile for team members"""
     
     ROLE_CHOICES = [
-        # ('professor_special', 'Full Professor (University Dean)'),
+        ('rector', 'UniMORE Rector & AImageLab Head'),
         ('full_professor', 'Full Professor'),
         ('assoc_professor', 'Associate Professor'),
         ('researcher_tt', 'Researcher (RTT)'),
@@ -95,9 +95,7 @@ class UserProfile(models.Model):
     
     def get_title(self):
         match self.role:
-            # case 'professor_special':
-            #     return "Full Professor (University Dean)"
-            case 'full_professor' | 'assoc_professor':
+            case 'rector' | 'full_professor' | 'assoc_professor':
                 return "Prof."
             case 'researcher_tt' | 'researcher_a' | 'researcher_b' | 'postdoc':
                 return "Dr."
