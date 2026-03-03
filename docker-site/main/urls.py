@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
@@ -31,5 +31,9 @@ urlpatterns = [
     path('rooms/reserve/', views.create_reservation, name='create_reservation'),
     path('rooms/reservation/<int:reservation_id>/edit/', views.edit_reservation, name='edit_reservation'),
     path('rooms/reservation/<int:reservation_id>/delete/', views.delete_reservation, name='delete_reservation'),
+
+    # Short links (Go)
+    path('go/', views.go_links, name='go_links'),
+    re_path(r'^go/(?P<src>[-a-zA-Z0-9_.]+)$', views.go_redirect, name='go_redirect'),
 ]
 

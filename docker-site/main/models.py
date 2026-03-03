@@ -344,6 +344,45 @@ class Post(models.Model):
         return self.title
 
 
+class ShortLink(models.Model):
+    """Short URL redirect model (Go links)"""
+
+    src = models.SlugField(
+        max_length=100,
+        unique=True,
+        help_text="Short code (e.g., 'crowd'). The link will be /go/crowd"
+    )
+    dest = models.URLField(
+        max_length=2000,
+        help_text="Destination URL to redirect to"
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='short_links',
+        help_text="Owner of this short link"
+    )
+    description = models.CharField(
+        max_length=300,
+        blank=True,
+        help_text="Optional description of what this link points to"
+    )
+    click_count = models.PositiveIntegerField(default=0, help_text="Number of times this link has been visited")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Short Link"
+        verbose_name_plural = "Short Links"
+
+    def __str__(self):
+        return f"/go/{self.src} → {self.dest} ({self.user.username})"
+
+    def get_absolute_url(self):
+        return f"/go/{self.src}"
+
+
 class Project(models.Model):
     """Research project model"""
 

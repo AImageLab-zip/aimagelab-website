@@ -68,6 +68,20 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
             </div>
             {% endif %}
 
+            {% if user.is_authenticated %}
+            <div class="card bg-base-200 mt-6">
+                <div class="card-body flex flex-col md:flex-row gap-3 justify-end">
+                    <p class="block my-auto text-lg">
+                        <i data-lucide="link" class="inline"></i>
+                        Manage your short redirect URLs
+                    </p>
+                    <a href="{% url 'go_links' %}" class="btn btn-primary">
+                        <i data-lucide="external-link" class="w-4 h-4"></i> Go Links
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
             <h2 class="text-2xl font-bold text-primary mt-8 mb-4">
                 At a Glance:
             </h2>
@@ -109,6 +123,10 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                         <a href="{% url 'rooms_calendar' %}" class="btn btn-primary btn-block justify-start">
                             <i data-lucide="calendar" class="w-4 h-4"></i>
                             Meeting Rooms
+                        </a>
+                        <a href="{% url 'go_links' %}" class="btn btn-primary btn-block justify-start">
+                            <i data-lucide="link" class="w-4 h-4"></i>
+                            Go Links
                         </a>
                         
                         {% if user.is_staff %}

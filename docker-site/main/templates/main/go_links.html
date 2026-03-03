@@ -1,0 +1,315 @@
+{% extends 'main/base_with_sidebar.html' %}
+
+{% block title %}Go Links - Short URL Manager - AImageLab{% endblock %}
+
+{% block hero_title %}Go Links{% endblock %}
+
+{% block hero_description %}
+Create and manage short redirect URLs. Use <code class="bg-base-300 px-2 py-0.5 rounded">/go/&lt;code&gt;</code> to redirect anywhere.
+{% endblock %}
+
+{% block main_content %}
+    <!-- Search & Add -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-6">
+        <form method="get" class="flex-1">
+            <div class="join w-full">
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search links…"
+                    class="input join-item flex-1" />
+                <button type="submit" class="btn btn-primary join-item">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </button>
+                {% if search_query %}
+                <a href="{% url 'go_links' %}" class="btn btn-ghost join-item">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+        <button class="btn btn-primary" onclick="openAddModal()">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            New Link
+        </button>
+    </div>
+
+    <!-- Links Table -->
+    {% if links %}
+    <div class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+            <thead>
+                <tr>
+                    <th>Short URL</th>
+                    <th>Destination</th>
+                    {% if user.is_staff %}<th>Owner</th>{% endif %}
+                    <th class="text-center">Clicks</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for link in links %}
+                <tr>
+                    <td>
+                        <div class="flex items-center gap-2">
+                            <a href="{% url 'go_redirect' link.src %}" target="_blank"
+                                class="font-mono font-bold text-primary link link-hover">
+                                /go/{{ link.src }}
+                            </a>
+                            <button class="btn btn-ghost btn-xs copy-btn" data-url="{{ request.scheme }}://{{ request.get_host }}/go/{{ link.src }}" title="Copy full URL">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        {% if link.description %}
+                        <p class="text-xs text-base-content/60 mt-0.5">{{ link.description }}</p>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ link.dest }}" target="_blank" class="link link-hover text-sm break-all max-w-xs inline-block truncate" title="{{ link.dest }}">
+                            {{ link.dest|truncatechars:60 }}
+                        </a>
+                    </td>
+                    {% if user.is_staff %}
+                    <td>
+                        <span class="badge badge-ghost">{{ link.user.username }}</span>
+                    </td>
+                    {% endif %}
+                    <td class="text-center">
+                        <span class="badge badge-outline badge-sm">{{ link.click_count }}</span>
+                    </td>
+                    <td class="text-right">
+                        {% if link.user == user or user.is_staff %}
+                        <div class="flex justify-end gap-1">
+                            <button class="btn btn-ghost btn-xs"
+                                onclick="openEditModal('{{ link.pk }}', '{{ link.src }}', '{{ link.dest|escapejs }}', '{{ link.description|escapejs }}')"
+                                title="Edit">
+                                <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button class="btn btn-ghost btn-xs text-error"
+                                onclick="openDeleteModal('{{ link.pk }}', '{{ link.src }}')"
+                                title="Delete">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if links.has_other_pages %}
+    <div class="flex justify-center mt-8">
+        <div class="join">
+            {% if links.has_previous %}
+            <a href="?page={{ links.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                class="join-item btn">«</a>
+            {% endif %}
+            {% for num in links.paginator.page_range %}
+                {% if links.number == num %}
+                <button class="join-item btn btn-active">{{ num }}</button>
+                {% elif num > links.number|add:'-3' and num < links.number|add:'3' %}
+                <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                    class="join-item btn">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if links.has_next %}
+            <a href="?page={{ links.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                class="join-item btn">»</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="card bg-base-200">
+        <div class="card-body items-center text-center py-16">
+            <i data-lucide="link" class="w-16 h-16 text-base-content/30 mb-4"></i>
+            <h3 class="text-xl font-bold text-base-content/60">No short links yet</h3>
+            <p class="text-base-content/50 mb-4">Create your first short link to get started.</p>
+            <button class="btn btn-primary" onclick="openAddModal()">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                Create Short Link
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ Add / Edit Modal ═══ -->
+    <dialog id="linkModal" class="modal">
+        <div class="modal-box">
+            <h3 class="text-lg font-bold text-primary mb-4" id="modalTitle">New Short Link</h3>
+            <form method="post" id="linkForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" id="modalAction" value="add">
+                <input type="hidden" name="pk" id="modalPk" value="">
+
+                <fieldset class="fieldset mb-4">
+                    <legend class="fieldset-legend">Short Code *</legend>
+                    <label class="input w-full">
+                        <span class="text-base-content/50">/go/</span>
+                        <input type="text" name="src" id="modalSrc" required
+                            pattern="[a-z0-9][a-z0-9_-]*[a-z0-9]|[a-z0-9]"
+                            placeholder="my-link" class="grow" />
+                    </label>
+                    <p class="label">Lowercase letters, numbers, hyphens, underscores and dots only.</p>
+                </fieldset>
+
+                <fieldset class="fieldset mb-4">
+                    <legend class="fieldset-legend">Destination URL *</legend>
+                    <input type="url" name="dest" id="modalDest" required
+                        class="input w-full" placeholder="https://example.com/page" />
+                </fieldset>
+
+                <fieldset class="fieldset mb-4">
+                    <legend class="fieldset-legend">Description</legend>
+                    <input type="text" name="description" id="modalDesc"
+                        class="input w-full" maxlength="300" placeholder="Brief note (optional)" />
+                </fieldset>
+
+                <!-- Preview -->
+                <div class="bg-base-300 rounded-lg p-3 font-mono text-sm mb-4">
+                    <span class="text-base-content/60">{{ request.scheme }}://{{ request.get_host }}/go/</span><span id="modalPreview" class="text-primary font-bold">…</span>
+                </div>
+
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost" onclick="linkModal.close()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="modalSubmitBtn">
+                        <i data-lucide="plus" class="w-4 h-4" id="modalSubmitIcon"></i>
+                        <span id="modalSubmitText">Create</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <!-- ═══ Delete Confirmation Modal ═══ -->
+    <dialog id="deleteModal" class="modal">
+        <div class="modal-box">
+            <h3 class="text-lg font-bold text-error mb-2">Delete Short Link</h3>
+            <p class="mb-4">Are you sure you want to delete <code id="deleteSrc" class="bg-base-300 px-2 py-0.5 rounded font-bold"></code>? This cannot be undone.</p>
+            <form method="post" id="deleteForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="pk" id="deletePk" value="">
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost" onclick="deleteModal.close()">Cancel</button>
+                    <button type="submit" class="btn btn-error">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+{% endblock %}
+
+{% block sidebar_content %}
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-4">
+                <i data-lucide="info" class="w-5 h-5"></i>
+                How it works
+            </h2>
+            <div class="space-y-3 text-sm">
+                <p>Create short memorable URLs that redirect to any destination.</p>
+                <div class="bg-base-300 rounded-lg p-3 font-mono text-xs">
+                    {{ request.scheme }}://{{ request.get_host }}/go/<span class="text-primary">code</span>
+                </div>
+                <p class="text-base-content/70">
+                    For example, <code class="bg-base-300 px-1 rounded">/go/crowd</code> can redirect to a project page.
+                </p>
+                {% if user.is_staff %}
+                <div class="divider my-2">Admin</div>
+                <p class="text-base-content/70 text-xs">
+                    <i data-lucide="shield" class="w-3 h-3 inline"></i>
+                    As staff, you can see and manage all users' links.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-base-200 mt-4">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-2">
+                <i data-lucide="zap" class="w-5 h-5"></i>
+                Quick Links
+            </h2>
+            <div class="space-y-2">
+                <button onclick="openAddModal()" class="btn btn-primary btn-block btn-sm justify-start">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    New Short Link
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-ghost btn-block btn-sm justify-start">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const linkModal = document.getElementById('linkModal');
+    const deleteModal = document.getElementById('deleteModal');
+
+    function openAddModal() {
+        document.getElementById('modalTitle').textContent = 'New Short Link';
+        document.getElementById('modalAction').value = 'add';
+        document.getElementById('modalPk').value = '';
+        document.getElementById('modalSrc').value = '';
+        document.getElementById('modalDest').value = '';
+        document.getElementById('modalDesc').value = '';
+        document.getElementById('modalPreview').textContent = '…';
+        document.getElementById('modalSubmitText').textContent = 'Create';
+        document.getElementById('modalSubmitIcon').setAttribute('data-lucide', 'plus');
+        document.getElementById('modalSrc').removeAttribute('readonly');
+        lucide.createIcons();
+        linkModal.showModal();
+    }
+
+    function openEditModal(pk, src, dest, desc) {
+        document.getElementById('modalTitle').textContent = 'Edit Short Link';
+        document.getElementById('modalAction').value = 'edit';
+        document.getElementById('modalPk').value = pk;
+        document.getElementById('modalSrc').value = src;
+        document.getElementById('modalDest').value = dest;
+        document.getElementById('modalDesc').value = desc;
+        document.getElementById('modalPreview').textContent = src;
+        document.getElementById('modalSubmitText').textContent = 'Save';
+        document.getElementById('modalSubmitIcon').setAttribute('data-lucide', 'save');
+        lucide.createIcons();
+        linkModal.showModal();
+    }
+
+    function openDeleteModal(pk, src) {
+        document.getElementById('deletePk').value = pk;
+        document.getElementById('deleteSrc').textContent = '/go/' + src;
+        deleteModal.showModal();
+    }
+
+    // Live preview for src field
+    document.getElementById('modalSrc').addEventListener('input', function() {
+        this.value = this.value.toLowerCase().replace(/[^a-z0-9_.\-]/g, '');
+        document.getElementById('modalPreview').textContent = this.value || '…';
+    });
+
+    // Copy-to-clipboard
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            navigator.clipboard.writeText(btn.dataset.url).then(() => {
+                const icon = btn.querySelector('[data-lucide]');
+                icon.setAttribute('data-lucide', 'check');
+                lucide.createIcons();
+                setTimeout(() => {
+                    icon.setAttribute('data-lucide', 'copy');
+                    lucide.createIcons();
+                }, 1500);
+            });
+        });
+    });
+</script>
+{% endblock %}
