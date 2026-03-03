@@ -68,20 +68,6 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
             </div>
             {% endif %}
 
-            {% if user.is_authenticated %}
-            <div class="card bg-base-200 mt-6">
-                <div class="card-body flex flex-col md:flex-row gap-3 justify-end">
-                    <p class="block my-auto text-lg">
-                        <i data-lucide="link" class="inline"></i>
-                        Manage your short redirect URLs
-                    </p>
-                    <a href="{% url 'go_links' %}" class="btn btn-primary">
-                        <i data-lucide="external-link" class="w-4 h-4"></i> Go Links
-                    </a>
-                </div>
-            </div>
-            {% endif %}
-
             <h2 class="text-2xl font-bold text-primary mt-8 mb-4">
                 At a Glance:
             </h2>
@@ -95,12 +81,12 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                 {% include 'main/dashboard_card.html' with link='https://web.ing.unimo.it/DocumentiPubblici/dief/altre-attivita/rimborso%20piccole%20spese/' title='Small Expense Reimbursement' description='Forms for small expense reimbursements.' logo='lucide:coins' %}
             </div>
 
-            <h2 class="text-2xl font-bold text-primary mt-8 mb-4">
+         <!--    <h2 class="text-2xl font-bold text-primary mt-8 mb-4">
                 Common graphical tools:
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 Under construction...
-            </div>
+            </div> -->
 
 {% endblock %}  
 
