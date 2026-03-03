@@ -1000,11 +1000,13 @@ def go_redirect(request, src):
     return redirect(link.dest)
 
 
-@login_required
 def go_links(request):
-    """List short links with inline add/edit/delete via modals.
-    Staff sees all; regular users see only their own."""
+    """Public landing page for unauthenticated users; full manager for authenticated ones."""
     import re as _re
+
+    # ── Unauthenticated: show public launcher page ──
+    if not request.user.is_authenticated:
+        return render(request, 'main/go_public.html')
 
     # ── Handle POST actions (add / edit / delete) ──
     if request.method == 'POST':

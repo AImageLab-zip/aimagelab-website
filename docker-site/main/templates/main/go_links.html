@@ -2,7 +2,7 @@
 
 {% block title %}Go Links - Short URL Manager - AImageLab{% endblock %}
 
-{% block hero_title %}Go Links{% endblock %}
+{% block hero_title %}Go-To Links{% endblock %}
 
 {% block hero_description %}
 Create and manage short redirect URLs. Use <code class="bg-base-300 px-2 py-0.5 rounded">/go/&lt;code&gt;</code> to redirect anywhere.
@@ -34,7 +34,7 @@ Create and manage short redirect URLs. Use <code class="bg-base-300 px-2 py-0.5 
     <!-- Links Table -->
     {% if links %}
     <div class="overflow-x-auto">
-        <table class="table table-zebra w-full">
+        <table class="table w-full">
             <thead>
                 <tr>
                     <th>Short URL</th>
@@ -218,7 +218,7 @@ Create and manage short redirect URLs. Use <code class="bg-base-300 px-2 py-0.5 
                     {{ request.scheme }}://{{ request.get_host }}/go/<span class="text-primary">code</span>
                 </div>
                 <p class="text-base-content/70">
-                    For example, <code class="bg-base-300 px-1 rounded">/go/crowd</code> can redirect to a project page.
+                    For example, <code class="bg-base-300 px-1 rounded">/go/code</code> can redirect to a project page.
                 </p>
                 {% if user.is_staff %}
                 <div class="divider my-2">Admin</div>

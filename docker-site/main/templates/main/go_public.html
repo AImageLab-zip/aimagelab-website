@@ -1,0 +1,94 @@
+{% extends 'main/base_with_sidebar.html' %}
+
+{% block title %}Go-To Links - AImageLab{% endblock %}
+
+{% block hero_title %}Go-To Links{% endblock %}
+
+{% block hero_description %}
+AImageLab short redirect service. Type or paste a short code below to jump straight to the destination.
+{% endblock %}
+
+{% block main_content %}
+    <div class="card bg-base-200">
+        <div class="card-body lg:p-10">
+            <h2 class="card-title text-primary mb-2 text-2xl">
+                <i data-lucide="compass" class="w-6 h-6"></i>
+                Jump to a link
+            </h2>
+            <p class="text-base-content/70 text-lg mb-4">
+                Enter the short code below and press <kbd class="kbd kbd-sm">Enter</kbd> or click <strong>Go</strong>.
+            </p>
+
+            <div class="join w-full">
+                <label class="input input-xl join-item flex-1">
+                    <span class="text-base-content/50 font-mono">/go/</span>
+                    <input id="goInput" type="text" autofocus
+                        placeholder="short-code"
+                        class="grow font-mono"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false" />
+                </label>
+                <button id="goBtn" class="btn btn-primary btn-xl join-item">
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    Go
+                </button>
+            </div>
+            <p id="goError" class="text-error text-sm mt-2 hidden">Please enter a short code.</p>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block sidebar_content %}
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-3">
+                <i data-lucide="zap" class="w-5 h-5"></i>
+                Quick tip
+            </h2>
+            <p class="text-sm text-base-content/70 mb-3">
+                You can also navigate directly in the address bar:
+            </p>
+            <div class="bg-base-300 rounded-lg p-3 font-mono text-xs break-all">
+                {{ request.scheme }}://{{ request.get_host }}/go/<span class="text-primary font-bold">code</span>
+            </div>
+        </div>
+    </div>
+    <div class="card bg-base-200 mt-6">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-3">
+                <i data-lucide="info" class="w-5 h-5"></i>
+                What is this?
+            </h2>
+            <p class="text-base-content/70 text-sm leading-relaxed">
+                <strong>Go-To Links</strong> are an internal short-URL service for AImageLab members.
+            </p>
+            <p class="text-base-content/70 text-sm leading-relaxed mt-3">
+                If you have an AImageLab account you can
+                <a href="{% url 'login' %}?next={% url 'go_links' %}" class="link link-primary">log in</a>
+                to create and manage your own links.
+            </p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function navigate() {
+        const code = document.getElementById('goInput').value.trim();
+        if (!code) {
+            document.getElementById('goError').classList.remove('hidden');
+            return;
+        }
+        document.getElementById('goError').classList.add('hidden');
+        window.location.href = '/go/' + encodeURIComponent(code);
+    }
+
+    document.getElementById('goBtn').addEventListener('click', navigate);
+    document.getElementById('goInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') navigate();
+    });
+</script>
+{% endblock %}
