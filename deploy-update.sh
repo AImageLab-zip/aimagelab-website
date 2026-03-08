@@ -38,7 +38,11 @@ echo "🗄️  Running database migrations..."
 docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T django-app python manage.py migrate
 
 echo ""
-echo "📦 Collecting static files..."
+echo "� Syncing media files from development environment..."
+sudo ./sync-media-files.sh
+
+echo ""
+echo "�📦 Collecting static files..."
 docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T django-app python manage.py collectstatic --noinput
 
 echo ""
