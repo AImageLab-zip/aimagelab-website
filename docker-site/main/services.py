@@ -90,7 +90,7 @@ def add_or_update_user(user_data):
     
     # Handle avatar separately (ImageField)
     if 'avatar_path' in user_data:
-        profile.avatar = user_data['avatar_path']
+        profile.avatar_iris = user_data['avatar_path']
     
     profile.save()
     

@@ -23,7 +23,7 @@ class UserProfileAdmin(admin.ModelAdmin):
             'fields': ('role', 'current_position', 'display_order', 'is_visible')
         }),
         ('About', {
-            'fields': ('bio', 'avatar')
+            'fields': ('bio', 'avatar', 'avatar_iris')
         }),
         ('Contact', {
             'fields': ('phone_number', 'website', 'google_scholar', 'github', 'linkedin')

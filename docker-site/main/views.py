@@ -47,13 +47,16 @@ def home(request):
             user__username='rcucchiara'
         )
     
-    if rcucchiara_profile.avatar and hasattr(rcucchiara_profile.avatar, 'url') and rcucchiara_profile.avatar.url:
+    # Check avatar first, then avatar_iris
+    if (rcucchiara_profile.avatar and hasattr(rcucchiara_profile.avatar, 'url') and rcucchiara_profile.avatar.url) or \
+       (rcucchiara_profile.avatar_iris and hasattr(rcucchiara_profile.avatar_iris, 'url') and rcucchiara_profile.avatar_iris.url):
             featured_profiles.append(rcucchiara_profile)
     
+    # Filter profiles that have either avatar or avatar_iris
     featured_profiles.extend(UserProfile.objects.select_related('user').filter(
-        avatar__isnull=False,
+        Q(avatar__isnull=False) | Q(avatar_iris__isnull=False),
         is_visible=True
-    ).exclude(user__username='rcucchiara').exclude(avatar='').order_by('?')[:2])
+    ).exclude(user__username='rcucchiara').exclude(avatar='', avatar_iris='').order_by('?')[:2])
     
     return render(request, 'main/home.html', {
         'latest_posts': latest_posts,
@@ -543,6 +546,9 @@ def edit_profile(request):
             # Open and resize image
             img = Image.open(avatar_file)
             img.thumbnail((256, 256), Image.Resampling.LANCZOS)
+            # Convert RGBA/P/LA images to RGB (JPEG doesn't support transparency)
+            if img.mode in ('RGBA', 'P', 'LA'):
+                img = img.convert('RGB')
             img_io = BytesIO()
             img.save(img_io, format='JPEG', quality=85)
             img_io.seek(0)

@@ -47,6 +47,12 @@
                                     <img src="{{ profile.avatar.url }}" alt="{{ profile.get_full_name }}" />
                                 </div>
                             </div>
+                            {% elif profile.avatar_iris %}
+                            <div class="avatar border-3">
+                                <div class="w-8">
+                                    <img src="{{ profile.avatar_iris.url }}" alt="{{ profile.get_full_name }}" />
+                                </div>
+                            </div>
                             {% endif %}
                             {% endfor %}
                             <div class="avatar avatar-placeholder border-3">

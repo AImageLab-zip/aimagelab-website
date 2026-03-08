@@ -26,6 +26,10 @@
                         <div class="mask mask-squircle {% if card_size == 'large' %}w-24{% elif card_size == 'small' %}w-16{% else %}w-24{% endif %}">
                             <img src="{{ profile.avatar.url }}" alt="{{ profile.get_full_name }}" />
                         </div>
+                        {% elif profile.avatar_iris %}
+                        <div class="mask mask-squircle {% if card_size == 'large' %}w-24{% elif card_size == 'small' %}w-16{% else %}w-24{% endif %}">
+                            <img src="{{ profile.avatar_iris.url }}" alt="{{ profile.get_full_name }}" />
+                        </div>
                         {% else %}
                         <div class="mask mask-squircle {% if card_size == 'large' %}w-24{% elif card_size == 'small' %}w-16{% else %}w-24{% endif %} bg-base-300">
                             <img id="dicebear-avatar-img" data-seed="{{ profile.get_full_name|default:profile.user.username|urlencode }}" alt="Default avatar" />
@@ -101,6 +105,10 @@
                             {% if profile.avatar %}
                             <div class="mask mask-squircle w-48 md:w-64">
                                 <img src="{{ profile.avatar.url }}" alt="{{ profile.get_full_name }}" />
+                            </div>
+                            {% elif profile.avatar_iris %}
+                            <div class="mask mask-squircle w-48 md:w-64">
+                                <img src="{{ profile.avatar_iris.url }}" alt="{{ profile.get_full_name }}" />
                             </div>
                             {% else %}
                             <div class="mask mask-squircle w-48 md:w-64 bg-base-300">

@@ -99,20 +99,40 @@ Update your personal information and professional links
                             <div class="avatar mb-4">
                                 {% if profile.avatar %}
                                 <div class="mask mask-squircle w-32 ring ring-primary ring-offset-base-100 ring-offset-2">
-                                    <img src="{{ profile.avatar.url }}" alt="Current avatar" />
+                                    <img src="{{ profile.avatar.url }}" alt="Your personal photo" />
+                                </div>
+                                {% elif profile.avatar_iris %}
+                                <div class="mask mask-squircle w-32 ring ring-secondary ring-offset-base-100 ring-offset-2">
+                                    <img src="{{ profile.avatar_iris.url }}" alt="IRIS photo" />
                                 </div>
                                 {% else %}
-                                <div class="mask mask-squircle w-32 bg-base-300 ring ring-primary ring-offset-base-100 ring-offset-2">
+                                <div class="mask mask-squircle w-32 bg-base-300 ring ring-base-300 ring-offset-base-100 ring-offset-2">
                                     <img id="dicebear-avatar-img" data-seed="{{ user.get_full_name|default:user.username|urlencode }}" alt="Default avatar" />
                                 </div>
+                                {% endif %}
+                            </div>
+                            <div class="badge badge-sm {% if profile.avatar %}badge-primary{% elif profile.avatar_iris %}badge-secondary{% else %}badge-ghost{% endif %}">
+                                {% if profile.avatar %}
+                                    Your personal photo
+                                {% elif profile.avatar_iris %}
+                                    IRIS photo (automatic)
+                                {% else %}
+                                    No photo
                                 {% endif %}
                             </div>
                         </div>
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend">Upload New Picture</legend>
+                            <legend class="fieldset-legend">Upload Your Personal Photo</legend>
                             <input type="file" class="file-input w-full" id="avatar" name="avatar" accept="image/*">
-                            <p class="label overflow-scroll">JPG, PNG, GIF. Max size: 5MB. Recommended: square aspect ratio</p>
+                            <p class="label overflow-scroll">
+                                JPG, PNG, GIF. Max size: 5MB. Recommended: square aspect ratio.<br>
+                                {% if profile.avatar_iris %}
+                                <span class="text-info">Your personal photo will be shown instead of the IRIS photo.</span>
+                                {% else %}
+                                <span class="text-info">Upload your personal photo here.</span>
+                                {% endif %}
+                            </p>
                         </fieldset>
                         
                         {% if profile.avatar %}
@@ -120,7 +140,12 @@ Update your personal information and professional links
                         <div class="form-control">
                             <label class="label cursor-pointer justify-start gap-3">
                                 <input class="checkbox checkbox-primary" type="checkbox" id="remove_avatar" name="remove_avatar">
-                                <span class="label-text text-sm">Remove current picture</span>
+                                <span class="label-text text-sm">
+                                    Remove personal photo
+                                    {% if profile.avatar_iris %}
+                                    <span class="text-base-content/60">(IRIS photo will be shown)</span>
+                                    {% endif %}
+                                </span>
                             </label>
                         </div>
                         {% endif %}
