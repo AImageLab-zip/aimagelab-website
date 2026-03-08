@@ -8,7 +8,7 @@ class UserProfile(models.Model):
     """Extended user profile for team members"""
     
     ROLE_CHOICES = [
-        # ('professor_special', 'Full Professor (University Dean)'),
+        ('rector', 'UniMORE Rector & AImageLab Head'),
         ('full_professor', 'Full Professor'),
         ('assoc_professor', 'Associate Professor'),
         ('researcher_tt', 'Researcher (RTT)'),
@@ -95,9 +95,7 @@ class UserProfile(models.Model):
     
     def get_title(self):
         match self.role:
-            # case 'professor_special':
-            #     return "Full Professor (University Dean)"
-            case 'full_professor' | 'assoc_professor':
+            case 'rector' | 'full_professor' | 'assoc_professor':
                 return "Prof."
             case 'researcher_tt' | 'researcher_a' | 'researcher_b' | 'postdoc':
                 return "Dr."
@@ -344,6 +342,45 @@ class Post(models.Model):
     
     def __str__(self):
         return self.title
+
+
+class ShortLink(models.Model):
+    """Short URL redirect model (Go links)"""
+
+    src = models.SlugField(
+        max_length=100,
+        unique=True,
+        help_text="Short code (e.g., 'crowd'). The link will be /go/crowd"
+    )
+    dest = models.URLField(
+        max_length=2000,
+        help_text="Destination URL to redirect to"
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='short_links',
+        help_text="Owner of this short link"
+    )
+    description = models.CharField(
+        max_length=300,
+        blank=True,
+        help_text="Optional description of what this link points to"
+    )
+    click_count = models.PositiveIntegerField(default=0, help_text="Number of times this link has been visited")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Short Link"
+        verbose_name_plural = "Short Links"
+
+    def __str__(self):
+        return f"/go/{self.src} → {self.dest} ({self.user.username})"
+
+    def get_absolute_url(self):
+        return f"/go/{self.src}"
 
 
 class Project(models.Model):

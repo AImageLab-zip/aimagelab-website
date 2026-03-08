@@ -22,16 +22,22 @@
 
 <body class="min-h-screen flex flex-col font-sans bg-base-100 text-base-content">
     <!-- Navigation -->
-    <div id="navbar" class="fixed top-0 z-20 w-full px-4 transition-colors duration-300">
-        <div class="navbar container mx-auto">
-            <a class="navbar-start" href="{% url 'home' %}">
-                <img src="{% static 'main/assets/logo.svg' %}" alt="AImageLab Logo" class="h-10 mr-2" />
-            </a>
-            <div class="navbar-end gap-2 w-fit ml-auto">
+    <div id="navbar" class="fixed top-0 z-20 w-full px-6 transition-colors duration-300">
+        <div class="flex justify-between items-center container py-2 2xl:px-6 mx-auto ">
+            <div class="flex items-center">
+                <a href="https://www.unimore.it" target="_blank" aria-label="University of Modena and Reggio Emilia">
+                    <img src="{% static 'main/assets/logo_unimore_c.svg' %}" alt="Unimore Logo" class="h-6 mr-4" />
+                </a>
+                <a href="{% url 'home' %}">
+                    <img src="{% static 'main/assets/logo.svg' %}" alt="AImageLab Logo" class="h-10 mr-2" />
+                </a>
+            </div>
+            <div class="w-fit ml-auto">
                 <div class="hidden lg:flex">
                     <ul class="menu menu-horizontal px-1">
                         <li><a class="font-bold {% if request.resolver_match.url_name == 'home' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'home' %}">Home</a></li>
                         <li><a class="font-bold {% if request.resolver_match.url_name == 'people' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'people' %}">People</a></li>
+                        <li><a class="font-bold {% if request.resolver_match.url_name == 'research' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'research' %}">Research</a></li>
                         <li><a class="font-bold {% if request.resolver_match.url_name == 'news' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'news' %}">News</a></li>
                         <li><a class="font-bold {% if request.resolver_match.url_name == 'publications' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'publications' %}">Publications</a></li>
                         <li><a class="font-bold {% if request.resolver_match.url_name == 'projects' %}underline underline-offset-4 decoration-primary{% endif %}" href="{% url 'projects' %}">Projects</a></li>
@@ -48,13 +54,14 @@
 
 
                 <div class="dropdown dropdown-end lg:hidden">
-                    <div tabindex="0" role="button" class="btn btn-ghost">
+                    <div tabindex="0" role="button" class="block my-auto">
                           <i data-lucide="menu"></i>
 
                     </div>
                     <ul tabindex="-1" class="menu menu-md dropdown-content text-primary-content bg-primary rounded-box z-1 mt-2 w-48 p-2">
                         <li><a href="{% url 'home' %}">Home</a></li>
                         <li><a href="{% url 'people' %}">People</a></li>
+                        <li><a href="{% url 'research' %}">Research</a></li>
                         <li><a href="{% url 'news' %}">News</a></li>
                         <li><a href="{% url 'publications' %}">Publications</a></li>
                         <li><a href="{% url 'projects' %}">Projects</a></li>

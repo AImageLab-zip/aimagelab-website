@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
@@ -15,6 +15,7 @@ urlpatterns = [
     path('iris/import/', views.trigger_iris_import, name='trigger_iris_import'),
     path('iris/import-photos/', views.trigger_iris_photo_import, name='trigger_iris_photo_import'),
     path('iris/status/', views.iris_import_status, name='iris_import_status'),
+    path('research/', views.research, name='research'),
     path('news/', views.news, name='news'),
     path('publications/', views.publications, name='publications'),
     path('projects/', views.projects, name='projects'),
@@ -30,5 +31,9 @@ urlpatterns = [
     path('rooms/reserve/', views.create_reservation, name='create_reservation'),
     path('rooms/reservation/<int:reservation_id>/edit/', views.edit_reservation, name='edit_reservation'),
     path('rooms/reservation/<int:reservation_id>/delete/', views.delete_reservation, name='delete_reservation'),
+
+    # Short links (Go)
+    path('go/', views.go_links, name='go_links'),
+    re_path(r'^go/(?P<src>[-a-zA-Z0-9_.]+)$', views.go_redirect, name='go_redirect'),
 ]
 

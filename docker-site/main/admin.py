@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation
+from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink
 
 
 @admin.register(UserProfile)
@@ -182,6 +182,35 @@ class MeetingRoomAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(ShortLink)
+class ShortLinkAdmin(admin.ModelAdmin):
+    list_display = ('src', 'dest_short', 'user', 'click_count', 'created_at')
+    list_filter = ('user', 'created_at')
+    search_fields = ('src', 'dest', 'description', 'user__username')
+    readonly_fields = ('click_count', 'created_at', 'updated_at')
+    autocomplete_fields = ['user']
+    fieldsets = (
+        ('Link', {
+            'fields': ('src', 'dest', 'description')
+        }),
+        ('Owner', {
+            'fields': ('user',)
+        }),
+        ('Statistics', {
+            'fields': ('click_count',),
+            'classes': ('collapse',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def dest_short(self, obj):
+        return obj.dest[:80] + '...' if len(obj.dest) > 80 else obj.dest
+    dest_short.short_description = 'Destination'
 
 
 @admin.register(RoomReservation)

@@ -6,9 +6,9 @@
   --color-base-200: oklch(98% 0 0);
   --color-base-300: oklch(88% 0 0);
   --color-base-content: oklch(21% 0.006 285.885);
-  --color-primary: oklch(39% 0.141 25.723);
+  --color-primary: oklab(42.107% 0.15764 0.06234);
   --color-primary-content: oklch(98% 0.002 247.839);
-  --color-secondary: oklch(50% 0.213 27.518);
+  --color-secondary: oklch(50.542% 0.20712 28.8);
   --color-secondary-content: oklch(98% 0.003 247.858);
   --color-accent: oklch(63.016% 0.25215 9.207);
   --color-accent-content: oklch(37% 0 0);
@@ -39,12 +39,9 @@
     font-family: var(--font-sans);
     font-feature-settings: 'liga' 1, 'calt' 1, 'ss04' 1;
 
+    --color-red-legacy: #F04E22;
     --simple-gradient: linear-gradient(135deg, var(--color-base-100), var(--color-base-200));
-    --color-rita-red: oklch(54.626% 0.22417 29.223);
-    --color-gran-green: oklch(62.272% 0.21188 142.511);
-    --color-bobby-blue: oklch(53.582% 0.221 260.213);
-    --color-simon-silver: oklch(87.302% 0.0001 271.152);
-
+    --reddish-gradient: linear-gradient(135deg, var(--color-primary) 70%, var(--color-red-legacy));
 }
 
 #hero {

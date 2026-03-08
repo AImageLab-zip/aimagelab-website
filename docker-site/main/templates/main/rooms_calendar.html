@@ -178,6 +178,15 @@
                     </svg>
                     Delete
                 </button>
+                <button type="button" id="exportGcalBtn" class="btn btn-outline gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Export to Google Calendar
+                </button>
                 <button type="submit" class="btn btn-primary gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="20 6 9 17 4 12"></polyline>
@@ -360,6 +369,40 @@ document.addEventListener('DOMContentLoaded', function() {
             calendar.gotoDate(this.value);
         }
     });
+
+    // Export single event to Google Calendar
+    document.getElementById('exportGcalBtn').addEventListener('click', function() {
+        const titleValue = document.getElementById('title').value;
+        const descriptionValue = document.getElementById('description').value;
+        const startValue = document.getElementById('start_time').value;
+        const endValue = document.getElementById('end_time').value;
+
+        const roomSelect = document.getElementById('room');
+        const roomName = roomSelect.options[roomSelect.selectedIndex]?.text.split(' - ')[0] || '';
+
+        const start = toGoogleCalendarDateTime(startValue);
+        const end = toGoogleCalendarDateTime(endValue);
+
+        const detailsParts = [];
+        if (descriptionValue) {
+            detailsParts.push(descriptionValue);
+        }
+        if (roomName) {
+            detailsParts.push(`Room: ${roomName}`);
+        }
+
+        const title = encodeURIComponent(titleValue);
+        const details = encodeURIComponent(detailsParts.join('\n\n'));
+        const location = encodeURIComponent(`${roomName} - MORE AI Center, Via Pietro Vivarelli 2, Modena, Italy`);
+
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+            `&text=${title}` +
+            `&dates=${start}/${end}` +
+            `&details=${details}` +
+            `&location=${location}`;
+
+        window.open(url, '_blank');
+    });
     
     // Form submission
     form.addEventListener('submit', async function(e) {
@@ -483,6 +526,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const hours = String(d.getHours()).padStart(2, '0');
         const minutes = String(d.getMinutes()).padStart(2, '0');
         return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    function toGoogleCalendarDateTime(datetimeLocalValue) {
+        const d = new Date(datetimeLocalValue);
+
+        if (Number.isNaN(d.getTime())) {
+            return '';
+        }
+
+        const year = d.getUTCFullYear();
+        const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(d.getUTCDate()).padStart(2, '0');
+        const hours = String(d.getUTCHours()).padStart(2, '0');
+        const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+        const seconds = String(d.getUTCSeconds()).padStart(2, '0');
+
+        return `${year}${month}${day}T${hours}${minutes}${seconds}Z`;
     }
 });
 </script>

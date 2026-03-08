@@ -1,0 +1,28 @@
+{% load research_filters %}
+<section id="{{ area_id }}" class="scroll-mt-24 py-20 bg-base-100">
+    <div class="container mx-auto px-6">
+        <div class="flex flex-col lg:flex-row items-center gap-12">
+            <!-- Icon column -->
+            <div class="flex-none flex items-center justify-center w-full lg:w-48">
+                <div class="w-24 h-24 rounded-2xl bg-{{ color }}/10 flex items-center justify-center">
+                    <i data-lucide="{{ icon }}" class="text-{{ color }} w-12 h-12 stroke-1"></i>
+                </div>
+            </div>
+
+            <!-- Text column -->
+            <div class="flex-1">
+                <h2 class="text-3xl md:text-4xl font-bold text-{{ color }} mb-4">{{ title }}</h2>
+                <p class="text-lg mb-6 leading-relaxed">{{ intro }}</p>
+                <p class="mb-6 leading-relaxed opacity-80">{{ detail }}</p>
+                <div class="flex flex-wrap gap-2">
+                    {% with kw_list=keywords|split:"," %}
+                    {% for kw in kw_list %}
+                    <a href="{% url 'publications' %}?search=%23{{ kw|urlencode }}"
+                       class="badge badge-ghost hover:badge-primary transition-colors cursor-pointer">{{ kw }}</a>
+                    {% endfor %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

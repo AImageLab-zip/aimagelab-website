@@ -1,0 +1,147 @@
+{% extends 'main/base_with_hero.html' %}
+{% load static %}
+
+{% block title %}Research Areas — AImageLab{% endblock %}
+
+{% block hero_content %}
+<h1 class="mb-5 text-2xl md:text-5xl font-bold text-primary text-balance">Research Areas</h1>
+<p class="mb-8 text-balance max-w-2xl text-lg">
+    From vision &amp; language to robotics, our research spans the full spectrum of AI. Explore the areas where we push the boundaries of the possible.
+</p>
+<!-- Quick-jump anchors -->
+<div class="flex flex-wrap gap-2">
+    <a href="#vision-language" class="btn btn-sm btn-outline btn-primary">Vision &amp; Language</a>
+    <a href="#ml-dl" class="btn btn-sm btn-outline btn-primary">ML &amp; DL</a>
+    <a href="#medical-imaging" class="btn btn-sm btn-outline btn-primary">Medical Imaging</a>
+    <a href="#computer-vision" class="btn btn-sm btn-outline btn-primary">Computer Vision</a>
+    <a href="#iot-sensors" class="btn btn-sm btn-outline btn-primary">IoT &amp; Sensors</a>
+    <a href="#robotics-hri" class="btn btn-sm btn-outline btn-primary">Robotics &amp; HRI</a>
+</div>
+{% endblock %}
+
+{% block page_content %}
+
+<!-- ───────────────────────────────────────────────────────── -->
+<!-- History -->
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="history" class="scroll-mt-24 py-20 bg-base-100">
+    <div class="container mx-auto px-6">
+        <h2 class="text-3xl md:text-4xl font-bold text-primary mb-10">Our History</h2>
+
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+            <div class="card bg-base-200">
+                <div class="card-body gap-2">
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="text-2xl font-bold text-primary/40">1998</span>
+                        <i data-lucide="flag" class="text-primary w-5 h-5 stroke-1"></i>
+                    </div>
+                    <h3 class="card-title text-base-content">Foundation</h3>
+                    <p class="opacity-80 text-sm">
+                        AImageLab (Artificial Image Laboratory) was founded by Professor Rita Cucchiara within the Department of Engineering "Enzo Ferrari" (DIEF) at the University of Modena and Reggio Emilia. The initial focus was image processing and computer vision, which gradually evolved into machine learning and applied artificial intelligence.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body gap-2">
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="text-2xl font-bold text-primary/40">2000s</span>
+                        <i data-lucide="trending-up" class="text-primary w-5 h-5 stroke-1"></i>
+                    </div>
+                    <h3 class="card-title text-base-content">Scientific Growth</h3>
+                    <p class="opacity-80 text-sm">
+                        Over the years AImageLab expanded its expertise beyond pure computer vision into complex AI applications, including video understanding, multimedia analytics, and human–machine interaction, establishing itself as one of Italy's leading AI research groups.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body gap-2">
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="text-2xl font-bold text-primary/40">2016</span>
+                        <i data-lucide="globe" class="text-primary w-5 h-5 stroke-1"></i>
+                    </div>
+                    <h3 class="card-title text-base-content">International Recognition</h3>
+                    <p class="opacity-80 text-sm">
+                        The lab gained global visibility when Facebook AI Research (FAIR) selected AImageLab as one of only 15 European academic laboratories for a dedicated research partnership, including GPU server resources — a testament to the group's world-class standing.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body gap-2">
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="text-2xl font-bold text-primary/40">2018</span>
+                        <i data-lucide="shopping-bag" class="text-primary w-5 h-5 stroke-1"></i>
+                    </div>
+                    <h3 class="card-title text-base-content">YNAP AI Lab</h3>
+                    <p class="opacity-80 text-sm">
+                        In collaboration with the Yoox Net-A-Porter Group (YNAP), AImageLab co-founded the YNAP Artificial Intelligence Lab@UNIMORE, focusing on AI for fashion — particularly visual search and virtual try-on — bridging fundamental research with high-impact industrial applications.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body gap-2">
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="text-2xl font-bold text-primary/40">2020</span>
+                        <i data-lucide="cpu" class="text-primary w-5 h-5 stroke-1"></i>
+                    </div>
+                    <h3 class="card-title text-base-content">Tecnopolo &amp; NVIDIA Hub</h3>
+                    <p class="opacity-80 text-sm">
+                        AImageLab became a core member of the AI Research and Innovation Center (AIRI) at the Tecnopolo di Modena. Through its partnership with NVIDIA, the lab hosts the NVIDIA AI Technology Center (NVAITC), serving as a regional hub for the dissemination of AI technologies.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card bg-base-200">
+                <div class="card-body gap-2">
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="text-2xl font-bold text-primary/40">2025</span>
+                        <i data-lucide="zap" class="text-primary w-5 h-5 stroke-1"></i>
+                    </div>
+                    <h3 class="card-title text-base-content">EuroHPC &amp; ELLIS</h3>
+                    <p class="opacity-80 text-sm">
+                        The lab supports the ELLIS Unit Modena (European Laboratory for Learning and Intelligent Systems), anchoring it in Europe's top AI excellence network. In 2025, AImageLab won the EuroHPC Extreme Scale call, securing high-performance computing resources for frontier AI research.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<!-- Research Area Sections (using include template) -->
+<!-- ───────────────────────────────────────────────────────── -->
+
+{% include "main/research_area.html" with area_id="vision-language" icon="images" color="primary" title="Vision & Language" intro="We investigate multimodal architectures that bridge visual perception and natural language understanding. Our models learn joint representations of images, videos, and text, enabling tasks such as visual question answering, dense image captioning, cross-modal retrieval, and zero-shot recognition." detail="Recent work focuses on grounded language generation — teaching models not only to describe scenes, but to reason about spatial relationships, attribute ambiguities, and temporal dynamics in video. We also explore efficient fine-tuning strategies (LoRA, prompt tuning) to adapt large vision-language models to specialised downstream domains with minimal supervision." keywords="visual-qa,image-captioning,clip,cross-modal-retrieval,llm-fine-tuning,grounding" %}
+
+{% include "main/research_area.html" with area_id="ml-dl" icon="waypoints" color="secondary" title="Machine Learning & Deep Learning" intro="Our ML/DL group develops the foundational algorithms and training methodologies that power every project in the lab. We design novel neural architectures, study generalisation theory, and build robust training pipelines for both computer-vision and language tasks." detail="Key research threads include continual learning and catastrophic-forgetting mitigation, neural architecture search (NAS), parameter-efficient fine-tuning (PEFT), model merging and ensemble strategies, and self-supervised pretraining on unlabelled data. We also contribute to the reliability and interpretability of deep models, studying calibration, uncertainty estimation, and feature attribution methods." keywords="continual-learning,neural-architecture-search,peft,model-merging,self-supervised-learning,uncertainty-estimation" %}
+
+{% include "main/research_area.html" with area_id="medical-imaging" icon="microscope" color="success" title="Medical Imaging" intro="We apply deep learning to the full clinical imaging pipeline — from raw-data acquisition to computer-aided diagnosis. Our collaborations with radiologists and hospital networks yield benchmarks and models that directly inform clinical practice." detail="Current projects include automated tumour segmentation in CT and MRI volumes, retinal disease grading from fundus photographs, and histopathology slide analysis for cancer staging. We pay particular attention to data scarcity through few-shot and semi-supervised strategies, domain adaptation across scanner vendors, and explainability requirements mandated by clinical regulation." keywords="segmentation,classification,histopathology,domain-adaptation,few-shot-learning,xai" %}
+
+{% include "main/research_area.html" with area_id="computer-vision" icon="aperture" color="primary" title="Computer Vision" intro="Computer Vision is the heart of AImageLab. Our researchers tackle the full visual understanding stack: low-level image restoration and enhancement, mid-level structural recognition, and high-level semantic scene understanding for images and video." detail="We are particularly active in action recognition, video object segmentation, pedestrian re-identification, 3D scene reconstruction, and generative modelling (diffusion, GANs). Our video understanding work targets both efficiency — enabling real-time inference on edge hardware — and accuracy, pushing state-of-the-art on international benchmarks such as ActivityNet, MOT, and Market-1501." keywords="action-recognition,re-identification,object-detection,3d-reconstruction,diffusion-models,video-understanding" %}
+
+{% include "main/research_area.html" with area_id="iot-sensors" icon="wifi-cog" color="warning" title="IoT & Embedded Sensors" intro="We design end-to-end systems that fuse data from heterogeneous sensor networks — cameras, IMUs, depth sensors, LiDARs, and environmental monitors — to enable pervasive, context-aware intelligence at the edge." detail="Our embedded AI research targets microcontroller and FPGA deployment of neural networks, tackling the trade-off between model accuracy and resource footprint with quantisation, pruning, and knowledge distillation. Use cases span smart buildings, precision agriculture, industrial monitoring, and wearable health-sensing platforms. We also develop protocols for privacy-preserving federated learning directly on low-power nodes." keywords="edge-ai,model-compression,sensor-fusion,federated-learning,tinyml,fpga-deployment" %}
+
+{% include "main/research_area.html" with area_id="robotics-hri" icon="bot" color="error" title="Robotics & Human-Robot Interaction" intro="We create autonomous systems capable of perceiving, understanding, and acting in complex human environments. Our robots learn from demonstrations, adapt to novel scenarios through sim-to-real transfer, and communicate intuitively with people." detail="Research themes include vision-based manipulation, social navigation with pedestrian intent prediction, multimodal dialogue systems for assistive robotics, and egocentric action anticipation from wearable cameras. We participate in international competitions (RoboCup, Amazon Robotics Challenge) and collaborate with industry partners on warehouse automation and collaborative assembly applications." keywords="sim-to-real,manipulation,social-navigation,egocentric-vision,assistive-robotics,action-anticipation" %}
+
+<!-- ───────────────────────────────────────────────────────── -->
+<!-- CTA strip -->
+<!-- ───────────────────────────────────────────────────────── -->
+<section class="py-16 bg-base-200 text-base-content">
+    <div class="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+            <h2 class="text-2xl md:text-3xl font-bold mb-2">Interested in collaborating?</h2>
+            <p class="opacity-60 max-w-xl">We welcome partnerships with industry, healthcare institutions, and fellow research groups. Reach out to learn how we can work together.</p>
+        </div>
+        <div class="flex gap-4 flex-shrink-0">
+            <a href="{% url 'contacts' %}" class="btn btn-primary">Contact Us</a>
+            <a href="{% url 'publications' %}" class="btn btn-ghost btn-outline">Our Publications →</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

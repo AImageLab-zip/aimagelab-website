@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import json
-from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation
+from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField
 from datetime import datetime, timedelta
@@ -69,6 +69,10 @@ def home(request):
 def contacts(request):
     """Contacts page view."""
     return render(request, 'main/contacts.html')
+
+def research(request):
+    """Research areas page view."""
+    return render(request, 'main/research.html')
 
 def news(request):
     """News/Blog page view with pagination and search."""
@@ -465,9 +469,10 @@ def people(request):
     
     # Group by role and order by priority (descending), display_order, then first name
     grouped_profiles = {
-        'professors': profiles.filter(role__in=['full_professor', 'assoc_professor', 'researcher_tt', 'researcher_b', 'researcher_a']).order_by(-role_order, '-display_order', 'user__first_name'),
-        'phd_students_and_co': profiles.filter(role__in=['phd', 'research_fellow', 'postdoc', 'collaborator']).order_by(-role_order,'-display_order', 'user__first_name'),
-        'alumni': profiles.filter(role__in=['past_member']).order_by(-role_order, '-display_order', 'user__first_name'),
+        'professors': profiles.filter(role__in=['rector', 'full_professor', 'assoc_professor', 'researcher_tt', 'researcher_b', 'researcher_a']).order_by(-role_order, '-display_order', 'user__last_name'),
+        'phd_students_and_co': profiles.filter(role__in=['phd', 'research_fellow', 'postdoc', 'collaborator']).order_by(-role_order,'-display_order', 'user__last_name'),
+        'staff': profiles.filter(role__in=['staff']).order_by(-role_order, '-display_order', 'user__last_name'),
+        'alumni': profiles.filter(role__in=['past_member']).order_by(-role_order, '-display_order', 'user__last_name'),
     }
     
     return render(request, 'main/people.html', {'grouped_profiles': grouped_profiles})
@@ -982,3 +987,124 @@ def delete_reservation(request, reservation_id):
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
 
+
+# ─── Short Links (Go) Views ─────────────────────────────────────────────────
+
+from django.db.models import F
+
+
+def go_redirect(request, src):
+    """Redirect /go/<src> to the destination URL, incrementing click count."""
+    link = get_object_or_404(ShortLink, src=src)
+    ShortLink.objects.filter(pk=link.pk).update(click_count=F('click_count') + 1)
+    return redirect(link.dest)
+
+
+def go_links(request):
+    """Public landing page for unauthenticated users; full manager for authenticated ones."""
+    import re as _re
+
+    # ── Unauthenticated: show public launcher page ──
+    if not request.user.is_authenticated:
+        return render(request, 'main/go_public.html')
+
+    # ── Handle POST actions (add / edit / delete) ──
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        pk = request.POST.get('pk', '')
+
+        if action == 'add':
+            src = request.POST.get('src', '').strip().lower()
+            dest = request.POST.get('dest', '').strip()
+            description = request.POST.get('description', '').strip()
+
+            errors = []
+            if not src:
+                errors.append('Short code is required.')
+            if not dest:
+                errors.append('Destination URL is required.')
+            if src and ShortLink.objects.filter(src=src).exists():
+                errors.append(f'Short code "{src}" is already taken.')
+            if src and not _re.match(r'^[a-z0-9][-a-z0-9_.]*[a-z0-9.]?$', src):
+                errors.append('Short code must contain only lowercase letters, numbers, hyphens, underscores and dots.')
+
+            if errors:
+                for err in errors:
+                    django_messages.error(request, err)
+            else:
+                ShortLink.objects.create(src=src, dest=dest, description=description, user=request.user)
+                django_messages.success(request, f'Short link /go/{src} created!')
+            return redirect('go_links')
+
+        elif action == 'edit' and pk:
+            link = get_object_or_404(ShortLink, pk=pk)
+            if link.user != request.user and not request.user.is_staff:
+                django_messages.error(request, 'You can only edit your own short links.')
+                return redirect('go_links')
+
+            src = request.POST.get('src', '').strip().lower()
+            dest = request.POST.get('dest', '').strip()
+            description = request.POST.get('description', '').strip()
+
+            errors = []
+            if not src:
+                errors.append('Short code is required.')
+            if not dest:
+                errors.append('Destination URL is required.')
+            if src and ShortLink.objects.filter(src=src).exclude(pk=link.pk).exists():
+                errors.append(f'Short code "{src}" is already taken.')
+            if src and not _re.match(r'^[a-z0-9][-a-z0-9_.]*[a-z0-9.]?$', src):
+                errors.append('Short code must contain only lowercase letters, numbers, hyphens, underscores and dots.')
+
+            if errors:
+                for err in errors:
+                    django_messages.error(request, err)
+            else:
+                link.src = src
+                link.dest = dest
+                link.description = description
+                link.save()
+                django_messages.success(request, f'Short link /go/{src} updated!')
+            return redirect('go_links')
+
+        elif action == 'delete' and pk:
+            link = get_object_or_404(ShortLink, pk=pk)
+            if link.user != request.user and not request.user.is_staff:
+                django_messages.error(request, 'You can only delete your own short links.')
+                return redirect('go_links')
+            src = link.src
+            link.delete()
+            django_messages.success(request, f'Short link /go/{src} deleted.')
+            return redirect('go_links')
+
+    # ── GET: list links ──
+    search_query = request.GET.get('search', '')
+
+    if request.user.is_staff:
+        links = ShortLink.objects.select_related('user').all()
+    else:
+        links = ShortLink.objects.filter(user=request.user)
+
+    if search_query:
+        links = links.filter(
+            Q(src__icontains=search_query) |
+            Q(dest__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(user__username__icontains=search_query)
+        )
+
+    links = links.order_by('-created_at')
+
+    paginator = Paginator(links, 20)
+    page = request.GET.get('page', 1)
+    try:
+        links_page = paginator.page(page)
+    except PageNotAnInteger:
+        links_page = paginator.page(1)
+    except EmptyPage:
+        links_page = paginator.page(paginator.num_pages)
+
+    return render(request, 'main/go_links.html', {
+        'links': links_page,
+        'search_query': search_query,
+    })

@@ -81,12 +81,12 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                 {% include 'main/dashboard_card.html' with link='https://web.ing.unimo.it/DocumentiPubblici/dief/altre-attivita/rimborso%20piccole%20spese/' title='Small Expense Reimbursement' description='Forms for small expense reimbursements.' logo='lucide:coins' %}
             </div>
 
-            <h2 class="text-2xl font-bold text-primary mt-8 mb-4">
+         <!--    <h2 class="text-2xl font-bold text-primary mt-8 mb-4">
                 Common graphical tools:
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 Under construction...
-            </div>
+            </div> -->
 
 {% endblock %}  
 
@@ -109,6 +109,10 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                         <a href="{% url 'rooms_calendar' %}" class="btn btn-primary btn-block justify-start">
                             <i data-lucide="calendar" class="w-4 h-4"></i>
                             Meeting Rooms
+                        </a>
+                        <a href="{% url 'go_links' %}" class="btn btn-primary btn-block justify-start">
+                            <i data-lucide="link" class="w-4 h-4"></i>
+                            Go Links
                         </a>
                         
                         {% if user.is_staff %}
