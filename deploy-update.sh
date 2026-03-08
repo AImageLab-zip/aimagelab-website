@@ -23,11 +23,11 @@ fi
 
 echo ""
 echo "🔨 Rebuilding Docker containers..."
-docker compose build django-app celery-worker celery-beat apache-prod
+docker compose -f docker-compose.yml -f docker-compose.prod.yml build django-app celery-worker celery-beat apache-prod
 
 echo ""
 echo "🔄 Restarting production services..."
-docker compose up -d django-app mysql-db redis celery-worker celery-beat apache-prod
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d django-app mysql-db redis celery-worker celery-beat apache-prod
 
 # Wait for database to be ready
 echo "⏳ Waiting for services to be ready..."
@@ -35,15 +35,15 @@ sleep 10
 
 echo ""
 echo "🗄️  Running database migrations..."
-docker compose exec -T django-app python manage.py migrate
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T django-app python manage.py migrate
 
 echo ""
 echo "📦 Collecting static files..."
-docker compose exec -T django-app python manage.py collectstatic --noinput
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T django-app python manage.py collectstatic --noinput
 
 echo ""
 echo "🔄 Restarting Apache to apply changes..."
-docker compose restart apache-prod
+docker compose -f docker-compose.yml -f docker-compose.prod.yml restart apache-prod
 
 echo ""
 echo "✅ Production environment updated successfully!"
