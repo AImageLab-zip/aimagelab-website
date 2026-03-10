@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea
+from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard
 
 
 @admin.register(UserProfile)
@@ -270,6 +270,35 @@ class ResearchAreaAdmin(admin.ModelAdmin):
         }),
         ('Display', {
             'fields': ('display_order',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(DashboardCard)
+class DashboardCardAdmin(admin.ModelAdmin):
+    list_display = ('title', 'section', 'link_type', 'logo_type', 'display_order', 'is_active')
+    list_filter = ('section', 'link_type', 'logo_type', 'is_active')
+    list_editable = ('display_order', 'is_active')
+    search_fields = ('title', 'description', 'section')
+    fieldsets = (
+        ('Content', {
+            'fields': ('title', 'description', 'section')
+        }),
+        ('Logo', {
+            'fields': ('logo_type', 'logo_external_url', 'logo_lucide_icon', 'logo_upload'),
+            'description': 'Choose a logo type and fill the corresponding field.'
+        }),
+        ('Link', {
+            'fields': ('link_type', 'link_url', 'link_file'),
+            'description': 'Choose link type: external URL or a downloadable file.'
+        }),
+        ('Display', {
+            'fields': ('display_order', 'is_active')
         }),
         ('Metadata', {
             'fields': ('created_at', 'updated_at'),

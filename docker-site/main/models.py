@@ -482,3 +482,72 @@ class ResearchArea(models.Model):
     def __str__(self):
         return self.title
 
+
+class DashboardCard(models.Model):
+    """Cards displayed on the user dashboard, manageable from the admin."""
+
+    LOGO_TYPE_CHOICES = [
+        ('external', 'External URL'),
+        ('lucide', 'Lucide Icon'),
+        ('upload', 'Uploaded Image'),
+    ]
+
+    LINK_TYPE_CHOICES = [
+        ('external', 'External Link'),
+        ('file', 'Downloadable File'),
+    ]
+
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    section = models.CharField(
+        max_length=200,
+        help_text="Dashboard section heading to group cards under (e.g. 'At a Glance')"
+    )
+
+    # Logo options
+    logo_type = models.CharField(max_length=10, choices=LOGO_TYPE_CHOICES, default='external')
+    logo_external_url = models.URLField(blank=True, help_text="External URL to a logo image")
+    logo_lucide_icon = models.CharField(max_length=100, blank=True, help_text="Lucide icon name (e.g. coins, sparkles)")
+    logo_upload = models.ImageField(upload_to='dashboard_logos/', blank=True, help_text="Uploaded logo image")
+
+    # Link options
+    link_type = models.CharField(max_length=10, choices=LINK_TYPE_CHOICES, default='external')
+    link_url = models.URLField(blank=True, help_text="External URL for the card link")
+    link_file = models.FileField(upload_to='dashboard_files/', blank=True, help_text="File available for download")
+
+    display_order = models.IntegerField(default=0, help_text="Order within the section (lower first)")
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['section', 'display_order']
+        verbose_name = "Dashboard Card"
+        verbose_name_plural = "Dashboard Cards"
+
+    def __str__(self):
+        return f"{self.title} ({self.section})"
+
+    @property
+    def resolved_logo(self):
+        """Return the logo value compatible with the dashboard_card template."""
+        if self.logo_type == 'lucide' and self.logo_lucide_icon:
+            return f"lucide:{self.logo_lucide_icon}"
+        if self.logo_type == 'upload' and self.logo_upload:
+            return self.logo_upload.url
+        if self.logo_type == 'external' and self.logo_external_url:
+            return self.logo_external_url
+        return ''
+
+    @property
+    def resolved_link(self):
+        """Return the URL for the card."""
+        if self.link_type == 'file' and self.link_file:
+            return self.link_file.url
+        return self.link_url
+
+    @property
+    def is_download(self):
+        return self.link_type == 'file' and self.link_file
+

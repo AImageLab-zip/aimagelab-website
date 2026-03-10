@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import json
-from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea
+from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField
 from datetime import datetime, timedelta
@@ -516,7 +516,12 @@ def logout_view(request):
 @login_required
 def dashboard(request):
     """Dashboard view (requires login)."""
-    return render(request, 'main/dashboard.html')
+    from itertools import groupby
+    cards = DashboardCard.objects.filter(is_active=True)
+    grouped = []
+    for section, items in groupby(cards, key=lambda c: c.section):
+        grouped.append((section, list(items)))
+    return render(request, 'main/dashboard.html', {'card_sections': grouped})
 
 
 @login_required
