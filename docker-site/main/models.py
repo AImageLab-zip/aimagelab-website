@@ -15,6 +15,7 @@ class UserProfile(models.Model):
         ('researcher_a', 'Researcher (RTD-A)'),
         ('researcher_b', 'Researcher (RTD-B)'),
         ('postdoc', 'Postdoctoral Researcher'),
+        ('secretariat_staff', 'Secretariat Staff'),
         ('research_fellow', 'Research Fellow'),
         ('collaborator', 'External Collaborator'),
         ('phd', 'PhD Student'),

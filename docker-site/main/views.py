@@ -479,7 +479,7 @@ def people(request):
     grouped_profiles = {
         'professors': profiles.filter(role__in=['rector', 'full_professor', 'assoc_professor', 'researcher_tt', 'researcher_b', 'researcher_a']).order_by(-role_order, '-display_order', 'user__last_name'),
         'phd_students_and_co': profiles.filter(role__in=['phd', 'research_fellow', 'postdoc', 'collaborator']).order_by(-role_order,'-display_order', 'user__last_name'),
-        'staff': profiles.filter(role__in=['staff']).order_by(-role_order, '-display_order', 'user__last_name'),
+        'staff': profiles.filter(role__in=['secretariat_staff', 'staff']).order_by(-role_order, '-display_order', 'user__last_name'),
         'alumni': profiles.filter(role__in=['past_member']).order_by(-role_order, '-display_order', 'user__last_name'),
     }
     
