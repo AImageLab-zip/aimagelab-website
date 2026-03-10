@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink
+from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea
 
 
 @admin.register(UserProfile)
@@ -226,6 +226,50 @@ class RoomReservationAdmin(admin.ModelAdmin):
         }),
         ('Time Slot', {
             'fields': ('start_time', 'end_time')
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(HistoryMilestone)
+class HistoryMilestoneAdmin(admin.ModelAdmin):
+    list_display = ('year_label', 'title', 'icon', 'display_order')
+    list_editable = ('display_order',)
+    search_fields = ('title', 'description')
+    fieldsets = (
+        ('Content', {
+            'fields': ('year_label', 'title', 'icon', 'description')
+        }),
+        ('Display', {
+            'fields': ('display_order',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(ResearchArea)
+class ResearchAreaAdmin(admin.ModelAdmin):
+    list_display = ('title', 'area_id', 'icon', 'color', 'display_order')
+    list_editable = ('display_order', 'color')
+    search_fields = ('title', 'homepage_caption', 'intro', 'detail')
+    prepopulated_fields = {'area_id': ('title',)}
+    fieldsets = (
+        ('Identity', {
+            'fields': ('title', 'area_id', 'icon', 'color')
+        }),
+        ('Text Content', {
+            'fields': ('homepage_caption', 'intro', 'detail', 'keywords')
+        }),
+        ('Display', {
+            'fields': ('display_order',)
         }),
         ('Metadata', {
             'fields': ('created_at', 'updated_at'),

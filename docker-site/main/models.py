@@ -405,3 +405,79 @@ class Project(models.Model):
     def __str__(self):
         return f"{self.title} ({self.name})"
 
+
+class HistoryMilestone(models.Model):
+    """Timeline milestone for the lab history section"""
+
+    year_label = models.CharField(
+        max_length=20,
+        help_text="Year or period label (e.g., '1999', '2000s', '2022–2023')"
+    )
+    title = models.CharField(max_length=200, help_text="Short headline (e.g., 'Foundation')")
+    icon = models.CharField(
+        max_length=50, default='flag',
+        help_text="Lucide icon name (e.g., flag, trending-up, globe, cpu, zap)"
+    )
+    description = models.TextField(help_text="Body text for this milestone")
+    display_order = models.IntegerField(default=0, help_text="Order on the page (lower first)")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['display_order', 'year_label']
+        verbose_name = "History Milestone"
+        verbose_name_plural = "History Milestones"
+
+    def __str__(self):
+        return f"{self.year_label} — {self.title}"
+
+
+class ResearchArea(models.Model):
+    """Research area displayed on the home page and research page"""
+
+    COLOR_CHOICES = [
+        ('primary', 'Primary'),
+        ('secondary', 'Secondary'),
+        ('success', 'Success'),
+        ('warning', 'Warning'),
+        ('error', 'Error'),
+    ]
+
+    area_id = models.SlugField(
+        unique=True,
+        help_text="URL anchor slug (e.g., 'vision-language')"
+    )
+    title = models.CharField(max_length=200, help_text="Research area name")
+    icon = models.CharField(
+        max_length=50, default='sparkles',
+        help_text="Lucide icon name (e.g., images, waypoints, microscope)"
+    )
+    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default='primary')
+    homepage_caption = models.TextField(
+        help_text="Short description shown on the homepage card"
+    )
+    intro = models.TextField(
+        help_text="Medium-length intro paragraph for the research page"
+    )
+    detail = models.TextField(
+        help_text="Longer detailed paragraph for the research page"
+    )
+    keywords = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Comma-separated keywords (linked to publications search)"
+    )
+    display_order = models.IntegerField(default=0, help_text="Order on the page (lower first)")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['display_order']
+        verbose_name = "Research Area"
+        verbose_name_plural = "Research Areas"
+
+    def __str__(self):
+        return self.title
+

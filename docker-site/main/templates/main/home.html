@@ -171,53 +171,15 @@
     <div class="container mx-auto px-6">
         <h2 class="h2-home">Research Areas</h2>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
-            <a href="{% url 'research' %}#vision-language" class="card bg-base-200 hover:bg-base-300 transition-colors">
+            {% for area in research_areas %}
+            <a href="{% url 'research' %}#{{ area.area_id }}" class="card bg-base-200 hover:bg-base-300 transition-colors">
                 <div class="card-body">
-                    <i data-lucide="images" class="text-primary w-12 h-12 stroke-1"></i>
-                    <h3 class="card-title text-primary">Vision & Language</h3>
-                    <p class="hidden md:block">Multimodal models combining vision and natural language understanding for advanced AI applications.</p>
+                    <i data-lucide="{{ area.icon }}" class="text-primary w-12 h-12 stroke-1"></i>
+                    <h3 class="card-title text-primary">{{ area.title }}</h3>
+                    <p class="hidden md:block">{{ area.homepage_caption }}</p>
                 </div>
             </a>
-
-            <a href="{% url 'research' %}#ml-dl" class="card bg-base-200 hover:bg-base-300 transition-colors">
-                <div class="card-body">
-                    <i data-lucide="waypoints" class="text-primary w-12 h-12 stroke-1"></i>
-                    <h3 class="card-title text-primary">ML & DL</h3>
-                    <p class="hidden md:block">Development of novel algorithms and architectures for supervised, unsupervised, and reinforcement learning, model merging, and PEFT.</p>
-                </div>
-            </a>
-
-            <a href="{% url 'research' %}#medical-imaging" class="card bg-base-200 hover:bg-base-300 transition-colors">
-                <div class="card-body">
-                    <i data-lucide="microscope" class="text-primary w-12 h-12 stroke-1"></i>
-                    <h3 class="card-title text-primary">Medical Imaging</h3>
-                    <p class="hidden md:block">Deep learning applications for medical image analysis and clinical decision support.</p>
-                </div>
-            </a>
-
-            <a href="{% url 'research' %}#computer-vision" class="card bg-base-200 hover:bg-base-300 transition-colors">
-                <div class="card-body">
-                    <i data-lucide="aperture" class="text-primary w-12 h-12 stroke-1"></i>
-                    <h3 class="card-title text-primary">Computer Vision</h3>
-                    <p class="hidden md:block">Advanced algorithms for image and video analysis, object recognition, and scene understanding.</p>
-                </div>
-            </a>
-
-            <a href="{% url 'research' %}#iot-sensors" class="card bg-base-200 hover:bg-base-300 transition-colors">
-                <div class="card-body">
-                    <i data-lucide="wifi-cog" class="text-primary w-12 h-12 stroke-1"></i>
-                    <h3 class="card-title text-primary">IoT & Embedded Sensors</h3>
-                    <p class="hidden md:block">Design and deployment of IoT systems and embedded sensors for data collection and analysis.</p>
-                </div>
-            </a>
-
-            <a href="{% url 'research' %}#robotics-hri" class="card bg-base-200 hover:bg-base-300 transition-colors">
-                <div class="card-body">
-                    <i data-lucide="bot" class="text-primary w-12 h-12 stroke-1"></i>
-                    <h3 class="card-title text-primary">Robotics & HRI</h3>
-                    <p class="hidden md:block">Human-robot interaction and autonomous systems for real-world applications.</p>
-                </div>
-            </a>
+            {% endfor %}
         </div>
     </div>
 </section>

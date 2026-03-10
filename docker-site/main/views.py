@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import json
-from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink
+from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField
 from datetime import datetime, timedelta
@@ -58,12 +58,15 @@ def home(request):
         is_visible=True
     ).exclude(user__username='rcucchiara').exclude(avatar='', avatar_iris='').order_by('?')[:2])
     
+    research_areas = ResearchArea.objects.all()
+
     return render(request, 'main/home.html', {
         'latest_posts': latest_posts,
         'total_users': total_users,
         'total_publications': total_publications,
         'active_projects': active_projects,
         'featured_profiles': featured_profiles,
+        'research_areas': research_areas,
     })
 
 def contacts(request):
@@ -72,7 +75,12 @@ def contacts(request):
 
 def research(request):
     """Research areas page view."""
-    return render(request, 'main/research.html')
+    milestones = HistoryMilestone.objects.all()
+    research_areas = ResearchArea.objects.all()
+    return render(request, 'main/research.html', {
+        'milestones': milestones,
+        'research_areas': research_areas,
+    })
 
 def news(request):
     """News/Blog page view with pagination and search."""
