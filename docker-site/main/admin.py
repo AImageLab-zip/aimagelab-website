@@ -1,6 +1,10 @@
 from django.contrib import admin
 from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard
 
+admin.site.site_header = "AImageLab Admin"
+admin.site.site_title = "AImageLab Admin"
+admin.site.index_title = "Site Management"
+
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):

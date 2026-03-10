@@ -49,6 +49,7 @@ CSRF_COOKIE_SAMESITE = "Lax"
 
 # Application definition
 INSTALLED_APPS = [
+    "main.apps.MainConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -59,7 +60,6 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "phonenumber_field",
     "mozilla_django_oidc",  # OIDC authentication
-    "main.apps.MainConfig",
     'markdownify.apps.MarkdownifyConfig',
 ]
 
