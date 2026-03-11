@@ -84,7 +84,7 @@ class Command(BaseCommand):
                 'title': 'PNRR Projects',
                 'icon': 'file-text',
                 'description': (
-                    'Partecipated in PNRR projects (ITSERR, Ecosister, Fit4MedRob, FAIR as a CNR unit).'
+                    'Participated in PNRR projects (ITSERR, Ecosister, Fit4MedRob, FAIR as a CNR unit).'
                 ),
                 'display_order': 70,
             },
