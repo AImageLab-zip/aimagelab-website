@@ -1,0 +1,184 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+
+<style>
+    :root,
+    [data-theme="light"] {
+        --aimagelab-primary: #6b1d2a;      /* dark maroon from oklab primary */
+        --aimagelab-primary-light: #8a2a3a;
+        --aimagelab-primary-dark: #4e1420;
+        --aimagelab-secondary: #c4451a;    /* reddish-orange secondary */
+        --aimagelab-accent: #F04E22;       /* legacy red accent */
+        --aimagelab-neutral: #3a3a3a;
+        --aimagelab-bg: #fafafa;
+        --aimagelab-row-selected: #f5e6e9;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --aimagelab-primary: #9b2a40;      /* lighter maroon for dark mode */
+            --aimagelab-primary-light: #bf3752;
+            --aimagelab-primary-dark: #6b1d2a;
+            --aimagelab-secondary: #e66033;
+            --aimagelab-accent: #ff6e45;
+            --aimagelab-neutral: #e0e0e0;
+            --aimagelab-bg: #121212;
+            --aimagelab-row-selected: #3a151d;
+        }
+    }
+
+    [data-theme="dark"] {
+        --aimagelab-primary: #9b2a40;      /* lighter maroon for dark mode */
+        --aimagelab-primary-light: #bf3752;
+        --aimagelab-primary-dark: #6b1d2a;
+        --aimagelab-secondary: #e66033;
+        --aimagelab-accent: #ff6e45;
+        --aimagelab-neutral: #e0e0e0;
+        --aimagelab-bg: #121212;
+        --aimagelab-row-selected: #3a151d;
+    }
+
+/* Header */
+#header {
+    background: linear-gradient(135deg, var(--aimagelab-primary) 70%, var(--aimagelab-accent)) !important;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#header a:link, #header a:visited {
+    color: #fff;
+}
+
+/* Branding area */
+.aimagelab-branding {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.02em;
+}
+
+.aimagelab-logo {
+    height: 28px;
+    width: auto;
+}
+
+/* Links */
+a:link, a:visited {
+    color: var(--aimagelab-primary);
+}
+
+a:hover {
+    color: var(--aimagelab-secondary);
+}
+
+/* Module headers */
+.module h2, .module caption {
+    background: var(--aimagelab-primary) !important;
+    color: #fff !important;
+    font-family: "Inter", sans-serif;
+}
+
+/* Buttons */
+.submit-row input[type="submit"],
+input[type="submit"],
+.button,
+a.button {
+    background: var(--aimagelab-primary) !important;
+    border: none;
+    font-family: "Inter", sans-serif;
+}
+
+.submit-row input[type="submit"]:hover,
+input[type="submit"]:hover,
+.button:hover,
+a.button:hover {
+    background: var(--aimagelab-primary-light) !important;
+}
+
+input[type="submit"].default {
+    background: var(--aimagelab-primary) !important;
+}
+
+input[type="submit"].default:hover {
+    background: var(--aimagelab-primary-light) !important;
+}
+
+/* Delete / danger buttons keep their red but use our accent */
+.deletelink,
+.submit-row a.deletelink {
+    color: var(--aimagelab-accent) !important;
+}
+
+.submit-row a.deletelink:hover {
+    color: var(--aimagelab-secondary) !important;
+}
+
+/* Breadcrumbs */
+div.breadcrumbs {
+    background: var(--aimagelab-primary-dark) !important;
+    font-family: "Inter", sans-serif;
+}
+
+div.breadcrumbs a {
+    color: #e0c5ca !important;
+}
+
+div.breadcrumbs a:hover {
+    color: #fff !important;
+}
+
+/* Object tools */
+.object-tools a:link,
+.object-tools a:visited {
+    background: var(--aimagelab-primary) !important;
+    border-radius: 4px;
+}
+
+.object-tools a:hover {
+    background: var(--aimagelab-primary-light) !important;
+}
+
+/* Calendar & date shortcuts */
+.calendarbox .calendarnav-previous,
+.calendarbox .calendarnav-next {
+    background: var(--aimagelab-primary) !important;
+}
+
+/* Selected row highlight */
+.results table tbody tr.selected {
+    background: var(--aimagelab-row-selected);
+}
+
+/* General body font */
+body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#content h1 {
+    font-family: "Inter", sans-serif;
+    color: var(--aimagelab-neutral);
+}
+
+/* Active filter highlight */
+.changelist-filter li.selected a {
+    color: var(--aimagelab-primary) !important;
+    font-weight: 600;
+}
+
+</style>
+
+
+
+{% endblock %}
+
+{% block branding %}
+<div class="aimagelab-branding">
+    <img src="{% static 'main/assets/logo_w.svg' %}" alt="AImageLab" class="aimagelab-logo">
+    <span>{{ site_header|default:_('Django administration') }}</span>
+</div>
+{% endblock %}

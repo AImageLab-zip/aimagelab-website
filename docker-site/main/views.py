@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import json
-from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink
+from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField
 from datetime import datetime, timedelta
@@ -58,12 +58,15 @@ def home(request):
         is_visible=True
     ).exclude(user__username='rcucchiara').exclude(avatar='', avatar_iris='').order_by('?')[:2])
     
+    research_areas = ResearchArea.objects.all()
+
     return render(request, 'main/home.html', {
         'latest_posts': latest_posts,
         'total_users': total_users,
         'total_publications': total_publications,
         'active_projects': active_projects,
         'featured_profiles': featured_profiles,
+        'research_areas': research_areas,
     })
 
 def contacts(request):
@@ -72,7 +75,12 @@ def contacts(request):
 
 def research(request):
     """Research areas page view."""
-    return render(request, 'main/research.html')
+    milestones = HistoryMilestone.objects.all()
+    research_areas = ResearchArea.objects.all()
+    return render(request, 'main/research.html', {
+        'milestones': milestones,
+        'research_areas': research_areas,
+    })
 
 def news(request):
     """News/Blog page view with pagination and search."""
@@ -471,7 +479,7 @@ def people(request):
     grouped_profiles = {
         'professors': profiles.filter(role__in=['rector', 'full_professor', 'assoc_professor', 'researcher_tt', 'researcher_b', 'researcher_a']).order_by(-role_order, '-display_order', 'user__last_name'),
         'phd_students_and_co': profiles.filter(role__in=['phd', 'research_fellow', 'postdoc', 'collaborator']).order_by(-role_order,'-display_order', 'user__last_name'),
-        'staff': profiles.filter(role__in=['staff']).order_by(-role_order, '-display_order', 'user__last_name'),
+        'staff': profiles.filter(role__in=['secretariat_staff', 'staff']).order_by(-role_order, '-display_order', 'user__last_name'),
         'alumni': profiles.filter(role__in=['past_member']).order_by(-role_order, '-display_order', 'user__last_name'),
     }
     
@@ -508,7 +516,12 @@ def logout_view(request):
 @login_required
 def dashboard(request):
     """Dashboard view (requires login)."""
-    return render(request, 'main/dashboard.html')
+    from itertools import groupby
+    cards = DashboardCard.objects.filter(is_active=True)
+    grouped = []
+    for section, items in groupby(cards, key=lambda c: c.section):
+        grouped.append((section, list(items)))
+    return render(request, 'main/dashboard.html', {'card_sections': grouped})
 
 
 @login_required

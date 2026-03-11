@@ -15,6 +15,7 @@ class UserProfile(models.Model):
         ('researcher_a', 'Researcher (RTD-A)'),
         ('researcher_b', 'Researcher (RTD-B)'),
         ('postdoc', 'Postdoctoral Researcher'),
+        ('secretariat_staff', 'Secretariat Staff'),
         ('research_fellow', 'Research Fellow'),
         ('collaborator', 'External Collaborator'),
         ('phd', 'PhD Student'),
@@ -404,4 +405,149 @@ class Project(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.name})"
+
+
+class HistoryMilestone(models.Model):
+    """Timeline milestone for the lab history section"""
+
+    year_label = models.CharField(
+        max_length=20,
+        help_text="Year or period label (e.g., '1999', '2000s', '2022–2023')"
+    )
+    title = models.CharField(max_length=200, help_text="Short headline (e.g., 'Foundation')")
+    icon = models.CharField(
+        max_length=50, default='flag',
+        help_text="Lucide icon name (e.g., flag, trending-up, globe, cpu, zap)"
+    )
+    description = models.TextField(help_text="Body text for this milestone")
+    display_order = models.IntegerField(default=0, help_text="Order on the page (lower first)")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['display_order', 'year_label']
+        verbose_name = "History Milestone"
+        verbose_name_plural = "History Milestones"
+
+    def __str__(self):
+        return f"{self.year_label} — {self.title}"
+
+
+class ResearchArea(models.Model):
+    """Research area displayed on the home page and research page"""
+
+    COLOR_CHOICES = [
+        ('primary', 'Primary'),
+        ('secondary', 'Secondary'),
+        ('success', 'Success'),
+        ('warning', 'Warning'),
+        ('error', 'Error'),
+    ]
+
+    area_id = models.SlugField(
+        unique=True,
+        help_text="URL anchor slug (e.g., 'vision-language')"
+    )
+    title = models.CharField(max_length=200, help_text="Research area name")
+    icon = models.CharField(
+        max_length=50, default='sparkles',
+        help_text="Lucide icon name (e.g., images, waypoints, microscope)"
+    )
+    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default='primary')
+    homepage_caption = models.TextField(
+        help_text="Short description shown on the homepage card"
+    )
+    intro = models.TextField(
+        help_text="Medium-length intro paragraph for the research page"
+    )
+    detail = models.TextField(
+        help_text="Longer detailed paragraph for the research page"
+    )
+    keywords = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Comma-separated keywords (linked to publications search)"
+    )
+    display_order = models.IntegerField(default=0, help_text="Order on the page (lower first)")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['display_order']
+        verbose_name = "Research Area"
+        verbose_name_plural = "Research Areas"
+
+    def __str__(self):
+        return self.title
+
+
+class DashboardCard(models.Model):
+    """Cards displayed on the user dashboard, manageable from the admin."""
+
+    LOGO_TYPE_CHOICES = [
+        ('external', 'External URL'),
+        ('lucide', 'Lucide Icon'),
+        ('upload', 'Uploaded Image'),
+    ]
+
+    LINK_TYPE_CHOICES = [
+        ('external', 'External Link'),
+        ('file', 'Downloadable File'),
+    ]
+
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    section = models.CharField(
+        max_length=200,
+        help_text="Dashboard section heading to group cards under (e.g. 'At a Glance')"
+    )
+
+    # Logo options
+    logo_type = models.CharField(max_length=10, choices=LOGO_TYPE_CHOICES, default='external')
+    logo_external_url = models.URLField(blank=True, help_text="External URL to a logo image")
+    logo_lucide_icon = models.CharField(max_length=100, blank=True, help_text="Lucide icon name (e.g. coins, sparkles)")
+    logo_upload = models.ImageField(upload_to='dashboard_logos/', blank=True, help_text="Uploaded logo image")
+
+    # Link options
+    link_type = models.CharField(max_length=10, choices=LINK_TYPE_CHOICES, default='external')
+    link_url = models.URLField(blank=True, help_text="External URL for the card link")
+    link_file = models.FileField(upload_to='dashboard_files/', blank=True, help_text="File available for download")
+
+    display_order = models.IntegerField(default=0, help_text="Order within the section (lower first)")
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['section', 'display_order']
+        verbose_name = "Dashboard Card"
+        verbose_name_plural = "Dashboard Cards"
+
+    def __str__(self):
+        return f"{self.title} ({self.section})"
+
+    @property
+    def resolved_logo(self):
+        """Return the logo value compatible with the dashboard_card template."""
+        if self.logo_type == 'lucide' and self.logo_lucide_icon:
+            return f"lucide:{self.logo_lucide_icon}"
+        if self.logo_type == 'upload' and self.logo_upload:
+            return self.logo_upload.url
+        if self.logo_type == 'external' and self.logo_external_url:
+            return self.logo_external_url
+        return ''
+
+    @property
+    def resolved_link(self):
+        """Return the URL for the card."""
+        if self.link_type == 'file' and self.link_file:
+            return self.link_file.url
+        return self.link_url
+
+    @property
+    def is_download(self):
+        return self.link_type == 'file' and self.link_file
 

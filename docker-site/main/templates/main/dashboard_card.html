@@ -1,4 +1,4 @@
-    <a href="{{ link }}" class="group card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-all">
+    <a href="{{ link }}" {% if is_download %}download{% endif %} class="group card bg-base-200 border-1 border-base-200 hover:border-base-300 transition-all">
     <div class="card-body gap-4">
         <div class="flex items-start gap-4">
             <div class="w-12 h-12 rounded-xl bg-base-300 flex items-center justify-center overflow-hidden">
@@ -22,7 +22,11 @@
             </div>
         </div>
         <div class="card-actions justify-end">
+            {% if is_download %}
+            <span class="text-sm text-primary group-hover:underline">Download the resource ↓</span>
+            {% else %}
             <span class="text-sm text-primary group-hover:underline">Go to the resource ↗</span>
+            {% endif %}
         </div>
     </div>
 </a>

@@ -1,5 +1,9 @@
 from django.contrib import admin
-from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink
+from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard
+
+admin.site.site_header = "AImageLab Admin"
+admin.site.site_title = "AImageLab Admin"
+admin.site.index_title = "Site Management"
 
 
 @admin.register(UserProfile)
@@ -226,6 +230,79 @@ class RoomReservationAdmin(admin.ModelAdmin):
         }),
         ('Time Slot', {
             'fields': ('start_time', 'end_time')
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(HistoryMilestone)
+class HistoryMilestoneAdmin(admin.ModelAdmin):
+    list_display = ('year_label', 'title', 'icon', 'display_order')
+    list_editable = ('display_order',)
+    search_fields = ('title', 'description')
+    fieldsets = (
+        ('Content', {
+            'fields': ('year_label', 'title', 'icon', 'description')
+        }),
+        ('Display', {
+            'fields': ('display_order',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(ResearchArea)
+class ResearchAreaAdmin(admin.ModelAdmin):
+    list_display = ('title', 'area_id', 'icon', 'color', 'display_order')
+    list_editable = ('display_order', 'color')
+    search_fields = ('title', 'homepage_caption', 'intro', 'detail')
+    prepopulated_fields = {'area_id': ('title',)}
+    fieldsets = (
+        ('Identity', {
+            'fields': ('title', 'area_id', 'icon', 'color')
+        }),
+        ('Text Content', {
+            'fields': ('homepage_caption', 'intro', 'detail', 'keywords')
+        }),
+        ('Display', {
+            'fields': ('display_order',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(DashboardCard)
+class DashboardCardAdmin(admin.ModelAdmin):
+    list_display = ('title', 'section', 'link_type', 'logo_type', 'display_order', 'is_active')
+    list_filter = ('section', 'link_type', 'logo_type', 'is_active')
+    list_editable = ('display_order', 'is_active')
+    search_fields = ('title', 'description', 'section')
+    fieldsets = (
+        ('Content', {
+            'fields': ('title', 'description', 'section')
+        }),
+        ('Logo', {
+            'fields': ('logo_type', 'logo_external_url', 'logo_lucide_icon', 'logo_upload'),
+            'description': 'Choose a logo type and fill the corresponding field.'
+        }),
+        ('Link', {
+            'fields': ('link_type', 'link_url', 'link_file'),
+            'description': 'Choose link type: external URL or a downloadable file.'
+        }),
+        ('Display', {
+            'fields': ('display_order', 'is_active')
         }),
         ('Metadata', {
             'fields': ('created_at', 'updated_at'),
