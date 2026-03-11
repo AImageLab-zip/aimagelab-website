@@ -214,7 +214,7 @@ class Command(BaseCommand):
                     'possible\u2014and studies synthetic medical image generation to augment scarce data, probe '
                     'failure modes, and improve generalization.'
                 ),
-                'keywords': 'Segmentation,Benchmarking,Synthetic Image Generation,Multimodal Fusion,Missing Modalities',
+                'keywords': 'segmentation,benchmarking,synthetic-image-generation,multimodal-fusion,missing-modalities',
                 'display_order': 30,
             },
             {
@@ -272,7 +272,7 @@ class Command(BaseCommand):
                     'Depth Estimation, precision agriculture, Industrial IoT, and wearable health-sensing '
                     'platforms.'
                 ),
-                'keywords': 'Embedded AI,model-compression,sensor-fusion,TinyML,AI on microcontrollers',
+                'keywords': 'embedded-ai,model-compression,sensor-fusion,tinyml,ai-on-microcontrollers',
                 'display_order': 50,
             },
             {
@@ -341,9 +341,9 @@ class Command(BaseCommand):
                     'processes through interpretable and robust AI methodologies.'
                 ),
                 'keywords': (
-                    'Bioinformatics,Computational Biology,Multimodal Data Integration,Precision Medicine,'
-                    'Genomics,Proteomics,Whole Slide Imaging,Electronic Health Records,Clinical Text Mining,'
-                    'Therapy Response Prediction,ATMPs,Missing Modalities'
+                    'bioinformatics,computational-biology,multimodal-data-integration,precision-medicine,'
+                    'genomics,proteomics,whole-slide-imaging,electronic-health-records,clinical-text-mining,'
+                    'therapy-response-prediction,atmps,missing-modalities'
                 ),
                 'display_order': 70,
             },
