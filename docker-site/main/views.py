@@ -803,23 +803,11 @@ def rooms_calendar(request):
     """Display calendar view of all meeting rooms and their reservations."""
     rooms = MeetingRoom.objects.filter(is_active=True).order_by('name')
     
-    # Get date range from query params or default to current week
-    start_date = request.GET.get('start')
-    end_date = request.GET.get('end')
-    
-    if start_date and end_date:
-        try:
-            start_date = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
-            end_date = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
-        except ValueError:
-            # Default to current week if parsing fails
-            today = datetime.now()
-            start_date = today - timedelta(days=today.weekday())
-            end_date = start_date + timedelta(days=7)
-    else:
-        today = datetime.now()
-        start_date = today - timedelta(days=today.weekday())
-        end_date = start_date + timedelta(days=7)
+    # Load a wide date range (6 months back, 12 months forward) to support calendar navigation
+    # This ensures all reservations are available when users navigate to different dates
+    today = datetime.now()
+    start_date = today - timedelta(days=180)  # 6 months back
+    end_date = today + timedelta(days=365)     # 12 months forward
     
     # Get all reservations in the date range
     reservations = RoomReservation.objects.filter(
