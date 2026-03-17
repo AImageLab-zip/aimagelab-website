@@ -68,6 +68,34 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
             </div>
             {% endif %}
 
+            <!-- Wiki Quick Access -->
+            <div class="card bg-base-200 mt-6">
+                <div class="card-body">
+                    <h2 class="card-title text-primary mb-4">
+                        <i data-lucide="book-open" class="w-6 h-6"></i>
+                        Lab Wiki
+                    </h2>
+                    <p class="text-base-content opacity-80 mb-4">
+                        Access the lab's internal knowledge base. Share documentation, guides, and resources with your team.
+                    </p>
+                    <div class="flex gap-3">
+                        <a href="{% url 'wiki_home' %}" class="btn btn-primary">
+                            <i data-lucide="book-open" class="w-4 h-4"></i>
+                            Browse Wiki
+                        </a>
+                        <a href="{% url 'wiki_search' %}" class="btn btn-ghost">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                            Search
+                        </a>
+                        <a href="{% url 'wiki_create' %}" class="btn btn-ghost">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            New Page
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
             {% for section_name, cards in card_sections %}
             <h2 class="text-2xl font-bold text-primary mt-8 mb-4">
                 {{ section_name }}:

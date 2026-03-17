@@ -1,0 +1,108 @@
+{% extends 'main/base_with_sidebar.html' %}
+
+{% block title %}History: {{ page.title }} - Wiki - AImageLab{% endblock %}
+
+{% block hero_title %}Version History: {{ page.title }}{% endblock %}
+
+{% block hero_description %}
+View all changes made to this page over time.
+{% endblock %}
+
+{% block main_content %}
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="card-title text-primary">
+                    <i data-lucide="history" class="w-6 h-6"></i>
+                    Edit History
+                </h2>
+                <a href="{% url 'wiki_page' page.slug %}" class="btn btn-sm btn-ghost">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    Back to Page
+                </a>
+            </div>
+
+            {% if versions %}
+                <div class="space-y-3">
+                    {% for version in versions %}
+                        <div class="border-l-4 border-primary pl-4 py-3 bg-base-300 rounded-r-lg">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <i data-lucide="user" class="w-4 h-4"></i>
+                                        <span class="font-semibold">{{ version.edited_by.username|default:"Unknown" }}</span>
+                                        <span class="text-sm text-base-content opacity-60">
+                                            {{ version.edited_at|date:"F d, Y H:i" }}
+                                        </span>
+                                    </div>
+                                    {% if version.change_summary %}
+                                        <p class="text-sm text-base-content opacity-80">
+                                            {{ version.change_summary }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'wiki_version' page.slug version.id %}" class="btn btn-sm btn-ghost">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                    View
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if versions.has_other_pages %}
+                <div class="flex justify-center mt-6">
+                    <div class="join">
+                        {% if versions.has_previous %}
+                            <a href="?page={{ versions.previous_page_number }}" class="join-item btn">«</a>
+                        {% else %}
+                            <button class="join-item btn btn-disabled">«</button>
+                        {% endif %}
+                        
+                        <button class="join-item btn">
+                            Page {{ versions.number }} of {{ versions.paginator.num_pages }}
+                        </button>
+                        
+                        {% if versions.has_next %}
+                            <a href="?page={{ versions.next_page_number }}" class="join-item btn">»</a>
+                        {% else %}
+                            <button class="join-item btn btn-disabled">»</button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="alert">
+                    <i data-lucide="info" class="w-5 h-5"></i>
+                    <span>No version history available for this page yet.</span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block sidebar_content %}
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-4">
+                <i data-lucide="file-text" class="w-6 h-6"></i>
+                Page Info
+            </h2>
+            <div class="space-y-2 text-sm">
+                <div>
+                    <span class="font-semibold">Title:</span>
+                    <span class="block mt-1 ml-2">{{ page.title }}</span>
+                </div>
+                <div>
+                    <span class="font-semibold">Created:</span>
+                    <span class="block mt-1 ml-2">{{ page.created_at|date:"F d, Y" }}</span>
+                </div>
+                <div>
+                    <span class="font-semibold">Last updated:</span>
+                    <span class="block mt-1 ml-2">{{ page.updated_at|date:"F d, Y H:i" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

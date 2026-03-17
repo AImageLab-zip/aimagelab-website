@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard
+from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
 
 admin.site.site_header = "AImageLab Admin"
 admin.site.site_title = "AImageLab Admin"
@@ -311,3 +311,126 @@ class DashboardCardAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('created_at', 'updated_at')
 
+
+
+@admin.register(WikiPage)
+class WikiPageAdmin(admin.ModelAdmin):
+    list_display = ('title', 'slug', 'parent', 'display_order', 'is_published', 'updated_at', 'updated_by')
+    list_filter = ('is_published', 'created_at', 'updated_at')
+    search_fields = ('title', 'slug', 'content')
+    list_editable = ('display_order', 'is_published')
+    prepopulated_fields = {'slug': ('title',)}
+    autocomplete_fields = ['created_by', 'updated_by', 'parent']
+    fieldsets = (
+        ('Page Content', {
+            'fields': ('title', 'slug', 'content')
+        }),
+        ('Organization', {
+            'fields': ('parent', 'display_order', 'is_published')
+        }),
+        ('Authorship', {
+            'fields': ('created_by', 'updated_by')
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(WikiPageVersion)
+class WikiPageVersionAdmin(admin.ModelAdmin):
+    list_display = ('page', 'edited_by', 'edited_at', 'change_summary_short')
+    list_filter = ('edited_at', 'edited_by')
+    search_fields = ('page__title', 'title', 'content', 'change_summary')
+    date_hierarchy = 'edited_at'
+    autocomplete_fields = ['page', 'edited_by']
+    fieldsets = (
+        ('Version Info', {
+            'fields': ('page', 'edited_by', 'edited_at', 'change_summary')
+        }),
+        ('Content', {
+            'fields': ('title', 'content'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('edited_at',)
+    
+    def change_summary_short(self, obj):
+        return obj.change_summary[:50] + '...' if len(obj.change_summary) > 50 else obj.change_summary
+    change_summary_short.short_description = 'Change Summary'
+    
+    def has_add_permission(self, request):
+        # Prevent manual creation of versions (they're auto-created)
+        return False
+
+
+@admin.register(WikiPageChangeRequest)
+class WikiPageChangeRequestAdmin(admin.ModelAdmin):
+    list_display = ('page', 'requested_by', 'status', 'created_at', 'reviewed_by')
+    list_filter = ('status', 'created_at', 'reviewed_at')
+    search_fields = ('page__title', 'requested_by__username', 'change_description', 'proposed_content')
+    date_hierarchy = 'created_at'
+    autocomplete_fields = ['page', 'requested_by', 'reviewed_by']
+    fieldsets = (
+        ('Request Details', {
+            'fields': ('page', 'requested_by', 'created_at')
+        }),
+        ('Proposed Changes', {
+            'fields': ('proposed_title', 'proposed_content', 'change_description')
+        }),
+        ('Review', {
+            'fields': ('status', 'reviewed_by', 'reviewed_at', 'review_notes')
+        }),
+        ('Metadata', {
+            'fields': ('updated_at',),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+    
+    actions = ['approve_requests', 'reject_requests']
+    
+    def approve_requests(self, request, queryset):
+        from datetime import datetime
+        for change_request in queryset.filter(status='pending'):
+            change_request.status = 'approved'
+            change_request.reviewed_by = request.user
+            change_request.reviewed_at = datetime.now()
+            change_request.save()
+            change_request.apply_changes()
+        self.message_user(request, f"{queryset.count()} change request(s) approved.")
+    approve_requests.short_description = "Approve selected change requests"
+    
+    def reject_requests(self, request, queryset):
+        from datetime import datetime
+        for change_request in queryset.filter(status='pending'):
+            change_request.status = 'rejected'
+            change_request.reviewed_by = request.user
+            change_request.reviewed_at = datetime.now()
+            change_request.save()
+        self.message_user(request, f"{queryset.count()} change request(s) rejected.")
+    reject_requests.short_description = "Reject selected change requests"
+
+
+@admin.register(WikiImage)
+class WikiImageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'description', 'uploaded_by', 'uploaded_at', 'image_thumbnail')
+    list_filter = ('uploaded_at', 'uploaded_by')
+    search_fields = ('description',)
+    readonly_fields = ('uploaded_at', 'image_preview')
+    
+    def image_thumbnail(self, obj):
+        if obj.image:
+            return f'<img src="{obj.image.url}" style="max-height: 50px; max-width: 100px;" />'
+        return '-'
+    image_thumbnail.short_description = 'Thumbnail'
+    image_thumbnail.allow_tags = True
+    
+    def image_preview(self, obj):
+        if obj.image:
+            return f'<img src="{obj.image.url}" style="max-height: 300px; max-width: 500px;" />'
+        return '-'
+    image_preview.short_description = 'Preview'
+    image_preview.allow_tags = True

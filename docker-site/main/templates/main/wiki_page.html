@@ -1,0 +1,173 @@
+{% extends 'main/base_with_sidebar.html' %}
+{% load static %}
+{% load markdownify %}
+
+{% block title %}{{ page.title }} - Wiki - AImageLab{% endblock %}
+
+{% block hero_title %}{{ page.title }}{% endblock %}
+
+{% block hero_description %}
+<!-- Breadcrumbs -->
+<div class="breadcrumbs text-sm">
+    <ul>
+        <li><a href="{% url 'wiki_home' %}">Wiki Home</a></li>
+        {% for breadcrumb in breadcrumbs %}
+            {% if forloop.last %}
+                <li>{{ breadcrumb.title }}</li>
+            {% else %}
+                <li><a href="{% url 'wiki_page' breadcrumb.slug %}">{{ breadcrumb.title }}</a></li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
+
+{% block main_content %}
+    <!-- Page Content -->
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <div class="prose max-w-none">
+                {{ page.content|markdownify }}
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="text-sm text-base-content opacity-60">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                    Created by {{ page.created_by.username|default:"Unknown" }} on {{ page.created_at|date:"F d, Y" }}
+                </div>
+                {% if page.updated_by %}
+                <div class="flex items-center gap-2">
+                    <i data-lucide="edit" class="w-4 h-4"></i>
+                    Last edited by {{ page.updated_by.username }} on {{ page.updated_at|date:"F d, Y H:i" }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Child Pages -->
+    {% if children %}
+    <div class="card bg-base-200 mt-6">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-4">
+                <i data-lucide="folder" class="w-6 h-6"></i>
+                Sub-pages
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {% for child in children %}
+                    <a href="{% url 'wiki_page' child.slug %}" class="card bg-base-300 hover:bg-base-100 transition-colors">
+                        <div class="card-body p-4">
+                            <h3 class="font-semibold">{{ child.title }}</h3>
+                            <p class="text-sm text-base-content opacity-60">
+                                Updated {{ child.updated_at|timesince }} ago
+                            </p>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Pending Change Requests -->
+    {% if pending_requests and user.is_staff %}
+    <div class="alert alert-warning mt-6">
+        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+        <div>
+            <h3 class="font-bold">Pending Change Requests</h3>
+            <div class="text-sm">
+                There are {{ pending_requests.count }} pending change request(s) for this page.
+                <a href="{% url 'wiki_change_requests' %}?status=pending" class="link">Review them here</a>.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Edits -->
+    {% if recent_versions %}
+    <div class="card bg-base-200 mt-6">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-4">
+                <i data-lucide="history" class="w-6 h-6"></i>
+                Recent Edits
+            </h2>
+            <div class="space-y-2">
+                {% for version in recent_versions %}
+                    <div class="flex items-center justify-between text-sm">
+                        <div>
+                            <span class="font-semibold">{{ version.edited_by.username|default:"Unknown" }}</span>
+                            <span class="text-base-content opacity-60">
+                                - {{ version.change_summary }}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-base-content opacity-60">
+                                {{ version.edited_at|timesince }} ago
+                            </span>
+                            <a href="{% url 'wiki_version' page.slug version.id %}" class="btn btn-xs btn-ghost">
+                                View
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="mt-4">
+                <a href="{% url 'wiki_history' page.slug %}" class="btn btn-sm btn-ghost">
+                    View Full History
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+{% endblock %}
+
+{% block sidebar_content %}
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-4">
+                <i data-lucide="tool" class="w-6 h-6"></i>
+                Page Actions
+            </h2>
+            <div class="space-y-3">
+                <a href="{% url 'wiki_edit' page.slug %}" class="btn btn-primary btn-block justify-start">
+                    <i data-lucide="edit" class="w-4 h-4"></i>
+                    Edit / Suggest Changes
+                </a>
+                <a href="{% url 'wiki_history' page.slug %}" class="btn btn-ghost btn-block justify-start">
+                    <i data-lucide="history" class="w-4 h-4"></i>
+                    View History
+                </a>
+                <a href="{% url 'wiki_home' %}" class="btn btn-ghost btn-block justify-start">
+                    <i data-lucide="book-open" class="w-4 h-4"></i>
+                    Back to Wiki Home
+                </a>
+                <a href="{% url 'dashboard' %}" class="btn btn-ghost btn-block justify-start">
+                    <i data-lucide="home" class="w-4 h-4"></i>
+                    Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table of Contents (if parent) -->
+    {% if children %}
+    <div class="card bg-base-200 mt-6">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-4">
+                <i data-lucide="list" class="w-6 h-6"></i>
+                On This Page
+            </h2>
+            <ul class="menu menu-sm">
+                {% for child in children %}
+                    <li>
+                        <a href="{% url 'wiki_page' child.slug %}">{{ child.title }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}

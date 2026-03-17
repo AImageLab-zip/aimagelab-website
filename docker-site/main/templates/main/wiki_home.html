@@ -1,0 +1,134 @@
+{% extends 'main/base_with_sidebar.html' %}
+
+{% block title %}Wiki - AImageLab{% endblock %}
+
+{% block hero_title %}Lab Wiki{% endblock %}
+
+{% block hero_description %}
+Internal knowledge base for AImageLab. Share documentation, guides, and resources with your team.
+{% endblock %}
+
+{% block main_content %}
+    <!-- Search Box -->
+    <div class="card bg-base-200 mb-6">
+        <div class="card-body">
+            <form method="get" action="{% url 'wiki_search' %}" class="flex gap-3">
+                <input 
+                    type="text" 
+                    name="q" 
+                    placeholder="Search wiki pages..." 
+                    class="input input-bordered flex-1"
+                    required
+                />
+                <button type="submit" class="btn btn-primary">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                    Search
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Wiki Pages -->
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-4">
+                <i data-lucide="book-open" class="w-6 h-6"></i>
+                Wiki Pages
+            </h2>
+            
+            {% if root_pages %}
+                <div class="space-y-3">
+                    {% for page in root_pages %}
+                        <div class="border-l-4 border-primary pl-4 py-2">
+                            <a href="{% url 'wiki_page' page.slug %}" class="text-lg font-semibold hover:text-primary">
+                                {{ page.title }}
+                            </a>
+                            <p class="text-sm text-base-content opacity-70 mt-1">
+                                Last updated: {{ page.updated_at|date:"F d, Y" }}
+                                {% if page.updated_by %}
+                                    by {{ page.updated_by.username }}
+                                {% endif %}
+                            </p>
+                            
+                            {% if page.children.all %}
+                                <ul class="ml-6 mt-2 space-y-1">
+                                    {% for child in page.children.all %}
+                                        <li>
+                                            <a href="{% url 'wiki_page' child.slug %}" class="text-sm hover:text-primary">
+                                                &rarr; {{ child.title }}
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert">
+                    <i data-lucide="info" class="w-5 h-5"></i>
+                    <span>No wiki pages yet. Be the first to create one!</span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recently Updated -->
+    {% if recent_pages %}
+    <div class="card bg-base-200 mt-6">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-4">
+                <i data-lucide="clock" class="w-6 h-6"></i>
+                Recently Updated
+            </h2>
+            <div class="space-y-2">
+                {% for page in recent_pages %}
+                    <div class="flex items-center justify-between">
+                        <a href="{% url 'wiki_page' page.slug %}" class="hover:text-primary">
+                            {{ page.title }}
+                        </a>
+                        <span class="text-sm text-base-content opacity-60">
+                            {{ page.updated_at|timesince }} ago
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+{% endblock %}
+
+{% block sidebar_content %}
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-4">
+                <i data-lucide="zap" class="w-6 h-6"></i>
+                Quick Actions
+            </h2>
+            <div class="space-y-3">
+                <a href="{% url 'wiki_create' %}" class="btn btn-primary btn-block justify-start">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Create New Page
+                </a>
+                <a href="{% url 'wiki_search' %}" class="btn btn-ghost btn-block justify-start">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                    Search Wiki
+                </a>
+                {% if user.is_staff %}
+                <a href="{% url 'wiki_change_requests' %}" class="btn btn-ghost btn-block justify-start">
+                    <i data-lucide="git-pull-request" class="w-4 h-4"></i>
+                    Change Requests
+                    {% if pending_changes_count > 0 %}
+                        <span class="badge badge-primary">{{ pending_changes_count }}</span>
+                    {% endif %}
+                </a>
+                {% endif %}
+                <a href="{% url 'dashboard' %}" class="btn btn-ghost btn-block justify-start">
+                    <i data-lucide="home" class="w-4 h-4"></i>
+                    Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

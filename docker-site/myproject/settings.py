@@ -310,3 +310,23 @@ OIDC_DEFAULT_USER_ROLE = os.environ.get('OIDC_DEFAULT_USER_ROLE', 'phd')
 
 # Provider display name (for UI)
 OIDC_PROVIDER_NAME = os.environ.get('OIDC_PROVIDER_NAME', 'OIDC Provider')
+
+# Markdownify Configuration
+# Allow images and other HTML tags in markdown rendering
+MARKDOWNIFY = {
+    "default": {
+        "WHITELIST_TAGS": [
+            'a', 'abbr', 'acronym', 'b', 'blockquote', 'br', 'code', 'div', 'em', 
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img', 'li', 'ol', 'p', 
+            'pre', 'span', 'strong', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul'
+        ],
+        "WHITELIST_ATTRS": [
+            'href', 'src', 'alt', 'title', 'class', 'id'
+        ],
+        "MARKDOWN_EXTENSIONS": [
+            'markdown.extensions.fenced_code',
+            'markdown.extensions.tables',
+            'markdown.extensions.nl2br',
+        ],
+    }
+}

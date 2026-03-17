@@ -1,0 +1,73 @@
+{% extends 'main/base_with_sidebar.html' %}
+{% load markdownify %}
+
+{% block title %}Version from {{ version.edited_at|date:"Y-m-d H:i" }} - {{ page.title }} - Wiki{% endblock %}
+
+{% block hero_title %}Historical Version: {{ page.title }}{% endblock %}
+
+{% block hero_description %}
+Viewing version from {{ version.edited_at|date:"F d, Y H:i" }}
+{% endblock %}
+
+{% block main_content %}
+    <div class="alert alert-warning mb-6">
+        <i data-lucide="clock" class="w-5 h-5"></i>
+        <div>
+            <h3 class="font-bold">Historical Version</h3>
+            <div class="text-sm">
+                You are viewing an old version of this page. 
+                <a href="{% url 'wiki_page' page.slug %}" class="link">View current version</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-base-200 mb-6">
+        <div class="card-body">
+            <div class="flex items-center gap-2 mb-4 text-sm">
+                <i data-lucide="user" class="w-4 h-4"></i>
+                <span class="font-semibold">{{ version.edited_by.username|default:"Unknown" }}</span>
+                <span class="text-base-content opacity-60">edited on {{ version.edited_at|date:"F d, Y H:i" }}</span>
+            </div>
+            {% if version.change_summary %}
+            <div class="alert alert-info mb-4">
+                <i data-lucide="message-square" class="w-4 h-4"></i>
+                <span>{{ version.change_summary }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="text-2xl font-bold mb-4">{{ version.title }}</h2>
+            <div class="prose max-w-none">
+                {{ version.content|markdownify }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block sidebar_content %}
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-4">
+                <i data-lucide="navigation" class="w-6 h-6"></i>
+                Navigation
+            </h2>
+            <div class="space-y-3">
+                <a href="{% url 'wiki_page' page.slug %}" class="btn btn-primary btn-block justify-start">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    Current Version
+                </a>
+                <a href="{% url 'wiki_history' page.slug %}" class="btn btn-ghost btn-block justify-start">
+                    <i data-lucide="history" class="w-4 h-4"></i>
+                    All Versions
+                </a>
+                <a href="{% url 'wiki_home' %}" class="btn btn-ghost btn-block justify-start">
+                    <i data-lucide="book-open" class="w-4 h-4"></i>
+                    Wiki Home
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

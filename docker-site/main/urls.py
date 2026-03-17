@@ -35,5 +35,17 @@ urlpatterns = [
     # Short links (Go)
     path('go/', views.go_links, name='go_links'),
     re_path(r'^go/(?P<src>[-a-zA-Z0-9_.]+)$', views.go_redirect, name='go_redirect'),
+    
+    # Wiki
+    path('wiki/', views.wiki_home, name='wiki_home'),
+    path('wiki/search/', views.wiki_search, name='wiki_search'),
+    path('wiki/create/', views.wiki_create, name='wiki_create'),
+    path('wiki/upload-image/', views.wiki_upload_image, name='wiki_upload_image'),
+    path('wiki/changes/', views.wiki_change_requests, name='wiki_change_requests'),
+    path('wiki/changes/<int:request_id>/', views.wiki_change_request_detail, name='wiki_change_request_detail'),
+    path('wiki/<slug:slug>/', views.wiki_page, name='wiki_page'),
+    path('wiki/<slug:slug>/edit/', views.wiki_edit, name='wiki_edit'),
+    path('wiki/<slug:slug>/history/', views.wiki_history, name='wiki_history'),
+    path('wiki/<slug:slug>/version/<int:version_id>/', views.wiki_version, name='wiki_version'),
 ]
 

@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import json
-from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard
+from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField
 from datetime import datetime, timedelta
@@ -1109,3 +1109,351 @@ def go_links(request):
         'links': links_page,
         'search_query': search_query,
     })
+
+
+# ============================================================================
+# Wiki Views
+# ============================================================================
+
+@login_required
+def wiki_home(request):
+    """Display wiki home page with all top-level pages"""
+    # Get all root pages (no parent)
+    root_pages = WikiPage.objects.filter(
+        parent=None,
+        is_published=True
+    ).prefetch_related('children').order_by('display_order', 'title')
+    
+    # Get recently updated pages
+    recent_pages = WikiPage.objects.filter(
+        is_published=True
+    ).order_by('-updated_at')[:5]
+    
+    # Get pending change requests count
+    pending_changes_count = WikiPageChangeRequest.objects.filter(
+        status='pending'
+    ).count()
+    
+    return render(request, 'main/wiki_home.html', {
+        'root_pages': root_pages,
+        'recent_pages': recent_pages,
+        'pending_changes_count': pending_changes_count,
+    })
+
+
+@login_required
+def wiki_page(request, slug):
+    """Display a single wiki page"""
+    page = get_object_or_404(WikiPage, slug=slug, is_published=True)
+    
+    # Get child pages
+    children = page.children.filter(is_published=True).order_by('display_order', 'title')
+    
+    # Get breadcrumbs
+    breadcrumbs = page.get_breadcrumbs()
+    
+    # Get recent versions (for showing last editor info)
+    recent_versions = page.versions.select_related('edited_by').order_by('-edited_at')[:3]
+    
+    # Get pending change requests for this page
+    pending_requests = page.change_requests.filter(status='pending').select_related('requested_by')
+    
+    return render(request, 'main/wiki_page.html', {
+        'page': page,
+        'children': children,
+        'breadcrumbs': breadcrumbs,
+        'recent_versions': recent_versions,
+        'pending_requests': pending_requests,
+    })
+
+
+@login_required
+def wiki_create(request):
+    """Create a new wiki page"""
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        slug = request.POST.get('slug', '').strip()
+        content = request.POST.get('content', '').strip()
+        parent_id = request.POST.get('parent', None)
+        
+        if not title or not content:
+            django_messages.error(request, 'Title and content are required.')
+            return redirect('wiki_create')
+        
+        # Auto-generate slug from title if not provided
+        if not slug:
+            from django.utils.text import slugify
+            base_slug = slugify(title)
+            slug = base_slug
+            counter = 1
+            while WikiPage.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+        else:
+            # Check if provided slug already exists
+            if WikiPage.objects.filter(slug=slug).exists():
+                django_messages.error(request, 'A page with this slug already exists.')
+                return redirect('wiki_create')
+        
+        parent = None
+        if parent_id:
+            try:
+                parent = WikiPage.objects.get(pk=parent_id)
+            except WikiPage.DoesNotExist:
+                pass
+        
+        page = WikiPage.objects.create(
+            title=title,
+            slug=slug,
+            content=content,
+            parent=parent,
+            created_by=request.user,
+            updated_by=request.user,
+        )
+        
+        # Create initial version
+        WikiPageVersion.objects.create(
+            page=page,
+            title=title,
+            content=content,
+            edited_by=request.user,
+            change_summary="Initial creation"
+        )
+        
+        django_messages.success(request, f'Wiki page "{title}" created successfully!')
+        return redirect('wiki_page', slug=page.slug)
+    
+    # GET request - show form
+    all_pages = WikiPage.objects.filter(is_published=True).order_by('title')
+    return render(request, 'main/wiki_create.html', {
+        'all_pages': all_pages,
+    })
+
+
+@login_required
+def wiki_edit(request, slug):
+    """Edit a wiki page - direct edit or suggest changes"""
+    page = get_object_or_404(WikiPage, slug=slug)
+    
+    # Check if user can directly edit (staff or original creator)
+    can_direct_edit = request.user.is_staff or page.created_by == request.user
+    
+    if request.method == 'POST':
+        action = request.POST.get('action', 'edit')
+        title = request.POST.get('title', '').strip()
+        content = request.POST.get('content', '').strip()
+        change_summary = request.POST.get('change_summary', '').strip()
+        
+        if not title or not content:
+            django_messages.error(request, 'Title and content are required.')
+            return redirect('wiki_edit', slug=slug)
+        
+        if action == 'direct_edit' and can_direct_edit:
+            # Direct edit
+            page.title = title
+            page.content = content
+            page.updated_by = request.user
+            page.save()
+            
+            django_messages.success(request, 'Page updated successfully!')
+            return redirect('wiki_page', slug=page.slug)
+        else:
+            # Create change request
+            WikiPageChangeRequest.objects.create(
+                page=page,
+                requested_by=request.user,
+                proposed_title=title if title != page.title else '',
+                proposed_content=content,
+                change_description=change_summary or 'Suggested changes',
+            )
+            
+            django_messages.success(request, 'Your change request has been submitted for review!')
+            return redirect('wiki_page', slug=page.slug)
+    
+    # GET request - show form
+    return render(request, 'main/wiki_edit.html', {
+        'page': page,
+        'can_direct_edit': can_direct_edit,
+    })
+
+
+@login_required
+def wiki_history(request, slug):
+    """View version history of a wiki page"""
+    page = get_object_or_404(WikiPage, slug=slug)
+    
+    versions = page.versions.select_related('edited_by').order_by('-edited_at')
+    
+    # Pagination
+    paginator = Paginator(versions, 20)
+    page_num = request.GET.get('page', 1)
+    try:
+        versions_page = paginator.page(page_num)
+    except PageNotAnInteger:
+        versions_page = paginator.page(1)
+    except EmptyPage:
+        versions_page = paginator.page(paginator.num_pages)
+    
+    return render(request, 'main/wiki_history.html', {
+        'page': page,
+        'versions': versions_page,
+    })
+
+
+@login_required
+def wiki_version(request, slug, version_id):
+    """View a specific version of a wiki page"""
+    page = get_object_or_404(WikiPage, slug=slug)
+    version = get_object_or_404(WikiPageVersion, pk=version_id, page=page)
+    
+    return render(request, 'main/wiki_version.html', {
+        'page': page,
+        'version': version,
+    })
+
+
+@login_required
+def wiki_search(request):
+    """Search wiki pages"""
+    query = request.GET.get('q', '').strip()
+    results = []
+    
+    if query:
+        results = WikiPage.objects.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query),
+            is_published=True
+        ).order_by('-updated_at')
+    
+    # Pagination
+    paginator = Paginator(results, 20)
+    page_num = request.GET.get('page', 1)
+    try:
+        results_page = paginator.page(page_num)
+    except PageNotAnInteger:
+        results_page = paginator.page(1)
+    except EmptyPage:
+        results_page = paginator.page(paginator.num_pages)
+    
+    return render(request, 'main/wiki_search.html', {
+        'query': query,
+        'results': results_page,
+    })
+
+
+@login_required
+def wiki_change_requests(request):
+    """View all change requests (filterable by status)"""
+    # Only staff can view all change requests
+    # Regular users can only see their own
+    if request.user.is_staff:
+        requests_list = WikiPageChangeRequest.objects.select_related(
+            'page', 'requested_by', 'reviewed_by'
+        )
+    else:
+        requests_list = WikiPageChangeRequest.objects.filter(
+            requested_by=request.user
+        ).select_related('page', 'requested_by', 'reviewed_by')
+    
+    # Filter by status if provided
+    status = request.GET.get('status', 'all')
+    if status and status != 'all':
+        requests_list = requests_list.filter(status=status)
+    
+    requests_list = requests_list.order_by('-created_at')
+    
+    # Pagination
+    paginator = Paginator(requests_list, 15)
+    page_num = request.GET.get('page', 1)
+    try:
+        requests_page = paginator.page(page_num)
+    except PageNotAnInteger:
+        requests_page = paginator.page(1)
+    except EmptyPage:
+        requests_page = paginator.page(paginator.num_pages)
+    
+    return render(request, 'main/wiki_change_requests.html', {
+        'requests': requests_page,
+        'status': status,
+    })
+
+
+@login_required
+def wiki_change_request_detail(request, request_id):
+    """View and review a change request"""
+    change_request = get_object_or_404(WikiPageChangeRequest, pk=request_id)
+    
+    # Check permissions
+    can_review = request.user.is_staff
+    is_owner = change_request.requested_by == request.user
+    
+    if not (can_review or is_owner):
+        django_messages.error(request, 'You do not have permission to view this request.')
+        return redirect('wiki_change_requests')
+    
+    if request.method == 'POST' and can_review:
+        action = request.POST.get('action')
+        review_notes = request.POST.get('review_notes', '').strip()
+        
+        if action == 'approve':
+            change_request.status = 'approved'
+            change_request.reviewed_by = request.user
+            change_request.reviewed_at = datetime.now()
+            change_request.review_notes = review_notes
+            change_request.save()
+            
+            # Apply the changes
+            change_request.apply_changes()
+            
+            django_messages.success(request, 'Change request approved and applied!')
+            return redirect('wiki_page', slug=change_request.page.slug)
+        
+        elif action == 'reject':
+            change_request.status = 'rejected'
+            change_request.reviewed_by = request.user
+            change_request.reviewed_at = datetime.now()
+            change_request.review_notes = review_notes
+            change_request.save()
+            
+            django_messages.success(request, 'Change request rejected.')
+            return redirect('wiki_change_requests')
+    
+    return render(request, 'main/wiki_change_request_detail.html', {
+        'change_request': change_request,
+        'can_review': can_review,
+        'is_owner': is_owner,
+    })
+
+
+@login_required
+def wiki_upload_image(request):
+    """Handle image upload for wiki pages"""
+    if request.method == 'POST' and request.FILES.get('image'):
+        try:
+            image_file = request.FILES['image']
+            description = request.POST.get('description', '')
+            
+            # Create WikiImage instance
+            wiki_image = WikiImage.objects.create(
+                image=image_file,
+                uploaded_by=request.user,
+                description=description
+            )
+            
+            # Return image URL for markdown insertion
+            return JsonResponse({
+                'success': True,
+                'url': wiki_image.image.url,
+                'id': wiki_image.id,
+                'markdown': f'![{description or "Image"}]({wiki_image.image.url})'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    return JsonResponse({
+        'success': False,
+        'error': 'No image provided'
+    }, status=400)

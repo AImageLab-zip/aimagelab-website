@@ -1,0 +1,209 @@
+{% extends 'main/base_with_sidebar.html' %}
+{% load markdownify %}
+
+{% block title %}Change Request #{{ change_request.id }} - Wiki - AImageLab{% endblock %}
+
+{% block hero_title %}Change Request for "{{ change_request.page.title }}"{% endblock %}
+
+{% block hero_description %}
+Review suggested changes to this wiki page.
+{% endblock %}
+
+{% block main_content %}
+    <!-- Status Badge -->
+    <div class="alert {% if change_request.status == 'pending' %}alert-warning{% elif change_request.status == 'approved' %}alert-success{% else %}alert-error{% endif %} mb-6">
+        <i data-lucide="{% if change_request.status == 'pending' %}clock{% elif change_request.status == 'approved' %}check-circle{% else %}x-circle{% endif %}" class="w-5 h-5"></i>
+        <div>
+            <h3 class="font-bold">Status: {{ change_request.get_status_display }}</h3>
+            {% if change_request.status == 'pending' %}
+                <div class="text-sm">This change request is awaiting review.</div>
+            {% elif change_request.status == 'approved' %}
+                <div class="text-sm">
+                    This change request was approved by {{ change_request.reviewed_by.username }} 
+                    on {{ change_request.reviewed_at|date:"F d, Y H:i" }}.
+                </div>
+            {% else %}
+                <div class="text-sm">
+                    This change request was rejected by {{ change_request.reviewed_by.username }} 
+                    on {{ change_request.reviewed_at|date:"F d, Y H:i" }}.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Request Info -->
+    <div class="card bg-base-200 mb-6">
+        <div class="card-body">
+            <h3 class="font-semibold text-lg mb-3">Request Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="font-semibold">Requested by:</span>
+                    <span class="ml-2">{{ change_request.requested_by.username }}</span>
+                </div>
+                <div>
+                    <span class="font-semibold">Submitted:</span>
+                    <span class="ml-2">{{ change_request.created_at|date:"F d, Y H:i" }}</span>
+                </div>
+                <div class="md:col-span-2">
+                    <span class="font-semibold">Page:</span>
+                    <a href="{% url 'wiki_page' change_request.page.slug %}" class="link link-primary ml-2">
+                        {{ change_request.page.title }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Description -->
+    <div class="card bg-base-200 mb-6">
+        <div class="card-body">
+            <h3 class="font-semibold text-lg mb-3">
+                <i data-lucide="message-square" class="w-5 h-5 inline"></i>
+                Change Description
+            </h3>
+            <p class="text-base-content opacity-90">
+                {{ change_request.change_description }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Proposed Changes -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Current Content -->
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h3 class="font-semibold text-lg mb-3">
+                    <i data-lucide="file" class="w-5 h-5 inline"></i>
+                    Current Content
+                </h3>
+                <div class="bg-base-300 p-4 rounded-lg">
+                    <h4 class="font-semibold mb-2">{{ change_request.page.title }}</h4>
+                    <div class="prose prose-sm max-w-none max-h-96 overflow-y-auto">{{ change_request.page.content|markdownify }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Proposed Content -->
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h3 class="font-semibold text-lg mb-3">
+                    <i data-lucide="file-edit" class="w-5 h-5 inline"></i>
+                    Proposed Changes
+                </h3>
+                <div class="bg-success bg-opacity-10 p-4 rounded-lg border-2 border-success border-opacity-30">
+                    {% if change_request.proposed_title %}
+                        <h4 class="font-semibold mb-2">{{ change_request.proposed_title }}</h4>
+                    {% else %}
+                        <h4 class="font-semibold mb-2">{{ change_request.page.title }}</h4>
+                    {% endif %}
+                    <div class="prose prose-sm max-w-none max-h-96 overflow-y-auto">{{ change_request.proposed_content|markdownify }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Form (for staff only) -->
+    {% if can_review and change_request.status == 'pending' %}
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h3 class="font-semibold text-lg mb-4">
+                <i data-lucide="clipboard-check" class="w-5 h-5 inline"></i>
+                Review This Request
+            </h3>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">Review Notes (Optional)</span>
+                    </label>
+                    <textarea 
+                        name="review_notes" 
+                        class="textarea textarea-bordered h-24 w-full" 
+                        placeholder="Add any comments about this review..."
+                    ></textarea>
+                </div>
+                <div class="flex gap-3 justify-end">
+                    <button type="submit" name="action" value="reject" class="btn btn-error">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                        Reject Changes
+                    </button>
+                    <button type="submit" name="action" value="approve" class="btn btn-success">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        Approve & Apply Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Review Notes (if reviewed) -->
+    {% if change_request.review_notes and change_request.status != 'pending' %}
+    <div class="card bg-base-200 mt-6">
+        <div class="card-body">
+            <h3 class="font-semibold text-lg mb-3">
+                <i data-lucide="message-circle" class="w-5 h-5 inline"></i>
+                Review Notes
+            </h3>
+            <p class="text-base-content opacity-90">
+                {{ change_request.review_notes }}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+{% endblock %}
+
+{% block sidebar_content %}
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-4">
+                <i data-lucide="navigation" class="w-6 h-6"></i>
+                Navigation
+            </h2>
+            <div class="space-y-3">
+                <a href="{% url 'wiki_page' change_request.page.slug %}" class="btn btn-primary btn-block justify-start">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    View Page
+                </a>
+                <a href="{% url 'wiki_change_requests' %}" class="btn btn-ghost btn-block justify-start">
+                    <i data-lucide="list" class="w-4 h-4"></i>
+                    All Requests
+                </a>
+                <a href="{% url 'wiki_home' %}" class="btn btn-ghost btn-block justify-start">
+                    <i data-lucide="book-open" class="w-4 h-4"></i>
+                    Wiki Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if can_review %}
+    <div class="card bg-base-200 mt-6">
+        <div class="card-body">
+            <h2 class="card-title text-primary mb-4">
+                <i data-lucide="info" class="w-6 h-6"></i>
+                Review Guidelines
+            </h2>
+            <ul class="space-y-2 text-sm">
+                <li class="flex gap-2">
+                    <i data-lucide="check" class="w-4 h-4 text-success mt-0.5"></i>
+                    <span>Check for accuracy</span>
+                </li>
+                <li class="flex gap-2">
+                    <i data-lucide="check" class="w-4 h-4 text-success mt-0.5"></i>
+                    <span>Ensure proper formatting</span>
+                </li>
+                <li class="flex gap-2">
+                    <i data-lucide="check" class="w-4 h-4 text-success mt-0.5"></i>
+                    <span>Verify appropriate tone</span>
+                </li>
+                <li class="flex gap-2">
+                    <i data-lucide="check" class="w-4 h-4 text-success mt-0.5"></i>
+                    <span>Approve if improvements are valuable</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}

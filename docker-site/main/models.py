@@ -551,3 +551,168 @@ class DashboardCard(models.Model):
     def is_download(self):
         return self.link_type == 'file' and self.link_file
 
+
+class WikiImage(models.Model):
+    """Images uploaded for wiki pages"""
+    image = models.ImageField(upload_to='wiki_images/%Y/%m/', help_text="Wiki image")
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='wiki_images')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    description = models.CharField(max_length=200, blank=True, help_text="Image description")
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = "Wiki Image"
+        verbose_name_plural = "Wiki Images"
+    
+    def __str__(self):
+        return f"Image {self.id} - {self.description or 'No description'}" if self.id else "New Image"
+
+
+class WikiPage(models.Model):
+    """Wiki page for the lab intranet"""
+    
+    title = models.CharField(max_length=200, help_text="Page title")
+    slug = models.SlugField(unique=True, max_length=250, help_text="URL-friendly slug (auto-generated if not provided)")
+    content = models.TextField(help_text="Page content (supports Markdown)")
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='children',
+        help_text="Parent page for hierarchical organization"
+    )
+    display_order = models.IntegerField(default=0, help_text="Order within parent (lower first)")
+    
+    # Metadata
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='wiki_pages_created')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='wiki_pages_updated')
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    is_published = models.BooleanField(default=True, help_text="Published pages are visible to all authenticated users")
+    
+    class Meta:
+        ordering = ['display_order', 'title']
+        verbose_name = "Wiki Page"
+        verbose_name_plural = "Wiki Pages"
+        indexes = [
+            models.Index(fields=['slug']),
+            models.Index(fields=['parent', 'display_order']),
+        ]
+    
+    def __str__(self):
+        return self.title
+    
+    def get_breadcrumbs(self):
+        """Return list of parent pages from root to current"""
+        breadcrumbs = []
+        current = self
+        while current:
+            breadcrumbs.insert(0, current)
+            current = current.parent
+        return breadcrumbs
+    
+    def save(self, *args, **kwargs):
+        """Override save to auto-generate slug and create version entry"""
+        from django.utils.text import slugify
+        import re
+        
+        # Auto-generate slug if not provided
+        if not self.slug:
+            base_slug = slugify(self.title)
+            slug = base_slug
+            counter = 1
+            while WikiPage.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        # Create a version entry after saving
+        if not is_new:
+            WikiPageVersion.objects.create(
+                page=self,
+                title=self.title,
+                content=self.content,
+                edited_by=self.updated_by,
+                change_summary=f"Updated by {self.updated_by.username if self.updated_by else 'system'}"
+            )
+
+
+class WikiPageVersion(models.Model):
+    """Version history for wiki pages"""
+    
+    page = models.ForeignKey(WikiPage, on_delete=models.CASCADE, related_name='versions')
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    edited_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='wiki_edits')
+    edited_at = models.DateTimeField(auto_now_add=True)
+    change_summary = models.CharField(max_length=500, blank=True, help_text="Brief description of changes")
+    
+    class Meta:
+        ordering = ['-edited_at']
+        verbose_name = "Wiki Page Version"
+        verbose_name_plural = "Wiki Page Versions"
+        indexes = [
+            models.Index(fields=['page', '-edited_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.page.title} - {self.edited_at.strftime('%Y-%m-%d %H:%M')}"
+
+
+class WikiPageChangeRequest(models.Model):
+    """Change request/suggestion for wiki pages"""
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    page = models.ForeignKey(WikiPage, on_delete=models.CASCADE, related_name='change_requests')
+    requested_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wiki_change_requests')
+    
+    # Proposed changes
+    proposed_title = models.CharField(max_length=200, blank=True, help_text="Leave blank to keep current title")
+    proposed_content = models.TextField(help_text="Suggested content changes")
+    change_description = models.TextField(help_text="Explanation of why these changes are needed")
+    
+    # Status tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='wiki_reviews'
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    review_notes = models.TextField(blank=True, help_text="Reviewer's notes")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Wiki Change Request"
+        verbose_name_plural = "Wiki Change Requests"
+        indexes = [
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['page', 'status']),
+        ]
+    
+    def __str__(self):
+        return f"Change request for '{self.page.title}' by {self.requested_by.username}"
+    
+    def apply_changes(self):
+        """Apply the proposed changes to the wiki page"""
+        if self.proposed_title:
+            self.page.title = self.proposed_title
+        self.page.content = self.proposed_content
+        self.page.updated_by = self.requested_by
+        self.page.save()
+

@@ -1,0 +1,367 @@
+{% extends 'main/base_full_width.html' %}
+{% load markdownify %}
+
+{% block title %}Edit {{ page.title }} - Wiki - AImageLab{% endblock %}
+
+{% block hero_title %}Edit: {{ page.title }}{% endblock %}
+
+{% block hero_description %}
+{% if can_direct_edit %}
+Make changes directly to this page, or suggest changes for review.
+{% else %}
+Suggest changes to this page. Your changes will be reviewed by staff.
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+<style>
+    /* Editor styling */
+    .EasyMDEContainer .CodeMirror {
+        height: 500px;
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+    }
+    
+    /* Toolbar styling - prevent wrapping */
+    .editor-toolbar {
+        border-radius: 0.5rem 0.5rem 0 0;
+        white-space: nowrap;
+        overflow-x: auto;
+    }
+    
+    .editor-toolbar a {
+        display: inline-block;
+    }
+    
+    /* Fix DaisyUI table class conflict with EasyMDE table button */
+    .editor-toolbar .table,
+    .editor-toolbar button.table,
+    .editor-toolbar a.table {
+        display: inline-block !important;
+        width: auto !important;
+        border-collapse: initial !important;
+        border-spacing: initial !important;
+    }
+    
+    .CodeMirror {
+        border-radius: 0 0 0.5rem 0.5rem;
+    }
+    
+    /* Fullscreen mode adjustments - hide navbar and use full screen */
+    .CodeMirror-fullscreen {
+        z-index: 9999 !important;
+    }
+    
+    .editor-toolbar.fullscreen {
+        z-index: 9999 !important;
+    }
+    
+    /* Hide navbar when editor is in fullscreen */
+    body:has(.CodeMirror-fullscreen) #navbar {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block page_content %}
+    <!-- Upload Modal -->
+    <dialog id="upload-modal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg" id="modal-title">
+                <i data-lucide="upload" class="w-5 h-5 inline"></i>
+                Uploading Image
+            </h3>
+            <p class="py-4" id="modal-message">
+                <span class="loading loading-spinner loading-md"></span>
+                Uploading your image...
+            </p>
+            <div class="modal-action">
+                <button id="modal-close-btn" class="btn" style="display: none;">Close</button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Main Form -->
+            <div class="lg:col-span-3">
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        {% if can_direct_edit %}
+                        <div class="alert alert-info mb-4">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                            <div>
+                                <h3 class="font-bold">Editor Mode</h3>
+                                <div class="text-sm">
+                                    You can edit this page directly or submit a change request for review.
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning mb-4">
+                            <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                            <div>
+                                <h3 class="font-bold">Suggestion Mode</h3>
+                                <div class="text-sm">
+                                    Your changes will be submitted as a change request for staff review.
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <form method="post" class="space-y-4" id="wiki-form">
+                            {% csrf_token %}
+                            
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-semibold">Title *</span>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    name="title" 
+                                    value="{{ page.title }}"
+                                    class="input input-bordered w-full" 
+                                    required
+                                />
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-semibold">Content *</span>
+                                </label>
+                                <textarea 
+                                    id="wiki-content"
+                                    name="content" 
+                                    required
+                                >{{ page.content }}</textarea>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-semibold">
+                                        <i data-lucide="image" class="w-4 h-4 inline"></i>
+                                        Upload Image
+                                    </span>
+                                </label>
+                                <div class="flex gap-3">
+                                    <input 
+                                        type="file" 
+                                        id="wiki-image-upload"
+                                        accept="image/*" 
+                                        class="file-input file-input-bordered flex-1"
+                                    />
+                                    <button type="button" id="upload-image-btn" class="btn btn-secondary">
+                                        <i data-lucide="upload" class="w-4 h-4"></i>
+                                        Upload & Insert
+                                    </button>
+                                </div>
+                                <label class="label">
+                                    <span class="label-text-alt">Upload an image and insert markdown code at cursor position</span>
+                                </label>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-semibold">
+                                        {% if can_direct_edit %}
+                                            Version Summary
+                                        {% else %}
+                                            Change Description *
+                                        {% endif %}
+                                    </span>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    name="change_summary" 
+                                    class="input input-bordered w-full" 
+                                    placeholder="Briefly describe what you changed"
+                                    {% if not can_direct_edit %}required{% endif %}
+                                />
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <div class="flex gap-3 justify-end">
+                                <a href="{% url 'wiki_page' page.slug %}" class="btn btn-ghost">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                    Cancel
+                                </a>
+                                {% if can_direct_edit %}
+                                    <button type="submit" name="action" value="suggest" class="btn btn-secondary">
+                                        <i data-lucide="git-pull-request" class="w-4 h-4"></i>
+                                        Suggest Changes
+                                    </button>
+                                    <button type="submit" name="action" value="direct_edit" class="btn btn-primary">
+                                        <i data-lucide="save" class="w-4 h-4"></i>
+                                        Save Directly
+                                    </button>
+                                {% else %}
+                                    <button type="submit" name="action" value="suggest" class="btn btn-primary">
+                                        <i data-lucide="send" class="w-4 h-4"></i>
+                                        Submit for Review
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="card bg-base-200 sticky top-24">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="file-text" class="w-6 h-6"></i>
+                            Page Info
+                        </h2>
+                        <div class="space-y-2 text-sm">
+                            <div>
+                                <span class="font-semibold">Created by:</span>
+                                <span class="block mt-1 ml-2">{{ page.created_by.username|default:"Unknown" }}</span>
+                            </div>
+                            <div>
+                                <span class="font-semibold">Last updated:</span>
+                                <span class="block mt-1 ml-2">{{ page.updated_at|date:"F d, Y H:i" }}</span>
+                            </div>
+                            {% if page.updated_by %}
+                            <div>
+                                <span class="font-semibold">Last editor:</span>
+                                <span class="block mt-1 ml-2">{{ page.updated_by.username }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="divider"></div>
+                        <a href="{% url 'wiki_history' page.slug %}" class="btn btn-sm btn-ghost btn-block">
+                            <i data-lucide="history" class="w-4 h-4"></i>
+                            View Edit History
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize EasyMDE
+    const easyMDE = new EasyMDE({
+        element: document.getElementById('wiki-content'),
+        spellChecker: false,
+        autosave: {
+            enabled: true,
+            uniqueId: 'wiki-edit-{{ page.slug }}',
+            delay: 1000,
+        },
+        toolbar: [
+            'bold', 'italic', 'heading', '|',
+            'quote', 'unordered-list', 'ordered-list', '|',
+            'link', 'image', 'table', '|',
+            'preview', 'side-by-side', 'fullscreen', '|',
+            'guide'
+        ],
+        status: ['lines', 'words', 'cursor'],
+    });
+    
+    // Modal functions
+    const modal = document.getElementById('upload-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    
+    function showModal(title, message, showClose = false) {
+        modalTitle.innerHTML = title;
+        modalMessage.innerHTML = message;
+        modalCloseBtn.style.display = showClose ? 'block' : 'none';
+        modal.showModal();
+    }
+    
+    function hideModal() {
+        modal.close();
+    }
+    
+    modalCloseBtn.addEventListener('click', hideModal);
+    
+    // Image upload
+    const uploadBtn = document.getElementById('upload-image-btn');
+    const fileInput = document.getElementById('wiki-image-upload');
+    
+    uploadBtn.addEventListener('click', async function() {
+        const file = fileInput.files[0];
+        if (!file) {
+            showModal(
+                '<i data-lucide="alert-circle" class="w-5 h-5 inline text-warning"></i> No File Selected',
+                'Please select an image file first.',
+                true
+            );
+            lucide.createIcons();
+            return;
+        }
+        
+        // Show uploading modal
+        showModal(
+            '<i data-lucide="upload" class="w-5 h-5 inline text-primary"></i> Uploading',
+            '<span class="loading loading-spinner loading-md"></span> Uploading your image...',
+            false
+        );
+        lucide.createIcons();
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        
+        try {
+            const response = await fetch('{% url "wiki_upload_image" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Insert markdown at cursor position
+                const pos = easyMDE.codemirror.getCursor();
+                easyMDE.codemirror.replaceRange('\n' + data.markdown + '\n', pos);
+                
+                // Clear file input
+                fileInput.value = '';
+                
+                // Show success modal
+                showModal(
+                    '<i data-lucide="check-circle" class="w-5 h-5 inline text-success"></i> Success!',
+                    'Image uploaded successfully and inserted into the editor.',
+                    true
+                );
+                lucide.createIcons();
+            } else {
+                showModal(
+                    '<i data-lucide="x-circle" class="w-5 h-5 inline text-error"></i> Upload Failed',
+                    'Error: ' + (data.error || 'Unknown error occurred'),
+                    true
+                );
+                lucide.createIcons();
+            }
+        } catch (error) {
+            showModal(
+                '<i data-lucide="x-circle" class="w-5 h-5 inline text-error"></i> Upload Failed',
+                'Error: ' + error.message,
+                true
+            );
+            lucide.createIcons();
+        }
+    });
+    
+    // Initialize lucide icons
+    lucide.createIcons();
+});
+</script>
+{% endblock %}
