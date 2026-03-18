@@ -78,7 +78,7 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.WARNING(
                             f'Row {row_num}: User "{username}" not found, using admin'
                         ))
-                        user = User.objects.get(username='admin')
+                        user = User.objects.get(username='gsalici')
                         # Continue processing with the admin user
 
                     # Create or update the short link
