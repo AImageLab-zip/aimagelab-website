@@ -20,7 +20,18 @@ DEBUG = os.environ.get("DEBUG", "1") == "1"
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
+    "aimagelab.unimore.it",  # Canonical domain
     "aimagelab-app.ing.unimore.it",
+    "aimagelab.ing.unimore.it",
+    # All supported aliases
+    "imagelab.ing.unimo.it",
+    "www.imagelab.unimo.it",
+    "www.imagelab.ing.unimo.it",
+    "imagelab.unimo.it",
+    "www.aimagelab.unimo.it",
+    "www.aimagelab.ing.unimo.it",
+    "aimagelab.unimo.it",
+    "aimagelab.ing.unimo.it",
     "0.0.0.0",
     "django-app",
     "dev-django-app",
@@ -29,8 +40,19 @@ ALLOWED_HOSTS = [
 
 # CSRF trusted origins for cross-site requests
 CSRF_TRUSTED_ORIGINS = [
+    "https://aimagelab.unimore.it",  # Canonical domain
     "https://aimagelab-app.ing.unimore.it",
     "https://aimagelab-app.ing.unimore.it:8443",
+    "https://aimagelab.ing.unimore.it",
+    # All supported aliases
+    "https://imagelab.ing.unimo.it",
+    "https://www.imagelab.unimo.it",
+    "https://www.imagelab.ing.unimo.it",
+    "https://imagelab.unimo.it",
+    "https://www.aimagelab.unimo.it",
+    "https://www.aimagelab.ing.unimo.it",
+    "https://aimagelab.unimo.it",
+    "https://aimagelab.ing.unimo.it",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]

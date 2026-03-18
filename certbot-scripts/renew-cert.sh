@@ -1,15 +1,15 @@
 #!/bin/bash
-# Renew Let's Encrypt certificates
+# Manually renew Let's Encrypt certificates
 
-DOMAIN="${DOMAIN:-aimagelab-app.ing.unimore.it}"
 WEBROOT="${WEBROOT:-/var/www/html}"
 
-echo "Renewing SSL certificates for $DOMAIN..."
+echo "Renewing SSL certificates..."
 
-certbot renew --webroot -w "$WEBROOT" --quiet
+certbot renew --webroot -w "$WEBROOT"
 
 if [ $? -eq 0 ]; then
     echo "Certificate renewal completed successfully!"
 else
-    echo "Certificate renewal check completed (no renewal needed or failed)"
+    echo "Certificate renewal failed. Check logs: /var/log/letsencrypt/letsencrypt.log"
+    exit 1
 fi
