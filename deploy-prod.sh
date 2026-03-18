@@ -23,6 +23,15 @@ if grep -q "DEBUG=1" .env; then
     fi
 fi
 
+# Verify SECRET_KEY is not the default insecure key
+SK=$(grep '^SECRET_KEY=' .env | cut -d'=' -f2-)
+if [[ -z "$SK" || "$SK" == *"insecure"* || "$SK" == *"change"* || "$SK" == *"dev-secret"* || ${#SK} -lt 50 ]]; then
+    echo "❌ Error: SECRET_KEY in .env is missing or insecure!"
+    echo "Generate a strong key with:"
+    echo "  python3 -c 'import secrets; print(secrets.token_urlsafe(64))'"
+    exit 1
+fi
+
 # Build production containers
 echo "Building Docker containers..."
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml build

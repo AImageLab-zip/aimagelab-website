@@ -9,12 +9,18 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY", "django-insecure-change-this-in-production"
-)
+SECRET_KEY = os.environ.get("SECRET_KEY", "")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is not set!")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "1") == "1"
+
+if not DEBUG and ("insecure" in SECRET_KEY or "change" in SECRET_KEY or len(SECRET_KEY) < 50):
+    raise RuntimeError(
+        "SECRET_KEY is insecure for production! "
+        "Generate a strong key with: python -c 'import secrets; print(secrets.token_urlsafe(64))'"
+    )
 
 # Allow requests from the specified domain and localhost
 ALLOWED_HOSTS = [
