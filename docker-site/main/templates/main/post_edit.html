@@ -11,9 +11,71 @@
 {% block extra_css %}
 <!-- Cropper.js CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+
+<style>
+    .EasyMDEContainer .CodeMirror {
+        height: 500px;
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+    }
+
+    .editor-toolbar {
+        border-radius: 0.5rem 0.5rem 0 0;
+        white-space: nowrap;
+        overflow-x: auto;
+    }
+
+    .editor-toolbar a {
+        display: inline-block;
+    }
+
+    .editor-toolbar .table,
+    .editor-toolbar button.table,
+    .editor-toolbar a.table {
+        display: inline-block !important;
+        width: auto !important;
+        border-collapse: initial !important;
+        border-spacing: initial !important;
+    }
+
+    .CodeMirror {
+        border-radius: 0 0 0.5rem 0.5rem;
+    }
+
+    .CodeMirror-fullscreen {
+        z-index: 9999 !important;
+    }
+
+    .editor-toolbar.fullscreen {
+        z-index: 9999 !important;
+    }
+
+    body:has(.CodeMirror-fullscreen) #navbar {
+        display: none !important;
+    }
+</style>
 {% endblock %}
 
 {% block main_content %}
+    <dialog id="upload-modal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg" id="modal-title">
+                <i data-lucide="upload" class="w-5 h-5 inline"></i>
+                Uploading Image
+            </h3>
+            <p class="py-4" id="modal-message">
+                <span class="loading loading-spinner loading-md"></span>
+                Uploading your image...
+            </p>
+            <div class="modal-action">
+                <button id="modal-close-btn" class="btn" style="display: none;">Close</button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         
@@ -63,6 +125,26 @@
                             <p class="label overflow-x-scroll">
                                 <strong>Markdown tips:</strong> **bold**, *italic*, [link](url), # Heading, - List item, `code`
                             </p>
+                        </fieldset>
+
+                        <fieldset class="fieldset mt-4">
+                            <legend class="fieldset-legend overflow-x-scroll">
+                                <i data-lucide="image" class="w-4 h-4 inline"></i>
+                                Upload Inline Image
+                            </legend>
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <input
+                                    type="file"
+                                    id="post-image-upload"
+                                    accept="image/*"
+                                    class="file-input w-full"
+                                >
+                                <button type="button" id="upload-image-btn" class="btn btn-secondary">
+                                    <i data-lucide="upload" class="w-4 h-4"></i>
+                                    Upload and Insert
+                                </button>
+                            </div>
+                            <p class="label overflow-x-scroll">Uploads an image and inserts Markdown at your cursor position</p>
                         </fieldset>
                     </div>
                 </div>
@@ -299,10 +381,122 @@
     </form>
 
 <!-- Cropper.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const easyMDE = new EasyMDE({
+        element: document.getElementById('content'),
+        placeholder: 'Write your post content here using Markdown...\n\n# Heading\n## Subheading\n\n**Bold** *Italic*\n\n- List item\n- Another item',
+        spellChecker: false,
+        autosave: {
+            enabled: true,
+            uniqueId: 'news-editor-{% if post %}{{ post.id }}{% else %}new{% endif %}',
+            delay: 1000,
+        },
+        toolbar: [
+            'bold', 'italic', 'heading', '|',
+            'quote', 'unordered-list', 'ordered-list', '|',
+            'link', 'image', 'table', '|',
+            'preview', 'side-by-side', 'fullscreen', '|',
+            'guide'
+        ],
+        status: ['lines', 'words', 'cursor'],
+    });
+
+    const modal = document.getElementById('upload-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    function showModal(title, message, showClose = false) {
+        modalTitle.innerHTML = title;
+        modalMessage.innerHTML = message;
+        modalCloseBtn.style.display = showClose ? 'block' : 'none';
+        modal.showModal();
+    }
+
+    function hideModal() {
+        modal.close();
+    }
+
+    modalCloseBtn.addEventListener('click', hideModal);
+
+    const uploadBtn = document.getElementById('upload-image-btn');
+    const fileInput = document.getElementById('post-image-upload');
+
+    uploadBtn.addEventListener('click', async function() {
+        const file = fileInput.files[0];
+        if (!file) {
+            showModal(
+                '<i data-lucide="alert-circle" class="w-5 h-5 inline text-warning"></i> No File Selected',
+                'Please select an image file first.',
+                true
+            );
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            return;
+        }
+
+        showModal(
+            '<i data-lucide="upload" class="w-5 h-5 inline text-primary"></i> Uploading',
+            '<span class="loading loading-spinner loading-md"></span> Uploading your image...',
+            false
+        );
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        try {
+            const response = await fetch('{% url "wiki_upload_image" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const pos = easyMDE.codemirror.getCursor();
+                easyMDE.codemirror.replaceRange('\n' + data.markdown + '\n', pos);
+                fileInput.value = '';
+
+                showModal(
+                    '<i data-lucide="check-circle" class="w-5 h-5 inline text-success"></i> Success',
+                    'Image uploaded successfully and inserted into the editor.',
+                    true
+                );
+            } else {
+                showModal(
+                    '<i data-lucide="x-circle" class="w-5 h-5 inline text-error"></i> Upload Failed',
+                    'Error: ' + (data.error || 'Unknown error occurred'),
+                    true
+                );
+            }
+
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        } catch (error) {
+            showModal(
+                '<i data-lucide="x-circle" class="w-5 h-5 inline text-error"></i> Upload Failed',
+                'Error: ' + error.message,
+                true
+            );
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+    });
+
     // Thumbnail cropping with Cropper.js
     const thumbnailSourceInput = document.getElementById('thumbnail-source');
     const coverInput = document.getElementById('cover');
