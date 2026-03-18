@@ -1,0 +1,111 @@
+{% extends "main/base_full_width.html" %}
+
+{% block title %}Mailing List Preferences - AImageLab{% endblock %}
+
+{% block hero_title %}Mailing List Preferences{% endblock %}
+{% block hero_description %}Manage your mailing list subscription and delivery addresses{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12">
+    <div class="max-w-2xl mx-auto space-y-6">
+
+        <!-- Subscription Toggle -->
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h2 class="card-title text-primary mb-4">
+                    <i data-lucide="mail" class="w-5 h-5"></i>
+                    Subscription
+                </h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_subscription">
+                    <div class="form-control">
+                        <label class="label cursor-pointer justify-start gap-3">
+                            <input type="checkbox" name="subscribed" class="toggle toggle-primary"
+                                   {% if pref.subscribed %}checked{% endif %}>
+                            <span class="label-text text-lg">
+                                Receive emails from the AImageLab mailing list
+                            </span>
+                        </label>
+                        <p class="text-sm text-base-content/60 mt-2 ml-14">
+                            When enabled, emails sent to the lab mailing list will be delivered to
+                            <strong>{{ user.email }}</strong> and any additional addresses below.
+                        </p>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Extra Email Addresses -->
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h2 class="card-title text-primary mb-4">
+                    <i data-lucide="at-sign" class="w-5 h-5"></i>
+                    Additional Email Addresses
+                </h2>
+                <p class="text-sm text-base-content/60 mb-4">
+                    Add extra email addresses where you want to receive mailing list messages, in addition to your primary address (<strong>{{ user.email }}</strong>).
+                </p>
+
+                {% if extra_emails %}
+                <div class="overflow-x-auto mb-4">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Email Address</th>
+                                <th class="w-20"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for extra in extra_emails %}
+                            <tr>
+                                <td>{{ extra.email }}</td>
+                                <td>
+                                    <form method="post" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="remove_email">
+                                        <input type="hidden" name="email_id" value="{{ extra.pk }}">
+                                        <button type="submit" class="btn btn-ghost btn-xs text-error"
+                                                title="Remove">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-sm italic text-base-content/40 mb-4">No additional emails configured.</p>
+                {% endif %}
+
+                <form method="post" class="flex gap-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_email">
+                    <input type="email" name="extra_email" class="input input-bordered flex-1"
+                           placeholder="colleague@example.com" required>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        Add
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Back Link -->
+        <div class="flex justify-end">
+            <a href="{% url 'edit_profile' %}" class="btn btn-ghost">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Back to Profile
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

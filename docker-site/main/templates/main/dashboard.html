@@ -95,6 +95,31 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                 </div>
             </div>
 
+            <!-- Mailing List -->
+            <div class="card bg-base-200 mt-6">
+                <div class="card-body">
+                    <h2 class="card-title text-primary mb-4">
+                        <i data-lucide="mail" class="w-6 h-6"></i>
+                        Mailing List
+                    </h2>
+                    <p class="text-base-content opacity-80 mb-4">
+                        Manage your mailing list subscription and delivery preferences.
+                    </p>
+                    <div class="flex gap-3 flex-wrap">
+                        <a href="{% url 'mailinglist:preferences' %}" class="btn btn-primary">
+                            <i data-lucide="settings" class="w-4 h-4"></i>
+                            Preferences
+                        </a>
+                        {% if user.is_staff %}
+                        <a href="{% url 'mailinglist:moderation' %}" class="btn btn-ghost">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            Moderation
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
 
             {% for section_name, cards in card_sections %}
             <h2 class="text-2xl font-bold text-primary mt-8 mb-4">
@@ -131,6 +156,10 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                             <i data-lucide="calendar" class="w-4 h-4"></i>
                             Meeting Rooms
                         </a>
+                        <a href="{% url 'mailinglist:preferences' %}" class="btn btn-primary btn-block justify-start">
+                            <i data-lucide="mail" class="w-4 h-4"></i>
+                            Mailing List
+                        </a>
                         <a href="{% url 'go_links' %}" class="btn btn-primary btn-block justify-start">
                             <i data-lucide="link" class="w-4 h-4"></i>
                             Go Links
@@ -143,6 +172,10 @@ Welcome back, {{ user.username }}! Manage your profile and access admin features
                         <a href="/admin/" class="btn btn-secondary text-secondary-content btn-block justify-start">
                             <i data-lucide="settings" class="w-4 h-4"></i>
                             Admin Panel
+                        </a>
+                        <a href="{% url 'mailinglist:moderation' %}" class="btn btn-secondary text-secondary-content btn-block justify-start">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            Email Moderation
                         </a>
                         <form method="post" action="{% url 'sync_ldap' %}">
                             {% csrf_token %}

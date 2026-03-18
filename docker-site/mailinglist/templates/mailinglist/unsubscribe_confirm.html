@@ -1,0 +1,29 @@
+{% extends "main/base_full_width.html" %}
+
+{% block title %}Unsubscribe - AImageLab{% endblock %}
+
+{% block hero_title %}Unsubscribe{% endblock %}
+{% block hero_description %}Confirm removal from the AImageLab mailing list{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12">
+    <div class="max-w-md mx-auto">
+        <div class="card bg-base-200">
+            <div class="card-body text-center">
+                <i data-lucide="mail-minus" class="w-12 h-12 mx-auto text-warning mb-4"></i>
+                <h2 class="text-lg font-semibold mb-2">Unsubscribe from Mailing List</h2>
+                <p class="text-base-content/70 mb-6">
+                    Are you sure you want to unsubscribe <strong>{{ label }}</strong> from the AImageLab mailing list?
+                </p>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        Yes, Unsubscribe
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

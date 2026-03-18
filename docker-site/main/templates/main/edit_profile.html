@@ -81,6 +81,23 @@ Update your personal information and professional links
                         </fieldset>
                     </div>
                 </div>
+
+                <!-- Mailing List Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="mail" class="w-5 h-5"></i>
+                            Mailing List
+                        </h2>
+                        <p class="text-sm text-base-content/70 mb-4">
+                            Manage your mailing list subscription, opt in/out, and add extra delivery addresses.
+                        </p>
+                        <a href="{% url 'mailinglist:preferences' %}" class="btn btn-primary btn-sm">
+                            <i data-lucide="settings" class="w-4 h-4"></i>
+                            Mailing List Preferences
+                        </a>
+                    </div>
+                </div>
         </div>
 {% endblock %}
 

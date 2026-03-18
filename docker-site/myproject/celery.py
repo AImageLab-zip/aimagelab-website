@@ -27,6 +27,13 @@ app.conf.beat_schedule = {
             'expires': 3600,  # Task expires after 1 hour if not executed
         }
     },
+    'fetch-mailinglist-emails': {
+        'task': 'mailinglist.tasks.fetch_incoming_emails',
+        'schedule': crontab(minute='*/3'),  # Every 3 minutes
+        'options': {
+            'expires': 150,  # Expire before next run
+        }
+    },
 }
 
 # Set timezone for beat scheduler

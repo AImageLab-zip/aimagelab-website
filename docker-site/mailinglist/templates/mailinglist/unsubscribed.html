@@ -1,0 +1,22 @@
+{% extends "main/base_full_width.html" %}
+
+{% block title %}Unsubscribed - AImageLab{% endblock %}
+
+{% block hero_title %}Unsubscribed{% endblock %}
+{% block hero_description %}You have been removed from the mailing list{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12">
+    <div class="max-w-md mx-auto">
+        <div class="card bg-base-200">
+            <div class="card-body text-center">
+                <i data-lucide="check-circle" class="w-12 h-12 mx-auto text-success mb-4"></i>
+                <h2 class="text-lg font-semibold mb-2">Successfully Unsubscribed</h2>
+                <p class="text-base-content/70">
+                    <strong>{{ label }}</strong> will no longer receive emails from the AImageLab mailing list.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

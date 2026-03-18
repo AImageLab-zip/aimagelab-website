@@ -1,0 +1,115 @@
+{% extends "main/base_full_width.html" %}
+
+{% block title %}Email Moderation - AImageLab{% endblock %}
+
+{% block hero_title %}Mailing List Moderation{% endblock %}
+{% block hero_description %}Review and approve emails before they are sent to the mailing list{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12">
+    <div class="max-w-4xl mx-auto space-y-8">
+
+        <!-- Pending Emails -->
+        <div>
+            <h2 class="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                <i data-lucide="clock" class="w-5 h-5"></i>
+                Pending Moderation
+                {% if pending %}
+                <span class="badge badge-warning">{{ pending.count }}</span>
+                {% endif %}
+            </h2>
+
+            {% if pending %}
+            <div class="space-y-3">
+                {% for email in pending %}
+                <a href="{% url 'mailinglist:moderation_detail' email.pk %}"
+                   class="card bg-base-200 hover:bg-base-300 transition-colors cursor-pointer block">
+                    <div class="card-body py-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-semibold truncate">{{ email.subject }}</h3>
+                                <p class="text-sm text-base-content/60">
+                                    From: {{ email.sender_name }} &lt;{{ email.sender }}&gt;
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                {% if email.matched_route %}
+                                <span class="badge badge-info badge-sm">{{ email.matched_route.tag }}</span>
+                                {% endif %}
+                                <span class="badge badge-warning badge-sm">Pending</span>
+                                <span class="text-xs text-base-content/50">
+                                    {{ email.received_at|timesince }} ago
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="card bg-base-200">
+                <div class="card-body text-center py-12">
+                    <i data-lucide="check-circle" class="w-12 h-12 mx-auto text-success mb-3"></i>
+                    <p class="text-lg text-base-content/60">No emails pending moderation.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent History -->
+        {% if recent %}
+        <div>
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <i data-lucide="history" class="w-5 h-5"></i>
+                Recent History
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>From</th>
+                            <th>Status</th>
+                            <th>Route</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for email in recent %}
+                        <tr class="hover cursor-pointer" onclick="window.location='{% url 'mailinglist:moderation_detail' email.pk %}'">
+                            <td class="max-w-xs truncate">{{ email.subject }}</td>
+                            <td class="text-sm">{{ email.sender }}</td>
+                            <td>
+                                {% if email.status == 'approved' %}
+                                <span class="badge badge-success badge-sm">Approved</span>
+                                {% elif email.status == 'auto_approved' %}
+                                <span class="badge badge-info badge-sm">Auto</span>
+                                {% elif email.status == 'rejected' %}
+                                <span class="badge badge-error badge-sm">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if email.matched_route %}
+                                <span class="badge badge-ghost badge-sm">{{ email.matched_route.tag }}</span>
+                                {% else %}
+                                <span class="text-base-content/30">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-xs">{{ email.received_at|date:"M d, H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="flex justify-end">
+            <a href="{% url 'dashboard' %}" class="btn btn-ghost">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -72,6 +72,7 @@ CSRF_COOKIE_SAMESITE = "Lax"
 # Application definition
 INSTALLED_APPS = [
     "main.apps.MainConfig",
+    "mailinglist.apps.MailinglistConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -352,3 +353,33 @@ MARKDOWNIFY = {
         ],
     }
 }
+
+# ============================================================================
+# Mailing List Configuration
+# ============================================================================
+
+# Gmail IMAP / SMTP credentials
+MAILINGLIST_EMAIL_ADDRESS = os.environ.get('MAILINGLIST_EMAIL_ADDRESS', '')
+MAILINGLIST_EMAIL_PASSWORD = os.environ.get('MAILINGLIST_EMAIL_PASSWORD', '')
+
+# IMAP settings (for fetching incoming mail)
+MAILINGLIST_IMAP_HOST = os.environ.get('MAILINGLIST_IMAP_HOST', 'imap.gmail.com')
+MAILINGLIST_IMAP_PORT = int(os.environ.get('MAILINGLIST_IMAP_PORT', '993'))
+
+# SMTP settings (for sending outgoing mail)
+MAILINGLIST_SMTP_HOST = os.environ.get('MAILINGLIST_SMTP_HOST', 'smtp.gmail.com')
+MAILINGLIST_SMTP_PORT = int(os.environ.get('MAILINGLIST_SMTP_PORT', '587'))
+
+# Display name used in the From header of outgoing emails
+MAILINGLIST_FROM_NAME = os.environ.get('MAILINGLIST_FROM_NAME', 'AImageLab Mailing List')
+
+# Base URL for unsubscribe and moderation links
+MAILINGLIST_BASE_URL = os.environ.get('MAILINGLIST_BASE_URL', 'https://aimagelab.unimore.it')
+
+# Sender domains that are auto-approved (no moderation needed)
+# Comma-separated in the env var, e.g. "unimore.it,example.com"
+_trusted = os.environ.get('MAILINGLIST_TRUSTED_DOMAINS', 'unimore.it')
+MAILINGLIST_TRUSTED_DOMAINS = [d.strip() for d in _trusted.split(',') if d.strip()]
+
+# Number of emails to send per batch (progressive sending)
+MAILINGLIST_BATCH_SIZE = int(os.environ.get('MAILINGLIST_BATCH_SIZE', '20'))

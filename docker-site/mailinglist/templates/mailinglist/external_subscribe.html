@@ -1,0 +1,41 @@
+{% extends "main/base_full_width.html" %}
+
+{% block title %}Subscribe to Mailing List - AImageLab{% endblock %}
+
+{% block hero_title %}Subscribe to Mailing List{% endblock %}
+{% block hero_description %}Stay updated with the latest from AImageLab{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12">
+    <div class="max-w-md mx-auto">
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h2 class="card-title text-primary mb-4">
+                    <i data-lucide="mail-plus" class="w-5 h-5"></i>
+                    External Subscription
+                </h2>
+                <p class="text-sm text-base-content/70 mb-4">
+                    Not a member of AImageLab? You can still receive our mailing list emails.
+                    Enter your details below to subscribe.
+                </p>
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">Name (optional)</legend>
+                        <input type="text" name="name" class="input w-full" placeholder="Your name">
+                    </fieldset>
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">Email Address</legend>
+                        <input type="email" name="email" class="input w-full"
+                               placeholder="you@example.com" required>
+                    </fieldset>
+                    <button type="submit" class="btn btn-primary w-full">
+                        <i data-lucide="mail-plus" class="w-4 h-4"></i>
+                        Subscribe
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

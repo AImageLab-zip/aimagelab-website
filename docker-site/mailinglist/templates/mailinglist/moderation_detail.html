@@ -1,0 +1,173 @@
+{% extends "main/base_full_width.html" %}
+
+{% block title %}Review Email - AImageLab{% endblock %}
+
+{% block hero_title %}Review Email{% endblock %}
+{% block hero_description %}Decide whether to forward this email to the mailing list{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12">
+    <div class="max-w-4xl mx-auto space-y-6">
+
+        <!-- Email Header Card -->
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+                    <div>
+                        <h2 class="card-title text-primary">{{ email.subject }}</h2>
+                        <p class="text-sm text-base-content/60 mt-1">
+                            From: <strong>{{ email.sender_name }}</strong> &lt;{{ email.sender }}&gt;
+                        </p>
+                        <p class="text-xs text-base-content/50">
+                            Received: {{ email.received_at|date:"F d, Y H:i" }}
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        {% if email.status == 'pending' %}
+                        <span class="badge badge-warning">Pending</span>
+                        {% elif email.status == 'approved' %}
+                        <span class="badge badge-success">Approved</span>
+                        {% elif email.status == 'auto_approved' %}
+                        <span class="badge badge-info">Auto-approved</span>
+                        {% elif email.status == 'rejected' %}
+                        <span class="badge badge-error">Rejected</span>
+                        {% endif %}
+
+                        {% if email.matched_route %}
+                        <span class="badge badge-ghost">{{ email.matched_route.tag }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if email.matched_route %}
+                <div class="alert alert-info mb-4">
+                    <i data-lucide="route" class="w-5 h-5"></i>
+                    <div>
+                        <p class="font-semibold">Route: {{ email.matched_route.tag }}</p>
+                        <p class="text-sm">
+                            Target roles: {{ email.matched_route.roles|join:", " }}
+                            {% if email.matched_route.send_to_external %} + external recipients{% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if email.moderated_by %}
+                <div class="text-sm text-base-content/60">
+                    Moderated by <strong>{{ email.moderated_by.get_full_name }}</strong>
+                    on {{ email.moderated_at|date:"F d, Y H:i" }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Email Body -->
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h3 class="font-semibold mb-3">Email Content</h3>
+                {% if email.body_html %}
+                <div class="bg-white rounded-lg p-4 border border-base-300 text-black overflow-auto max-h-[600px]">
+                    {{ email.body_html|safe }}
+                </div>
+                {% elif email.body_text %}
+                <pre class="bg-base-300 rounded-lg p-4 whitespace-pre-wrap text-sm overflow-auto max-h-[600px]">{{ email.body_text }}</pre>
+                {% else %}
+                <p class="italic text-base-content/40">No content.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Attachments -->
+        {% if email.attachments.all %}
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h3 class="font-semibold mb-3">
+                    <i data-lucide="paperclip" class="w-4 h-4 inline"></i>
+                    Attachments ({{ email.attachments.count }})
+                </h3>
+                <ul class="space-y-1">
+                    {% for att in email.attachments.all %}
+                    <li class="flex items-center gap-2 text-sm">
+                        <i data-lucide="file" class="w-4 h-4 text-base-content/60"></i>
+                        {{ att.filename }}
+                        <span class="text-xs text-base-content/40">({{ att.content_type }})</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Delivery Status (for approved emails) -->
+        {% if deliveries %}
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h3 class="font-semibold mb-3">Delivery Status</h3>
+                <div class="overflow-x-auto">
+                    <table class="table table-xs">
+                        <thead>
+                            <tr>
+                                <th>Recipient</th>
+                                <th>Status</th>
+                                <th>Sent At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in deliveries %}
+                            <tr>
+                                <td>{{ d.recipient_email }}</td>
+                                <td>
+                                    {% if d.status == 'queued' %}
+                                    <span class="badge badge-ghost badge-xs">Queued</span>
+                                    {% elif d.status == 'sent' %}
+                                    <span class="badge badge-success badge-xs">Sent</span>
+                                    {% elif d.status == 'failed' %}
+                                    <span class="badge badge-error badge-xs" title="{{ d.error_message }}">Failed</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-xs">{{ d.sent_at|date:"H:i:s"|default:"—" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        {% if email.status == 'pending' %}
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <div class="flex flex-wrap gap-3 justify-end">
+                    <form method="post" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="btn btn-success">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            Approve &amp; Send
+                        </button>
+                    </form>
+                    <form method="post" class="inline"
+                          onsubmit="return confirm('Reject this email? It will not be sent to the mailing list.')">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reject">
+                        <button type="submit" class="btn btn-error btn-outline">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                            Reject
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="flex justify-end">
+            <a href="{% url 'mailinglist:moderation' %}" class="btn btn-ghost">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Back to Moderation Queue
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
