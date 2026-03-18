@@ -14,6 +14,32 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
 
 <style>
+    .form-copy {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .form-legend {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.35;
+    }
+
+    .form-row-responsive {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+        .form-row-responsive {
+            flex-direction: row;
+            align-items: center;
+        }
+    }
+
     .EasyMDEContainer .CodeMirror {
         height: 500px;
         font-family: 'JetBrains Mono', 'Consolas', monospace;
@@ -89,21 +115,21 @@
                         </h2>
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend overflow-x-scroll">Title *</legend>
+                            <legend class="fieldset-legend form-legend">Title *</legend>
                             <input type="text" id="title" name="title" value="{{ post.title|default:'' }}" required class="input w-full" placeholder="Enter post title">
-                            <p class="label overflow-x-scroll">The main headline of your post</p>
+                            <p class="label form-copy">The main headline of your post</p>
                         </fieldset>
                         
                         <fieldset class="fieldset mb-4 ">
-                            <legend class="fieldset-legend">Slug *</legend>
+                            <legend class="fieldset-legend form-legend">Slug *</legend>
                             <input type="text" id="slug" name="slug" value="{{ post.slug|default:'' }}" required class="input w-full" placeholder="my-awesome-post">
-                            <p class="label overflow-x-scroll">URL-friendly version (e.g., my-awesome-post). Use lowercase letters, numbers, and hyphens only.</p>
+                            <p class="label form-copy">URL-friendly version (e.g., my-awesome-post). Use lowercase letters, numbers, and hyphens only.</p>
                         </fieldset>
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend overflow-x-scroll">Description</legend>
+                            <legend class="fieldset-legend form-legend">Description</legend>
                             <textarea id="description" name="description" rows="3" class="textarea w-full" placeholder="Brief summary of the post...">{{ post.description|default:'' }}</textarea>
-                            <p class="label overflow-x-scroll">Short excerpt shown in news listings and previews (recommended: 150-160 characters)</p>
+                            <p class="label form-copy">Short excerpt shown in news listings and previews (recommended: 150-160 characters)</p>
                         </fieldset>
                     </div>
                 </div>
@@ -117,37 +143,90 @@
                         </h2>
                         
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend overflow-x-scroll">
+                            <legend class="fieldset-legend form-legend">
                                 Post Content *
                                 <span class="badge badge-sm badge-primary ml-2">Markdown supported</span>
                             </legend>
                             <textarea id="content" name="content" rows="20" required class="textarea w-full font-mono text-xs sm:text-base" placeholder="Write your post content here... You can use Markdown formatting.">{{ post.content|default:'' }}</textarea>
-                            <p class="label overflow-x-scroll">
+                            <p class="label form-copy">
                                 <strong>Markdown tips:</strong> **bold**, *italic*, [link](url), # Heading, - List item, `code`
                             </p>
                         </fieldset>
 
                         <fieldset class="fieldset mt-4">
-                            <legend class="fieldset-legend overflow-x-scroll">
+                            <legend class="fieldset-legend form-legend">
                                 <i data-lucide="image" class="w-4 h-4 inline"></i>
                                 Upload Inline Image
                             </legend>
-                            <div class="flex flex-col sm:flex-row gap-3">
+                            <div class="form-row-responsive">
                                 <input
                                     type="file"
                                     id="post-image-upload"
                                     accept="image/*"
                                     class="file-input w-full"
                                 >
-                                <button type="button" id="upload-image-btn" class="btn btn-secondary">
+                                <button type="button" id="upload-image-btn" class="btn btn-secondary w-full sm:w-auto">
                                     <i data-lucide="upload" class="w-4 h-4"></i>
                                     Upload and Insert
                                 </button>
                             </div>
-                            <p class="label overflow-x-scroll">Uploads an image and inserts Markdown at your cursor position</p>
+                            <p class="label form-copy">Uploads an image and inserts Markdown at your cursor position</p>
                         </fieldset>
                     </div>
                 </div>
+
+                   <!-- Action Buttons -->
+        <div class="card bg-base-200 mt-6">
+            <div class="card-body">
+                <div class="flex flex-wrap gap-2 sm:gap-3 justify-end">
+                    {% if post %}
+                        {% if post.is_published %}
+                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Save Changes</span>
+                            <span class="sm:hidden">Save</span>
+                        </button>
+                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
+                            <i data-lucide="archive" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Move to Draft</span>
+                            <span class="sm:hidden">Draft</span>
+                        </button>
+                        {% else %}
+                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Save Draft</span>
+                            <span class="sm:hidden">Save</span>
+                        </button>
+                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Publish Now</span>
+                            <span class="sm:hidden">Publish</span>
+                        </button>
+                        {% endif %}
+                        <a href="{% url 'single' post.slug %}" class="btn btn-ghost btn-sm sm:btn-md w-full sm:w-auto">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Cancel</span>
+                        </a>
+                    {% else %}
+                     <a href="{% url 'news' %}" class="btn btn-ghost btn-sm sm:btn-md w-full sm:w-auto md:mr-auto">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                            <span>Cancel</span>
+                        </a>
+                        <button type="submit" name="action" value="draft" class="btn btn-outline w-full sm:w-auto btn-sm sm:btn-md">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Create as Draft</span>
+                            <span class="sm:hidden">Draft</span>
+                        </button>
+                        <button type="submit" name="action" value="publish" class="btn btn-primary w-full sm:w-auto btn-sm sm:btn-md">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Publish Now</span>
+                            <span class="sm:hidden">Publish</span>
+                        </button>
+
+                    {% endif %}
+                </div>
+            </div>
+        </div>
         </div>
 {% endblock %}
 
@@ -164,14 +243,14 @@
                         <div class="form-control mb-4">
                             <label class="label cursor-pointer justify-start gap-3">
                                 <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="is_pinned" name="is_pinned" {% if post and post.is_pinned %}checked{% endif %}>
-                                <span class="label-text break-words">Pin this post to top</span>
+                                <span class="text-wrap">Pin this post to top</span>
                             </label>
                         </div>
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend overflow-x-scroll">Event Date (optional)</legend>
+                            <legend class="fieldset-legend form-legend">Event Date (optional)</legend>
                             <input type="datetime-local" id="event_date" name="event_date" value="{% if post and post.event_date %}{{ post.event_date|date:'Y-m-d\TH:i' }}{% endif %}" class="input w-full">
-                            <p class="label overflow-x-scroll">Set if this post is about an upcoming or past event (date and time)</p>
+                            <p class="label form-copy">Set if this post is about an upcoming or past event (date and time)</p>
                         </fieldset>
                         
                         {% if post and post.event_date %}
@@ -208,13 +287,13 @@
                         </h2>
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend overflow-x-scroll">Select Categories</legend>
+                            <legend class="fieldset-legend form-legend">Select Categories</legend>
                             <select id="categories" name="categories" multiple class="select w-full h-40">
                                 {% for category in categories %}
                                     <option value="{{ category.id }}" {% if post and category in post.categories.all %}selected{% endif %}>{{ category.name }}</option>
                                 {% endfor %}
                             </select>
-                            <p class="label overflow-x-scroll">Hold Ctrl (Cmd on Mac) to select multiple categories</p>
+                            <p class="label form-copy">Hold Ctrl (Cmd on Mac) to select multiple categories</p>
                         </fieldset>
                     </div>
                 </div>
@@ -235,9 +314,9 @@
                         {% endif %}
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend overflow-x-scroll">{% if post.cover %}Replace{% else %}Upload{% endif %} Image</legend>
+                            <legend class="fieldset-legend form-legend">{% if post.cover %}Replace{% else %}Upload{% endif %} Image</legend>
                             <input type="file" id="cover" name="cover" accept="image/*" class="file-input w-full">
-                            <p class="label overflow-x-scroll">Recommended: 1200x630px, JPG or PNG, max 2MB</p>
+                            <p class="label form-copy">Recommended: 1200x630px, JPG or PNG, max 2MB</p>
                         </fieldset>
                         
                         {% if post and post.cover %}
@@ -267,9 +346,9 @@
                         {% endif %}
 
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend overflow-x-scroll">Create Thumbnail from Image</legend>
+                            <legend class="fieldset-legend form-legend">Create Thumbnail from Image</legend>
                             <input type="file" id="thumbnail-source" accept="image/*" class="file-input w-full">
-                            <p class="label overflow-x-scroll">Upload an image to crop for thumbnail (480x200px, 2.4:1 ratio)</p>
+                            <p class="label form-copy">Upload an image to crop for thumbnail (480x200px, 2.4:1 ratio)</p>
                         </fieldset>
 
                         <!-- Use Cover as Thumbnail Source Button -->
@@ -278,7 +357,7 @@
                                 <i data-lucide="image" class="w-4 h-4"></i>
                                 {% if post.thumbnail %}Re-crop from Cover Image{% else %}Use Cover as Thumbnail{% endif %}
                             </button>
-                            <p class="label overflow-x-scroll text-xs">Crop the cover image to create a thumbnail</p>
+                            <p class="label form-copy text-xs">Crop the cover image to create a thumbnail</p>
                         </div>
 
                         <!-- Cropper Section (hidden by default) -->
@@ -327,57 +406,7 @@
             </div>
         </div>
         
-        <!-- Action Buttons -->
-        <div class="card bg-base-200 mt-6">
-            <div class="card-body">
-                <div class="flex flex-wrap gap-2 sm:gap-3 justify-end">
-                    {% if post %}
-                        {% if post.is_published %}
-                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Save Changes</span>
-                            <span class="sm:hidden">Save</span>
-                        </button>
-                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
-                            <i data-lucide="archive" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Move to Draft</span>
-                            <span class="sm:hidden">Draft</span>
-                        </button>
-                        {% else %}
-                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Save Draft</span>
-                            <span class="sm:hidden">Save</span>
-                        </button>
-                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
-                            <i data-lucide="send" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Publish Now</span>
-                            <span class="sm:hidden">Publish</span>
-                        </button>
-                        {% endif %}
-                        <a href="{% url 'single' post.slug %}" class="btn btn-ghost btn-sm sm:btn-md">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Cancel</span>
-                        </a>
-                    {% else %}
-                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Create as Draft</span>
-                            <span class="sm:hidden">Draft</span>
-                        </button>
-                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
-                            <i data-lucide="send" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Publish Now</span>
-                            <span class="sm:hidden">Publish</span>
-                        </button>
-                        <a href="{% url 'news' %}" class="btn btn-ghost btn-sm sm:btn-md">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Cancel</span>
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+    
     </form>
 
 <!-- Cropper.js Library -->
