@@ -97,6 +97,7 @@ Add a new page to the lab knowledge base with full markdown support.
                                     name="title" 
                                     class="input input-bordered w-full" 
                                     placeholder="e.g., Getting Started Guide"
+                                    maxlength="200"
                                     required
                                 />
                             </div>
@@ -111,7 +112,8 @@ Add a new page to the lab knowledge base with full markdown support.
                                     name="slug" 
                                     class="input input-bordered w-full" 
                                     placeholder="e.g., getting-started-guide (auto-generated if empty)"
-                                    pattern="[a-z0-9-]*"
+                                    maxlength="250"
+                                    pattern="[a-z0-9_-]*"
                                 />
                                 <label class="label">
                                     <span class="label-text-alt">Use lowercase letters, numbers, and hyphens only</span>
@@ -136,8 +138,7 @@ Add a new page to the lab knowledge base with full markdown support.
                                 </label>
                                 <textarea 
                                     id="wiki-content"
-                                    name="content" 
-                                    required
+                                    name="content"
                                 ></textarea>
                             </div>
 
@@ -228,6 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
         element: document.getElementById('wiki-content'),
         placeholder: 'Write your content here using Markdown...\\n\\n# Heading 1\\n## Heading 2\\n\\n**Bold** *Italic*\\n\\n- List item\\n- Another item',
         spellChecker: false,
+        forceSync: true,
         autosave: {
             enabled: true,
             uniqueId: 'wiki-create',
@@ -242,6 +244,28 @@ document.addEventListener('DOMContentLoaded', function() {
         ],
         status: ['lines', 'words', 'cursor'],
     });
+
+    const wikiForm = document.getElementById('wiki-form');
+    if (wikiForm) {
+        wikiForm.addEventListener('submit', function(event) {
+            const markdownValue = easyMDE.value().trim();
+            if (!markdownValue) {
+                event.preventDefault();
+                showModal(
+                    '<i data-lucide="alert-circle" class="w-5 h-5 inline text-warning"></i> Content Required',
+                    'Please add page content before creating the wiki page.',
+                    true
+                );
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+                easyMDE.codemirror.focus();
+                return;
+            }
+
+            easyMDE.codemirror.save();
+        });
+    }
     
     // Modal functions
     const modal = document.getElementById('upload-modal');

@@ -1203,6 +1203,21 @@ def wiki_page(request, slug):
 @login_required
 def wiki_create(request):
     """Create a new wiki page"""
+    def make_unique_wiki_slug(raw_slug):
+        """Generate a unique slug for WikiPage instances within max length."""
+        max_slug_len = WikiPage._meta.get_field('slug').max_length
+        base_slug = (slugify(raw_slug) or 'wiki-page')[:max_slug_len]
+        candidate = base_slug
+        counter = 1
+
+        while WikiPage.objects.filter(slug=candidate).exists():
+            suffix = f"-{counter}"
+            trimmed_base = base_slug[:max_slug_len - len(suffix)]
+            candidate = f"{trimmed_base}{suffix}"
+            counter += 1
+
+        return candidate
+
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         slug = request.POST.get('slug', '').strip()
@@ -1213,20 +1228,9 @@ def wiki_create(request):
             django_messages.error(request, 'Title and content are required.')
             return redirect('wiki_create')
         
-        # Auto-generate slug from title if not provided
-        if not slug:
-            from django.utils.text import slugify
-            base_slug = slugify(title)
-            slug = base_slug
-            counter = 1
-            while WikiPage.objects.filter(slug=slug).exists():
-                slug = f"{base_slug}-{counter}"
-                counter += 1
-        else:
-            # Check if provided slug already exists
-            if WikiPage.objects.filter(slug=slug).exists():
-                django_messages.error(request, 'A page with this slug already exists.')
-                return redirect('wiki_create')
+        # Normalize and de-duplicate slug, whether provided or generated.
+        slug_source = slug or title
+        slug = make_unique_wiki_slug(slug_source)
         
         parent = None
         if parent_id:
