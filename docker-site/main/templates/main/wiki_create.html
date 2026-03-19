@@ -11,6 +11,19 @@ Add a new page to the lab knowledge base with full markdown support.
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
 <style>
+    .form-copy {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .form-legend {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.35;
+    }
+
     /* Editor styling */
     .EasyMDEContainer .CodeMirror {
         height: 500px;
@@ -90,7 +103,7 @@ Add a new page to the lab knowledge base with full markdown support.
                             
                             <div class="form-control">
                                 <label class="label">
-                                    <span class="label-text font-semibold">Title *</span>
+                                    <span class="label-text font-semibold form-legend">Title *</span>
                                 </label>
                                 <input 
                                     type="text" 
@@ -104,8 +117,8 @@ Add a new page to the lab knowledge base with full markdown support.
 
                             <div class="form-control">
                                 <label class="label">
-                                    <span class="label-text font-semibold">Slug (Optional)</span>
-                                    <span class="label-text-alt">Leave blank to auto-generate from title</span>
+                                    <span class="label-text font-semibold form-legend">Slug (Optional)</span>
+                                    <span class="label-text-alt form-copy">Leave blank to auto-generate from title</span>
                                 </label>
                                 <input 
                                     type="text" 
@@ -116,13 +129,13 @@ Add a new page to the lab knowledge base with full markdown support.
                                     pattern="[a-z0-9_-]*"
                                 />
                                 <label class="label">
-                                    <span class="label-text-alt">Use lowercase letters, numbers, and hyphens only</span>
+                                    <span class="label-text-alt form-copy">Use lowercase letters, numbers, and hyphens only</span>
                                 </label>
                             </div>
 
                             <div class="form-control">
                                 <label class="label">
-                                    <span class="label-text font-semibold">Parent Page (Optional)</span>
+                                    <span class="label-text font-semibold form-legend">Parent Page (Optional)</span>
                                 </label>
                                 <select name="parent" class="select select-bordered w-full">
                                     <option value="">None (Top-level page)</option>
@@ -134,7 +147,7 @@ Add a new page to the lab knowledge base with full markdown support.
 
                             <div class="form-control">
                                 <label class="label">
-                                    <span class="label-text font-semibold">Content *</span>
+                                    <span class="label-text font-semibold form-legend">Content *</span>
                                 </label>
                                 <textarea 
                                     id="wiki-content"
@@ -144,7 +157,7 @@ Add a new page to the lab knowledge base with full markdown support.
 
                             <div class="form-control">
                                 <label class="label">
-                                    <span class="label-text font-semibold">
+                                    <span class="label-text font-semibold form-legend">
                                         <i data-lucide="image" class="w-4 h-4 inline"></i>
                                         Upload Image
                                     </span>
@@ -162,7 +175,7 @@ Add a new page to the lab knowledge base with full markdown support.
                                     </button>
                                 </div>
                                 <label class="label">
-                                    <span class="label-text-alt">Upload an image and insert markdown code at cursor position</span>
+                                    <span class="label-text-alt form-copy">Upload an image and insert markdown code at cursor position</span>
                                 </label>
                             </div>
 

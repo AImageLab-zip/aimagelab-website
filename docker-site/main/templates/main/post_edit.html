@@ -142,16 +142,16 @@
                             Content
                         </h2>
                         
-                        <fieldset class="fieldset">
+                        <div>
                             <legend class="fieldset-legend form-legend">
                                 Post Content *
                                 <span class="badge badge-sm badge-primary ml-2">Markdown supported</span>
                             </legend>
-                            <textarea id="content" name="content" rows="20" class="textarea w-full font-mono text-xs sm:text-base" placeholder="Write your post content here... You can use Markdown formatting.">{{ post.content|default:'' }}</textarea>
+                            <textarea id="content" name="content" rows="20" class="textarea" placeholder="Write your post content here... You can use Markdown formatting.">{{ post.content|default:'' }}</textarea>
                             <p class="label form-copy">
                                 <strong>Markdown tips:</strong> **bold**, *italic*, [link](url), # Heading, - List item, `code`
                             </p>
-                        </fieldset>
+                        </div>
 
                         <fieldset class="fieldset mt-4">
                             <legend class="fieldset-legend form-legend">
