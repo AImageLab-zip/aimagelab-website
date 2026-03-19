@@ -51,7 +51,7 @@
                             <i data-lucide="arrow-left" class="w-4 h-4"></i>
                             Back to News
                         </a>
-                        {% if user.is_authenticated %}
+                        {% if user.is_staff %}
                         <a href="{% url 'post_edit' post.slug %}" class="btn btn-primary">
                             <i data-lucide="edit" class="w-4 h-4"></i>
                             Edit Post
