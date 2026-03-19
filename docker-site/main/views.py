@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 
 from django.http import FileResponse, Http404
 from django.conf import settings
+from django.utils.text import slugify
 import os
 from .models import UserProfile, IRISImportLog
 from .tasks import sync_user_task, import_iris_publications, import_iris_profile_photos, is_import_running
@@ -379,11 +380,33 @@ def post_form(request, slug=None):
     """Add or edit a post."""
     post = Post.objects.get(slug=slug) if slug else None
     categories = Category.objects.all().order_by('name')
+
+    def make_unique_post_slug(raw_slug, exclude_post_id=None):
+        """Generate a unique slug for Post instances."""
+        max_slug_len = Post._meta.get_field('slug').max_length
+        base_slug = (slugify(raw_slug) or 'post')[:max_slug_len]
+        candidate = base_slug
+        counter = 1
+
+        query = Post.objects.filter(slug=candidate)
+        if exclude_post_id:
+            query = query.exclude(pk=exclude_post_id)
+
+        while query.exists():
+            suffix = f"-{counter}"
+            trimmed_base = base_slug[:max_slug_len - len(suffix)]
+            candidate = f"{trimmed_base}{suffix}"
+            counter += 1
+            query = Post.objects.filter(slug=candidate)
+            if exclude_post_id:
+                query = query.exclude(pk=exclude_post_id)
+
+        return candidate
     
     if request.method == 'POST':
         action = request.POST.get('action')
         title = request.POST.get('title')
-        new_slug = request.POST.get('slug')
+        submitted_slug = request.POST.get('slug', '').strip()
         description = request.POST.get('description', '')
         content = request.POST.get('content')
         cover = request.FILES.get('cover')
@@ -413,6 +436,16 @@ def post_form(request, slug=None):
         remove_thumbnail = request.POST.get('remove_thumbnail') == 'on'
         
         is_published = action == 'publish'
+
+        if post:
+            # For edits, keep current slug unless user explicitly provides a new one.
+            new_slug = post.slug
+            if submitted_slug:
+                new_slug = make_unique_post_slug(submitted_slug, exclude_post_id=post.pk)
+        else:
+            # For new posts, use provided slug or auto-generate from title.
+            slug_source = submitted_slug or title
+            new_slug = make_unique_post_slug(slug_source)
         
         if post:
             # Edit existing post

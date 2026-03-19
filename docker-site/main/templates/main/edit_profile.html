@@ -46,7 +46,7 @@ Update your personal information and professional links
                         
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend form-legend">Phone Number</legend>
-                            <input class="input w-full" id="phone_number" name="phone_number"
+                            <input class="input w-full" id="phone_number" name="phone_number" maxlength="32"
                                    value="{{ profile.phone_number }}" placeholder="+39 123 456 7890">
                             <p class="label form-copy">International format preferred (e.g., +39-123-456-7890)</p>
                         </fieldset>
@@ -66,7 +66,7 @@ Update your personal information and professional links
                                 <i data-lucide="globe" class="w-4 h-4 inline mr-2"></i>
                                 Personal Website
                             </legend>
-                            <input type="url" class="input w-full" id="website" name="website"
+                            <input type="url" class="input w-full" id="website" name="website" maxlength="200"
                                    value="{{ profile.website }}" placeholder="https://your-website.com">
                         </fieldset>
                         
@@ -75,7 +75,7 @@ Update your personal information and professional links
                                 <i data-lucide="book-open" class="w-4 h-4 inline mr-2"></i>
                                 Google Scholar
                             </legend>
-                            <input type="url" class="input w-full" id="google_scholar" name="google_scholar"
+                            <input type="url" class="input w-full" id="google_scholar" name="google_scholar" maxlength="200"
                                    value="{{ profile.google_scholar }}" placeholder="https://scholar.google.com/...">
                         </fieldset>
                         
@@ -84,7 +84,7 @@ Update your personal information and professional links
                                 <i data-lucide="github" class="w-4 h-4 inline mr-2"></i>
                                 GitHub
                             </legend>
-                            <input type="url" class="input w-full" id="github" name="github"
+                            <input type="url" class="input w-full" id="github" name="github" maxlength="200"
                                    value="{{ profile.github }}" placeholder="https://github.com/username">
                         </fieldset>
                         
@@ -93,7 +93,7 @@ Update your personal information and professional links
                                 <i data-lucide="linkedin" class="w-4 h-4 inline mr-2"></i>
                                 LinkedIn
                             </legend>
-                            <input type="url" class="input w-full" id="linkedin" name="linkedin"
+                            <input type="url" class="input w-full" id="linkedin" name="linkedin" maxlength="200"
                                    value="{{ profile.linkedin }}" placeholder="https://linkedin.com/in/username">
                         </fieldset>
                     </div>
@@ -174,7 +174,7 @@ Update your personal information and professional links
                         <div class="form-control">
                             <label class="label cursor-pointer justify-start gap-3">
                                 <input class="checkbox checkbox-primary" type="checkbox" id="remove_avatar" name="remove_avatar">
-                                <span class="label-text text-sm text-wrap">
+                                <span class="label-text text-sm form-copy">
                                     Remove personal photo
                                     {% if profile.avatar_iris %}
                                     <span class="text-base-content/60">(IRIS photo will be shown)</span>
