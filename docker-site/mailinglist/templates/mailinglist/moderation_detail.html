@@ -31,22 +31,24 @@
                         <span class="badge badge-info">Auto-approved</span>
                         {% elif email.status == 'rejected' %}
                         <span class="badge badge-error">Rejected</span>
+                        {% elif email.status == 'blacklisted' %}
+                        <span class="badge badge-error">Blacklisted Sender</span>
                         {% endif %}
 
-                        {% if email.matched_route %}
-                        <span class="badge badge-ghost">{{ email.matched_route.tag }}</span>
+                        {% if email.matched_routes.all %}
+                        {% for route in email.matched_routes.all %}<span class="badge badge-ghost">{{ route.tag }}</span> {% endfor %}
                         {% endif %}
                     </div>
                 </div>
 
-                {% if email.matched_route %}
+                {% if email.matched_routes.all %}
                 <div class="alert alert-info mb-4">
                     <i data-lucide="route" class="w-5 h-5"></i>
                     <div>
-                        <p class="font-semibold">Route: {{ email.matched_route.tag }}</p>
+                        <p class="font-semibold">Routes: {% for route in email.matched_routes.all %}{{ route.tag }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
                         <p class="text-sm">
-                            Target roles: {{ email.matched_route.roles|join:", " }}
-                            {% if email.matched_route.send_to_external %} + external recipients{% endif %}
+                            Target roles: {% for route in email.matched_routes.all %}{{ route.roles|join:"," }}{% if not forloop.last %} + {% endif %}{% endfor %}
+                            {% for route in email.matched_routes.all %}{% if route.send_to_external %} + external recipients{% endif %}{% endfor %}
                         </p>
                     </div>
                 </div>
@@ -140,27 +142,114 @@
         <div class="card bg-base-200">
             <div class="card-body">
                 <div class="flex flex-wrap gap-3 justify-end">
-                    <form method="post" class="inline">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="approve">
-                        <button type="submit" class="btn btn-success">
-                            <i data-lucide="check" class="w-4 h-4"></i>
-                            Approve &amp; Send
-                        </button>
-                    </form>
-                    <form method="post" class="inline"
-                          onsubmit="return confirm('Reject this email? It will not be sent to the mailing list.')">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="reject">
-                        <button type="submit" class="btn btn-error btn-outline">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                            Reject
-                        </button>
-                    </form>
+                    <button type="button" onclick="document.getElementById('modal-approve').showModal()" class="btn btn-success btn-outline">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        Approve &amp; Send
+                    </button>
+                    <button type="button" onclick="document.getElementById('modal-reject').showModal()" class="btn btn-warning btn-outline">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                        Reject
+                    </button>
+                    <button type="button" onclick="document.getElementById('modal-blacklist').showModal()" class="btn btn-error btn-outline">
+                        <i data-lucide="ban" class="w-4 h-4"></i>
+                        Reject &amp; Blacklist Sender
+                    </button>
+                    <button type="button" onclick="document.getElementById('modal-whitelist').showModal()" class="btn btn-info btn-outline">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        Approve, Send &amp; Whitelist Sender
+                    </button>
                 </div>
             </div>
         </div>
         {% endif %}
+
+        <!-- Hidden forms (submitted by modals) -->
+        <form id="form-approve" method="post" class="hidden">{% csrf_token %}<input type="hidden" name="action" value="approve"></form>
+        <form id="form-reject" method="post" class="hidden">{% csrf_token %}<input type="hidden" name="action" value="reject"></form>
+        <form id="form-blacklist" method="post" class="hidden">{% csrf_token %}<input type="hidden" name="action" value="blacklist"></form>
+        <form id="form-whitelist" method="post" class="hidden">{% csrf_token %}<input type="hidden" name="action" value="whitelist"></form>
+
+        <!-- Modal: Approve -->
+        <dialog id="modal-approve" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-success"></i>
+                    Approve &amp; Send
+                </h3>
+                <p class="py-4">Forward this email to the mailing list? This action cannot be undone.</p>
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-approve').close()">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="document.getElementById('form-approve').submit()">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        Approve &amp; Send
+                    </button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
+
+        <!-- Modal: Reject -->
+        <dialog id="modal-reject" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i data-lucide="x-circle" class="w-5 h-5 text-warning"></i>
+                    Reject Email
+                </h3>
+                <p class="py-4">Reject this email? It will <strong>not</strong> be sent to the mailing list.</p>
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-reject').close()">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="document.getElementById('form-reject').submit()">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                        Reject
+                    </button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
+
+        <!-- Modal: Blacklist -->
+        <dialog id="modal-blacklist" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i data-lucide="ban" class="w-5 h-5 text-error"></i>
+                    Reject &amp; Blacklist Sender
+                </h3>
+                <p class="py-4">
+                    Blacklist <strong>{{ email.sender }}</strong>?<br>
+                    This email will be rejected and all future emails from this address will be <strong>automatically rejected</strong> without moderation.
+                </p>
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-blacklist').close()">Cancel</button>
+                    <button type="button" class="btn btn-error" onclick="document.getElementById('form-blacklist').submit()">
+                        <i data-lucide="ban" class="w-4 h-4"></i>
+                        Blacklist Sender
+                    </button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
+
+        <!-- Modal: Whitelist -->
+        <dialog id="modal-whitelist" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-info"></i>
+                    Approve, Send &amp; Whitelist Sender
+                </h3>
+                <p class="py-4">
+                    Whitelist <strong>{{ email.sender }}</strong>?<br>
+                    This email will be approved and forwarded. All future emails from this address will be <strong>auto-approved</strong> without moderation.
+                </p>
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-whitelist').close()">Cancel</button>
+                    <button type="button" class="btn btn-info" onclick="document.getElementById('form-whitelist').submit()">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        Approve &amp; Whitelist
+                    </button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
 
         <div class="flex justify-end">
             <a href="{% url 'mailinglist:moderation' %}" class="btn btn-ghost">

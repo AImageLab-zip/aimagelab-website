@@ -13,6 +13,7 @@ class MailingListPreference(models.Model):
         default=True,
         help_text="Receive emails from the mailing list"
     )
+    unsubscribe_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -53,19 +54,22 @@ class ExternalRecipient(models.Model):
 
 
 class SubjectRoleRoute(models.Model):
-    """Maps a subject tag like [ailb-all] to a set of recipient roles.
+    """Maps a subject tag like @ailb-all to a set of recipient roles.
 
+    Tags use the @ailb-<name> syntax and are stripped from the subject
+    when the email is forwarded.  Multiple tags may appear in a single
+    subject; recipients are the union of all matching routes.
     If ``send_to_external`` is True, external recipients also receive the mail.
     """
     tag = models.CharField(
         max_length=100,
         unique=True,
-        help_text="Tag that appears in the email subject, e.g. [ailb-all]"
+        help_text="Tag in the email subject using @ailb- syntax, e.g. @ailb-all"
     )
     description = models.CharField(max_length=255, blank=True)
     roles = models.JSONField(
         default=list,
-        help_text="List of role keys that should receive this mail, e.g. ['rector','full_professor']"
+        help_text="List of role keys that should receive this mail, e.g. ['professor','phd']"
     )
     send_to_external = models.BooleanField(
         default=False,
@@ -83,12 +87,14 @@ class IncomingEmail(models.Model):
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
         ('auto_approved', 'Auto-approved'),
+        ('blacklisted', 'Rejected (blacklisted sender)'),
     ]
 
     message_id = models.CharField(max_length=255, unique=True)
     sender = models.EmailField()
     sender_name = models.CharField(max_length=255, blank=True)
-    subject = models.CharField(max_length=998)  # RFC 5322 max
+    subject = models.CharField(max_length=998)  # RFC 5322 max — original subject
+    clean_subject = models.CharField(max_length=998, blank=True)  # subject with @tags stripped
     body_text = models.TextField(blank=True)
     body_html = models.TextField(blank=True)
     raw_headers = models.TextField(blank=True)
@@ -97,8 +103,8 @@ class IncomingEmail(models.Model):
         User, null=True, blank=True, on_delete=models.SET_NULL, related_name='moderated_emails'
     )
     moderated_at = models.DateTimeField(null=True, blank=True)
-    matched_route = models.ForeignKey(
-        SubjectRoleRoute, null=True, blank=True, on_delete=models.SET_NULL
+    matched_routes = models.ManyToManyField(
+        SubjectRoleRoute, blank=True, related_name='emails'
     )
     received_at = models.DateTimeField(auto_now_add=True)
 
@@ -144,3 +150,29 @@ class OutgoingEmail(models.Model):
 
     def __str__(self):
         return f"→ {self.recipient_email} [{self.status}]"
+
+
+class BlacklistedSender(models.Model):
+    """Senders whose emails are never forwarded to the mailing list."""
+    email = models.EmailField(unique=True)
+    reason = models.CharField(max_length=500, blank=True)
+    added_by = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name='blacklisted_senders'
+    )
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[blacklisted] {self.email}"
+
+
+class WhitelistedSender(models.Model):
+    """Senders whose emails are always auto-approved, regardless of domain."""
+    email = models.EmailField(unique=True)
+    reason = models.CharField(max_length=500, blank=True)
+    added_by = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name='whitelisted_senders'
+    )
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[whitelisted] {self.email}"
