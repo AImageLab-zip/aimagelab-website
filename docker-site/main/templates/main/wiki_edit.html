@@ -134,8 +134,7 @@ Suggest changes to this page. Your changes will be reviewed by staff.
                                 </label>
                                 <textarea 
                                     id="wiki-content"
-                                    name="content" 
-                                    required
+                                    name="content"
                                 >{{ page.content }}</textarea>
                             </div>
 
@@ -360,6 +359,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Sync EasyMDE content to textarea before form submission
+    const form = document.getElementById('wiki-form');
+    form.addEventListener('submit', function(e) {
+        const content = easyMDE.value();
+        document.getElementById('wiki-content').value = content;
+
+        const title = document.querySelector('input[name="title"]').value.trim();
+        if (!title || !content.trim()) {
+            e.preventDefault();
+            if (!content.trim()) {
+                alert('Content is required.');
+            }
+            return;
+        }
+
+        // Clear autosave on submit so stale drafts don't reappear
+        localStorage.removeItem('smde_wiki-edit-{{ page.slug }}');
+    });
+
     // Initialize lucide icons
     lucide.createIcons();
 });

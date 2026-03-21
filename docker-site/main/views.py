@@ -1465,3 +1465,20 @@ def wiki_upload_image(request):
         'success': False,
         'error': 'No image provided'
     }, status=400)
+
+
+@login_required
+def wiki_delete(request, slug):
+    """Delete a wiki page — superusers only."""
+    if not request.user.is_superuser:
+        django_messages.error(request, 'You do not have permission to delete wiki pages.')
+        return redirect('wiki_page', slug=slug)
+
+    page = get_object_or_404(WikiPage, slug=slug)
+
+    if request.method == 'POST':
+        page.delete()
+        django_messages.success(request, f'Wiki page "{page.title}" has been deleted.')
+        return redirect('wiki_home')
+
+    return render(request, 'main/wiki_delete.html', {'page': page})
