@@ -24,6 +24,10 @@ certbot certonly \
     -d www.aimagelab.ing.unimo.it \
     -d aimagelab.unimo.it \
     -d aimagelab.ing.unimo.it \
+    -d imagelab.unimore.it \
+    -d imagelab.ing.unimore.it \
+    -d www.imagelab.unimore.it \
+    -d www.imagelab.ing.unimore.it \
     --non-interactive \
     --agree-tos \
     --email ${EMAIL} \
