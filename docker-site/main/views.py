@@ -10,6 +10,8 @@ from django.core.files.base import ContentFile
 import json
 from functools import wraps
 from urllib.parse import quote
+from django_ratelimit.decorators import ratelimit
+from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField, F
 from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage, IRISImportLog
@@ -566,6 +568,7 @@ def people(request):
     return render(request, 'main/people.html', {'grouped_profiles': grouped_profiles})
 
 
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def login_view(request):
     """Login page view with Hello World message."""
     if request.method == 'POST':
@@ -766,35 +769,38 @@ def sync_ldap(request):
     # Redirect back to the previous page or home
     return redirect(request.META.get('HTTP_REFERER', 'home'))
 def serve_media(request, path):
-    """
-    Serve media files with access control.
-    
-    You can add authentication/authorization checks here:
-    - Check if user is authenticated
-    - Check if user has permission to access specific files
-    - Log file access
-    - etc.
-    """
-    # TODO: Add your access control logic here
-    # Example: if not request.user.is_authenticated:
-    #     raise Http404("File not found")
-    
+    """Serve media files with access control."""
+    # Directories that are publicly visible (used on unauthenticated pages)
+    PUBLIC_PREFIXES = (
+        'avatars/',
+        'blog_covers/',
+        'blog_thumbnails/',
+        'project_logos/',
+    )
+
+    # Allow public access only to explicitly public media directories;
+    # everything else requires authentication.
+    if not path.startswith(PUBLIC_PREFIXES):
+        if not request.user.is_authenticated:
+            raise Http404("File not found")
+
     file_path = os.path.join(settings.MEDIA_ROOT, path)
-    
+
     # Security check: ensure the file is within MEDIA_ROOT
     if not os.path.abspath(file_path).startswith(os.path.abspath(settings.MEDIA_ROOT)):
         raise Http404("Invalid file path")
-    
+
     if not os.path.exists(file_path):
         raise Http404("File not found")
-    
+
     if not os.path.isfile(file_path):
         raise Http404("Not a file")
-    
+
     # Serve the file
     return FileResponse(open(file_path, 'rb'))
 
 
+@ratelimit(key='user', rate='3/h', method='POST', block=True)
 @is_staff_required
 def trigger_iris_import(request):
     """
