@@ -8,6 +8,23 @@
 Update your personal information and professional links
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    .form-copy {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .form-legend {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.35;
+    }
+</style>
+{% endblock %}
+
 {% block main_content %}
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
@@ -22,16 +39,16 @@ Update your personal information and professional links
                         </h2>
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend">Biography</legend>
-                            <textarea id="bio" name="bio" rows="4" class="textarea w-full" placeholder="Tell us about yourself...">{{ profile.bio }}</textarea>
-                            <p class="label overflow-scroll">A short description of your background and interests</p>
+                            <legend class="fieldset-legend form-legend">Biography</legend>
+                            <textarea id="bio" name="bio" rows="4" class="textarea w-full" placeholder="Tell us about yourself...">{{ profile.bio|default:'' }}</textarea>
+                            <p class="label form-copy">A short description of your background and interests</p>
                         </fieldset>
-                        
+
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Phone Number</legend>
-                            <input class="input w-full" id="phone_number" name="phone_number"
-                                   value="{{ profile.phone_number }}" placeholder="+39 123 456 7890">
-                            <p class="label overflow-scroll">International format preferred (e.g., +39-123-456-7890)</p>
+                            <legend class="fieldset-legend form-legend">Phone Number</legend>
+                            <input class="input w-full" id="phone_number" name="phone_number" maxlength="32"
+                                   value="{{ profile.phone_number|default:'' }}" placeholder="+39 123 456 7890">
+                            <p class="label form-copy">International format preferred (e.g., +39-123-456-7890)</p>
                         </fieldset>
                     </div>
                 </div>
@@ -49,35 +66,35 @@ Update your personal information and professional links
                                 <i data-lucide="globe" class="w-4 h-4 inline mr-2"></i>
                                 Personal Website
                             </legend>
-                            <input type="url" class="input w-full" id="website" name="website"
-                                   value="{{ profile.website }}" placeholder="https://your-website.com">
+                            <input type="url" class="input w-full" id="website" name="website" maxlength="200"
+                                   value="{{ profile.website|default:'' }}" placeholder="https://your-website.com">
                         </fieldset>
-                        
+
                         <fieldset class="fieldset mb-4">
                             <legend class="fieldset-legend">
                                 <i data-lucide="book-open" class="w-4 h-4 inline mr-2"></i>
                                 Google Scholar
                             </legend>
-                            <input type="url" class="input w-full" id="google_scholar" name="google_scholar"
-                                   value="{{ profile.google_scholar }}" placeholder="https://scholar.google.com/...">
+                            <input type="url" class="input w-full" id="google_scholar" name="google_scholar" maxlength="200"
+                                   value="{{ profile.google_scholar|default:'' }}" placeholder="https://scholar.google.com/...">
                         </fieldset>
-                        
+
                         <fieldset class="fieldset mb-4">
                             <legend class="fieldset-legend">
                                 <i data-lucide="github" class="w-4 h-4 inline mr-2"></i>
                                 GitHub
                             </legend>
-                            <input type="url" class="input w-full" id="github" name="github"
-                                   value="{{ profile.github }}" placeholder="https://github.com/username">
+                            <input type="url" class="input w-full" id="github" name="github" maxlength="200"
+                                   value="{{ profile.github|default:'' }}" placeholder="https://github.com/username">
                         </fieldset>
-                        
+
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">
                                 <i data-lucide="linkedin" class="w-4 h-4 inline mr-2"></i>
                                 LinkedIn
                             </legend>
-                            <input type="url" class="input w-full" id="linkedin" name="linkedin"
-                                   value="{{ profile.linkedin }}" placeholder="https://linkedin.com/in/username">
+                            <input type="url" class="input w-full" id="linkedin" name="linkedin" maxlength="200"
+                                   value="{{ profile.linkedin|default:'' }}" placeholder="https://linkedin.com/in/username">
                         </fieldset>
                     </div>
                 </div>
@@ -140,14 +157,14 @@ Update your personal information and professional links
                         </div>
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend">Upload Your Personal Photo</legend>
+                            <legend class="fieldset-legend form-legend">Upload Your Personal Photo</legend>
                             <input type="file" class="file-input w-full" id="avatar" name="avatar" accept="image/*">
-                            <p class="label overflow-scroll">
-                                JPG, PNG, GIF. Max size: 5MB. Recommended: square aspect ratio.<br>
+                            <p class="label form-copy block">
+                                JPG, PNG, GIF. Max size: 5MB. Recommended: square aspect ratio.
                                 {% if profile.avatar_iris %}
-                                <span class="text-info">Your personal photo will be shown instead of the IRIS photo.</span>
+                                <span>Your personal photo will be shown instead of the IRIS photo.</span>
                                 {% else %}
-                                <span class="text-info">Upload your personal photo here.</span>
+                                <span>Upload your personal photo here.</span>
                                 {% endif %}
                             </p>
                         </fieldset>
@@ -157,7 +174,7 @@ Update your personal information and professional links
                         <div class="form-control">
                             <label class="label cursor-pointer justify-start gap-3">
                                 <input class="checkbox checkbox-primary" type="checkbox" id="remove_avatar" name="remove_avatar">
-                                <span class="label-text text-sm">
+                                <span class="label-text text-sm form-copy">
                                     Remove personal photo
                                     {% if profile.avatar_iris %}
                                     <span class="text-base-content/60">(IRIS photo will be shown)</span>
@@ -174,11 +191,11 @@ Update your personal information and professional links
         <div class="card bg-base-200 mt-6">
             <div class="card-body">
                 <div class="flex flex-wrap gap-3 justify-end">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary w-full sm:w-auto">
                         <i data-lucide="save" class="w-4 h-4"></i>
                         Save Changes
                     </button>
-                    <a href="{% url 'people' %}" class="btn btn-ghost">
+                    <a href="{% url 'people' %}" class="btn btn-ghost w-full sm:w-auto">
                         <i data-lucide="arrow-left" class="w-4 h-4"></i>
                         Back to Team
                     </a>

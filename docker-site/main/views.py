@@ -3,10 +3,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages as django_messages
 from django.http import JsonResponse
+from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import json
+from functools import wraps
+from urllib.parse import quote
 from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField
@@ -14,6 +17,7 @@ from datetime import datetime, timedelta
 
 from django.http import FileResponse, Http404
 from django.conf import settings
+from django.utils.text import slugify
 import os
 from .models import UserProfile, IRISImportLog
 from .tasks import sync_user_task, import_iris_publications, import_iris_profile_photos, is_import_running
@@ -25,6 +29,43 @@ from io import BytesIO
 POST_PER_PAGE = 10
 PUBLICATION_PER_PAGE = 10
 PROJECTS_PER_PAGE = 20
+
+
+def _build_login_url(request):
+    """Build a login URL that returns the user to the current page."""
+    next_path = quote(request.get_full_path(), safe='/:?=&')
+    return f"{reverse('login')}?next={next_path}"
+
+
+def intranet_required(view_func):
+    """Show intranet public page to anonymous users instead of redirecting immediately."""
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return render(request, 'main/intranet_public.html', {
+                'login_url': _build_login_url(request),
+            })
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
+
+
+def is_staff_required(view_func):
+    """Allow only authenticated staff users to access the view."""
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return render(request, 'main/intranet_public.html', {
+                'login_url': _build_login_url(request),
+            })
+
+        if not request.user.is_staff:
+            django_messages.error(request, 'You do not have permission to access this page.')
+            return redirect('dashboard')
+
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
 
 
 def home(request):
@@ -382,16 +423,38 @@ def privacy_policy(request):
     """Privacy Policy page view."""
     return render(request, 'main/privacy_policy.html')
 
-@login_required
+@is_staff_required
 def post_form(request, slug=None):
     """Add or edit a post."""
     post = Post.objects.get(slug=slug) if slug else None
     categories = Category.objects.all().order_by('name')
+
+    def make_unique_post_slug(raw_slug, exclude_post_id=None):
+        """Generate a unique slug for Post instances."""
+        max_slug_len = Post._meta.get_field('slug').max_length
+        base_slug = (slugify(raw_slug) or 'post')[:max_slug_len]
+        candidate = base_slug
+        counter = 1
+
+        query = Post.objects.filter(slug=candidate)
+        if exclude_post_id:
+            query = query.exclude(pk=exclude_post_id)
+
+        while query.exists():
+            suffix = f"-{counter}"
+            trimmed_base = base_slug[:max_slug_len - len(suffix)]
+            candidate = f"{trimmed_base}{suffix}"
+            counter += 1
+            query = Post.objects.filter(slug=candidate)
+            if exclude_post_id:
+                query = query.exclude(pk=exclude_post_id)
+
+        return candidate
     
     if request.method == 'POST':
         action = request.POST.get('action')
         title = request.POST.get('title')
-        new_slug = request.POST.get('slug')
+        submitted_slug = request.POST.get('slug', '').strip()
         description = request.POST.get('description', '')
         content = request.POST.get('content')
         cover = request.FILES.get('cover')
@@ -421,6 +484,16 @@ def post_form(request, slug=None):
         remove_thumbnail = request.POST.get('remove_thumbnail') == 'on'
         
         is_published = action == 'publish'
+
+        if post:
+            # For edits, keep current slug unless user explicitly provides a new one.
+            new_slug = post.slug
+            if submitted_slug:
+                new_slug = make_unique_post_slug(submitted_slug, exclude_post_id=post.pk)
+        else:
+            # For new posts, use provided slug or auto-generate from title.
+            slug_source = submitted_slug or title
+            new_slug = make_unique_post_slug(slug_source)
         
         if post:
             # Edit existing post
@@ -521,7 +594,14 @@ def logout_view(request):
     return redirect('home')
 
 
-@login_required
+def intranet_public(request):
+    """Public landing page for intranet sections."""
+    return render(request, 'main/intranet_public.html', {
+        'login_url': _build_login_url(request),
+    })
+
+
+@intranet_required
 def dashboard(request):
     """Dashboard view (requires login)."""
     from itertools import groupby
@@ -532,7 +612,7 @@ def dashboard(request):
     return render(request, 'main/dashboard.html', {'card_sections': grouped})
 
 
-@login_required
+@intranet_required
 def edit_profile(request):
     """Profile edit view for authenticated users with visible profiles."""
     profile, created = UserProfile.objects.get_or_create(
@@ -594,7 +674,7 @@ def edit_profile(request):
     })
 
 
-@login_required
+@is_staff_required
 def add_user(request):
     """View to add a new user using Celery task."""
     if request.method == 'POST':
@@ -661,15 +741,10 @@ def add_user(request):
     return render(request, 'main/add_user.html', {'role_choices': role_choices})
 
 
-@login_required
+@is_staff_required
 def sync_ldap(request):
     """View to manually trigger LDAP synchronization."""
     from .tasks import populate_users_from_ldap
-    
-    # Only allow staff members to trigger sync
-    if not request.user.is_staff:
-        django_messages.error(request, 'You do not have permission to perform this action.')
-        return redirect('home')
     
     if request.method == 'POST':
         try:
@@ -715,7 +790,7 @@ def serve_media(request, path):
     return FileResponse(open(file_path, 'rb'))
 
 
-@login_required
+@is_staff_required
 def trigger_iris_import(request):
     """
     Trigger IRIS publications import.
@@ -749,7 +824,7 @@ def trigger_iris_import(request):
     return redirect('dashboard')
 
 
-@login_required
+@is_staff_required
 def iris_import_status(request):
     """
     Get the status of IRIS imports.
@@ -779,7 +854,7 @@ def iris_import_status(request):
     })
 
 
-@login_required
+@is_staff_required
 def trigger_iris_photo_import(request):
     """
     Trigger IRIS profile photos import.
@@ -806,7 +881,7 @@ def trigger_iris_photo_import(request):
 
 # Meeting Room Reservation Views
 
-@login_required
+@intranet_required
 def rooms_calendar(request):
     """Display calendar view of all meeting rooms and their reservations."""
     rooms = MeetingRoom.objects.filter(is_active=True).order_by('name')
@@ -848,14 +923,14 @@ def rooms_calendar(request):
     })
 
 
-@login_required
+@intranet_required
 def rooms_list(request):
     """List all meeting rooms."""
     rooms = MeetingRoom.objects.filter(is_active=True).order_by('name')
     return render(request, 'main/rooms_list.html', {'rooms': rooms})
 
 
-@login_required
+@intranet_required
 def room_detail(request, room_id):
     """Display details and reservations for a specific room."""
     room = get_object_or_404(MeetingRoom, pk=room_id, is_active=True)
@@ -873,7 +948,7 @@ def room_detail(request, room_id):
     })
 
 
-@login_required
+@intranet_required
 def create_reservation(request):
     """Create a new room reservation."""
     if request.method == 'POST':
@@ -928,7 +1003,7 @@ def create_reservation(request):
     return render(request, 'main/create_reservation.html', {'rooms': rooms})
 
 
-@login_required
+@intranet_required
 def edit_reservation(request, reservation_id):
     """Edit an existing reservation."""
     reservation = get_object_or_404(RoomReservation, pk=reservation_id)
@@ -980,7 +1055,7 @@ def edit_reservation(request, reservation_id):
     })
 
 
-@login_required
+@intranet_required
 def delete_reservation(request, reservation_id):
     """Delete a reservation."""
     reservation = get_object_or_404(RoomReservation, pk=reservation_id)
@@ -1123,7 +1198,7 @@ def go_links(request):
 # Wiki Views
 # ============================================================================
 
-@login_required
+@intranet_required
 def wiki_home(request):
     """Display wiki home page with all top-level pages"""
     # Get all root pages (no parent)
@@ -1149,7 +1224,7 @@ def wiki_home(request):
     })
 
 
-@login_required
+@intranet_required
 def wiki_page(request, slug):
     """Display a single wiki page"""
     page = get_object_or_404(WikiPage, slug=slug, is_published=True)
@@ -1175,9 +1250,24 @@ def wiki_page(request, slug):
     })
 
 
-@login_required
+@intranet_required
 def wiki_create(request):
     """Create a new wiki page"""
+    def make_unique_wiki_slug(raw_slug):
+        """Generate a unique slug for WikiPage instances within max length."""
+        max_slug_len = WikiPage._meta.get_field('slug').max_length
+        base_slug = (slugify(raw_slug) or 'wiki-page')[:max_slug_len]
+        candidate = base_slug
+        counter = 1
+
+        while WikiPage.objects.filter(slug=candidate).exists():
+            suffix = f"-{counter}"
+            trimmed_base = base_slug[:max_slug_len - len(suffix)]
+            candidate = f"{trimmed_base}{suffix}"
+            counter += 1
+
+        return candidate
+
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         slug = request.POST.get('slug', '').strip()
@@ -1188,20 +1278,9 @@ def wiki_create(request):
             django_messages.error(request, 'Title and content are required.')
             return redirect('wiki_create')
         
-        # Auto-generate slug from title if not provided
-        if not slug:
-            from django.utils.text import slugify
-            base_slug = slugify(title)
-            slug = base_slug
-            counter = 1
-            while WikiPage.objects.filter(slug=slug).exists():
-                slug = f"{base_slug}-{counter}"
-                counter += 1
-        else:
-            # Check if provided slug already exists
-            if WikiPage.objects.filter(slug=slug).exists():
-                django_messages.error(request, 'A page with this slug already exists.')
-                return redirect('wiki_create')
+        # Normalize and de-duplicate slug, whether provided or generated.
+        slug_source = slug or title
+        slug = make_unique_wiki_slug(slug_source)
         
         parent = None
         if parent_id:
@@ -1238,7 +1317,7 @@ def wiki_create(request):
     })
 
 
-@login_required
+@intranet_required
 def wiki_edit(request, slug):
     """Edit a wiki page - direct edit or suggest changes"""
     page = get_object_or_404(WikiPage, slug=slug)
@@ -1285,7 +1364,7 @@ def wiki_edit(request, slug):
     })
 
 
-@login_required
+@intranet_required
 def wiki_history(request, slug):
     """View version history of a wiki page"""
     page = get_object_or_404(WikiPage, slug=slug)
@@ -1308,7 +1387,7 @@ def wiki_history(request, slug):
     })
 
 
-@login_required
+@intranet_required
 def wiki_version(request, slug, version_id):
     """View a specific version of a wiki page"""
     page = get_object_or_404(WikiPage, slug=slug)
@@ -1320,7 +1399,7 @@ def wiki_version(request, slug, version_id):
     })
 
 
-@login_required
+@intranet_required
 def wiki_search(request):
     """Search wiki pages"""
     query = request.GET.get('q', '').strip()
@@ -1349,7 +1428,7 @@ def wiki_search(request):
     })
 
 
-@login_required
+@intranet_required
 def wiki_change_requests(request):
     """View all change requests (filterable by status)"""
     # Only staff can view all change requests
@@ -1386,7 +1465,7 @@ def wiki_change_requests(request):
     })
 
 
-@login_required
+@intranet_required
 def wiki_change_request_detail(request, request_id):
     """View and review a change request"""
     change_request = get_object_or_404(WikiPageChangeRequest, pk=request_id)
@@ -1467,6 +1546,10 @@ def wiki_upload_image(request):
     }, status=400)
 
 
+def custom_404(request, exception):
+    """Render a custom 404 page."""
+    return render(request, 'main/404.html', status=404)
+  
 @login_required
 def wiki_delete(request, slug):
     """Delete a wiki page — superusers only."""

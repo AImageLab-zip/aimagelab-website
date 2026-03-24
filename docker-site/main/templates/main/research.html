@@ -11,7 +11,7 @@
 <!-- Quick-jump anchors -->
 <div class="flex flex-wrap gap-2">
     {% for area in research_areas %}
-    <a href="#{{ area.area_id }}" class="btn btn-sm btn-outline btn-primary">{{ area.title }}</a>
+    <a href="#{{ area.area_id }}" class="btn btn-sm btn-outline btn-primary max-w-full text-wrap h-fit">{{ area.title }}</a>
     {% endfor %}
 </div>
 {% endblock %}
