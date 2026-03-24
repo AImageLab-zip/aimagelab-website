@@ -13,14 +13,14 @@ from urllib.parse import quote
 from django_ratelimit.decorators import ratelimit
 from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q, Case, When, IntegerField
+from django.db.models import Q, Case, When, IntegerField, F
+from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage, IRISImportLog
 from datetime import datetime, timedelta
 
 from django.http import FileResponse, Http404
 from django.conf import settings
 from django.utils.text import slugify
 import os
-from .models import UserProfile, IRISImportLog
 from .tasks import sync_user_task, import_iris_publications, import_iris_profile_photos, is_import_running
 import os
 
@@ -613,6 +613,12 @@ def dashboard(request):
         grouped.append((section, list(items)))
     return render(request, 'main/dashboard.html', {'card_sections': grouped})
 
+def external_redirects(request, src_slug):
+    """Resolve external redirect entries and track click count."""
+    link = get_object_or_404(ExternalRedirects, src_slug=src_slug, is_active=True)
+    ExternalRedirects.objects.filter(pk=link.pk).update(click_count=F('click_count') + 1)
+    return redirect(link.custom_dest)
+
 
 @intranet_required
 def edit_profile(request):
@@ -1078,8 +1084,6 @@ def delete_reservation(request, reservation_id):
 
 
 # ─── Short Links (Go) Views ─────────────────────────────────────────────────
-
-from django.db.models import F
 
 
 def go_redirect(request, src):

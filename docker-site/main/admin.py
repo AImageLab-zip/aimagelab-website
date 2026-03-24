@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
+from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
 
 admin.site.site_header = "AImageLab Admin"
 admin.site.site_title = "AImageLab Admin"
@@ -310,6 +310,37 @@ class DashboardCardAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(ExternalRedirects)
+class ExternalRedirectsAdmin(admin.ModelAdmin):
+    list_display = ('source_short', 'custom_dest_short', 'is_active', 'click_count', 'updated_at')
+    list_filter = ('is_active', 'created_at', 'updated_at')
+    search_fields = ('src_slug', 'custom_dest', 'description')
+    list_editable = ('is_active',)
+    readonly_fields = ('click_count', 'created_at', 'updated_at')
+    fieldsets = (
+        ('Redirect', {
+            'fields': ('src_slug', 'custom_dest', 'description', 'is_active')
+        }),
+        ('Statistics', {
+            'fields': ('click_count',),
+            'classes': ('collapse',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def source_short(self, obj):
+        source = obj.source_url
+        return source[:80] + '...' if len(source) > 80 else source
+    source_short.short_description = 'Source'
+
+    def custom_dest_short(self, obj):
+        return obj.custom_dest[:80] + '...' if len(obj.custom_dest) > 80 else obj.custom_dest
+    custom_dest_short.short_description = 'Destination'
 
 
 
