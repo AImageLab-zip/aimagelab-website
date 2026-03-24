@@ -1,0 +1,34 @@
+{% extends 'main/base_with_hero.html' %}
+
+{% block title %}Intranet Access - AImageLab{% endblock %}
+
+{% block hero_title %}AImageLab Intranet{% endblock %}
+
+{% block hero_description %}
+Some sections of this website are reserved for lab members.
+{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12">
+    <div class="max-w-3xl mx-auto">
+        <div class="card bg-base-200 shadow-sm">
+            <div class="card-body lg:p-10">
+                <h2 class="card-title text-2xl text-primary mb-3">
+                    Login required
+                </h2>
+                <p class="text-base-content/80 mb-4">
+                    You are trying to access an intranet page. Sign in with your AImageLab account to continue.
+                </p>
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ login_url }}" class="btn btn-primary">
+                        Go to login
+                    </a>
+                    <a href="{% url 'home' %}" class="btn btn-ghost">
+                        Back to homepage
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

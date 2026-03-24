@@ -11,10 +11,98 @@
 {% block extra_css %}
 <!-- Cropper.js CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+
+<style>
+    .form-copy {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .form-legend {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.35;
+    }
+
+    .form-row-responsive {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+        .form-row-responsive {
+            flex-direction: row;
+            align-items: center;
+        }
+    }
+
+    .EasyMDEContainer .CodeMirror {
+        height: 500px;
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+    }
+
+    .editor-toolbar {
+        border-radius: 0.5rem 0.5rem 0 0;
+        white-space: nowrap;
+        overflow-x: auto;
+    }
+
+    .editor-toolbar a {
+        display: inline-block;
+    }
+
+    .editor-toolbar .table,
+    .editor-toolbar button.table,
+    .editor-toolbar a.table {
+        display: inline-block !important;
+        width: auto !important;
+        border-collapse: initial !important;
+        border-spacing: initial !important;
+    }
+
+    .CodeMirror {
+        border-radius: 0 0 0.5rem 0.5rem;
+    }
+
+    .CodeMirror-fullscreen {
+        z-index: 9999 !important;
+    }
+
+    .editor-toolbar.fullscreen {
+        z-index: 9999 !important;
+    }
+
+    body:has(.CodeMirror-fullscreen) #navbar {
+        display: none !important;
+    }
+</style>
 {% endblock %}
 
 {% block main_content %}
-    <form method="post" enctype="multipart/form-data">
+    <dialog id="upload-modal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg" id="modal-title">
+                <i data-lucide="upload" class="w-5 h-5 inline"></i>
+                Uploading Image
+            </h3>
+            <p class="py-4" id="modal-message">
+                <span class="loading loading-spinner loading-md"></span>
+                Uploading your image...
+            </p>
+            <div class="modal-action">
+                <button id="modal-close-btn" class="btn" style="display: none;">Close</button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <form id="post-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         
         <div class="space-y-6">
@@ -27,21 +115,21 @@
                         </h2>
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend overflow-x-scroll">Title *</legend>
-                            <input type="text" id="title" name="title" value="{{ post.title|default:'' }}" required class="input w-full" placeholder="Enter post title">
-                            <p class="label overflow-x-scroll">The main headline of your post</p>
+                            <legend class="fieldset-legend form-legend">Title *</legend>
+                            <input type="text" id="title" name="title" value="{{ post.title|default:'' }}" required maxlength="300" class="input w-full" placeholder="Enter post title">
+                            <p class="label form-copy">The main headline of your post</p>
                         </fieldset>
                         
                         <fieldset class="fieldset mb-4 ">
-                            <legend class="fieldset-legend">Slug *</legend>
-                            <input type="text" id="slug" name="slug" value="{{ post.slug|default:'' }}" required class="input w-full" placeholder="my-awesome-post">
-                            <p class="label overflow-x-scroll">URL-friendly version (e.g., my-awesome-post). Use lowercase letters, numbers, and hyphens only.</p>
+                            <legend class="fieldset-legend form-legend">Slug (optional)</legend>
+                            <input type="text" id="slug" name="slug" value="{{ post.slug|default:'' }}" maxlength="50" pattern="[a-z0-9_-]*" class="input w-full" placeholder="my-awesome-post">
+                            <p class="label form-copy">Leave blank to keep current slug (edit) or auto-generate from title (new post). Max 50 characters.</p>
                         </fieldset>
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend overflow-x-scroll">Description</legend>
+                            <legend class="fieldset-legend form-legend">Description</legend>
                             <textarea id="description" name="description" rows="3" class="textarea w-full" placeholder="Brief summary of the post...">{{ post.description|default:'' }}</textarea>
-                            <p class="label overflow-x-scroll">Short excerpt shown in news listings and previews (recommended: 150-160 characters)</p>
+                            <p class="label form-copy">Short excerpt shown in news listings and previews (recommended: 150-160 characters)</p>
                         </fieldset>
                     </div>
                 </div>
@@ -54,19 +142,93 @@
                             Content
                         </h2>
                         
-                        <fieldset class="fieldset">
-                            <legend class="fieldset-legend overflow-x-scroll">
+                        <div>
+                            <legend class="fieldset-legend form-legend">
                                 Post Content *
                                 <span class="badge badge-sm badge-primary ml-2">Markdown supported</span>
                             </legend>
-                            <textarea id="content" name="content" rows="20" required class="textarea w-full font-mono text-xs sm:text-base" placeholder="Write your post content here... You can use Markdown formatting.">{{ post.content|default:'' }}</textarea>
-                            <p class="label overflow-x-scroll">
+                            <textarea id="content" name="content" rows="20" class="textarea" placeholder="Write your post content here... You can use Markdown formatting.">{{ post.content|default:'' }}</textarea>
+                            <p class="label form-copy">
                                 <strong>Markdown tips:</strong> **bold**, *italic*, [link](url), # Heading, - List item, `code`
                             </p>
+                        </div>
+
+                        <fieldset class="fieldset mt-4">
+                            <legend class="fieldset-legend form-legend">
+                                <i data-lucide="image" class="w-4 h-4 inline"></i>
+                                Upload Inline Image
+                            </legend>
+                            <div class="form-row-responsive">
+                                <input
+                                    type="file"
+                                    id="post-image-upload"
+                                    accept="image/*"
+                                    class="file-input w-full"
+                                >
+                                <button type="button" id="upload-image-btn" class="btn btn-secondary w-full sm:w-auto">
+                                    <i data-lucide="upload" class="w-4 h-4"></i>
+                                    Upload and Insert
+                                </button>
+                            </div>
+                            <p class="label form-copy">Uploads an image and inserts Markdown at your cursor position</p>
                         </fieldset>
                     </div>
                 </div>
+
+                   <!-- Action Buttons -->
+        <div class="card bg-base-200 mt-6">
+            <div class="card-body">
+                <div class="flex flex-wrap gap-2 sm:gap-3 justify-end">
+                    {% if post %}
+                        {% if post.is_published %}
+                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Save Changes</span>
+                            <span class="sm:hidden">Save</span>
+                        </button>
+                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
+                            <i data-lucide="archive" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Move to Draft</span>
+                            <span class="sm:hidden">Draft</span>
+                        </button>
+                        {% else %}
+                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Save Draft</span>
+                            <span class="sm:hidden">Save</span>
+                        </button>
+                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Publish Now</span>
+                            <span class="sm:hidden">Publish</span>
+                        </button>
+                        {% endif %}
+                        <a href="{% url 'single' post.slug %}" class="btn btn-ghost btn-sm sm:btn-md w-full sm:w-auto">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Cancel</span>
+                        </a>
+                    {% else %}
+                     <a href="{% url 'news' %}" class="btn btn-ghost btn-sm sm:btn-md w-full sm:w-auto md:mr-auto">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                            <span>Cancel</span>
+                        </a>
+                        <button type="submit" name="action" value="draft" class="btn btn-outline w-full sm:w-auto btn-sm sm:btn-md">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Create as Draft</span>
+                            <span class="sm:hidden">Draft</span>
+                        </button>
+                        <button type="submit" name="action" value="publish" class="btn btn-primary w-full sm:w-auto btn-sm sm:btn-md">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Publish Now</span>
+                            <span class="sm:hidden">Publish</span>
+                        </button>
+
+                    {% endif %}
+                </div>
+            </div>
         </div>
+        </div>
+    </form>
 {% endblock %}
 
 {% block sidebar_content %}
@@ -81,21 +243,21 @@
                         
                         <div class="form-control mb-4">
                             <label class="label cursor-pointer justify-start gap-3">
-                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="is_pinned" name="is_pinned" {% if post and post.is_pinned %}checked{% endif %}>
-                                <span class="label-text break-words">Pin this post to top</span>
+                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="is_pinned" name="is_pinned" form="post-form" {% if post and post.is_pinned %}checked{% endif %}>
+                                <span class="text-wrap">Pin this post to top</span>
                             </label>
                         </div>
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend overflow-x-scroll">Event Date (optional)</legend>
-                            <input type="datetime-local" id="event_date" name="event_date" value="{% if post and post.event_date %}{{ post.event_date|date:'Y-m-d\TH:i' }}{% endif %}" class="input w-full">
-                            <p class="label overflow-x-scroll">Set if this post is about an upcoming or past event (date and time)</p>
+                            <legend class="fieldset-legend form-legend">Event Date (optional)</legend>
+                            <input type="datetime-local" id="event_date" name="event_date" form="post-form" value="{% if post and post.event_date %}{{ post.event_date|date:'Y-m-d\TH:i' }}{% endif %}" class="input w-full">
+                            <p class="label form-copy">Set if this post is about an upcoming or past event (date and time)</p>
                         </fieldset>
                         
                         {% if post and post.event_date %}
                         <div class="form-control mb-4">
                             <label class="label cursor-pointer justify-start gap-3">
-                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="remove_event_date" name="remove_event_date">
+                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="remove_event_date" name="remove_event_date" form="post-form">
                                 <span class="label-text text-sm break-words">Remove event date</span>
                             </label>
                         </div>
@@ -126,13 +288,13 @@
                         </h2>
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend overflow-x-scroll">Select Categories</legend>
-                            <select id="categories" name="categories" multiple class="select w-full h-40">
+                            <legend class="fieldset-legend form-legend">Select Categories</legend>
+                            <select id="categories" name="categories" form="post-form" multiple class="select w-full h-40">
                                 {% for category in categories %}
                                     <option value="{{ category.id }}" {% if post and category in post.categories.all %}selected{% endif %}>{{ category.name }}</option>
                                 {% endfor %}
                             </select>
-                            <p class="label overflow-x-scroll">Hold Ctrl (Cmd on Mac) to select multiple categories</p>
+                            <p class="label form-copy">Hold Ctrl (Cmd on Mac) to select multiple categories</p>
                         </fieldset>
                     </div>
                 </div>
@@ -153,15 +315,15 @@
                         {% endif %}
                         
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend overflow-x-scroll">{% if post.cover %}Replace{% else %}Upload{% endif %} Image</legend>
-                            <input type="file" id="cover" name="cover" accept="image/*" class="file-input w-full">
-                            <p class="label overflow-x-scroll">Recommended: 1200x630px, JPG or PNG, max 2MB</p>
+                            <legend class="fieldset-legend form-legend">{% if post.cover %}Replace{% else %}Upload{% endif %} Image</legend>
+                            <input type="file" id="cover" name="cover" form="post-form" accept="image/*" class="file-input w-full">
+                            <p class="label form-copy">Recommended: 1200x630px, JPG or PNG, max 2MB</p>
                         </fieldset>
                         
                         {% if post and post.cover %}
                         <div class="form-control">
                             <label class="label cursor-pointer justify-start gap-3">
-                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="remove_cover" name="remove_cover">
+                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="remove_cover" name="remove_cover" form="post-form">
                                 <span class="label-text text-sm break-words">Remove current cover</span>
                             </label>
                         </div>
@@ -185,9 +347,9 @@
                         {% endif %}
 
                         <fieldset class="fieldset mb-4">
-                            <legend class="fieldset-legend overflow-x-scroll">Create Thumbnail from Image</legend>
+                            <legend class="fieldset-legend form-legend">Create Thumbnail from Image</legend>
                             <input type="file" id="thumbnail-source" accept="image/*" class="file-input w-full">
-                            <p class="label overflow-x-scroll">Upload an image to crop for thumbnail (480x200px, 2.4:1 ratio)</p>
+                            <p class="label form-copy">Upload an image to crop for thumbnail (480x200px, 2.4:1 ratio)</p>
                         </fieldset>
 
                         <!-- Use Cover as Thumbnail Source Button -->
@@ -196,7 +358,7 @@
                                 <i data-lucide="image" class="w-4 h-4"></i>
                                 {% if post.thumbnail %}Re-crop from Cover Image{% else %}Use Cover as Thumbnail{% endif %}
                             </button>
-                            <p class="label overflow-x-scroll text-xs">Crop the cover image to create a thumbnail</p>
+                            <p class="label form-copy text-xs">Crop the cover image to create a thumbnail</p>
                         </div>
 
                         <!-- Cropper Section (hidden by default) -->
@@ -230,12 +392,12 @@
                         </div>
 
                         <!-- Hidden input for the cropped thumbnail -->
-                        <input type="file" id="thumbnail" name="thumbnail" style="display: none;">
+                        <input type="file" id="thumbnail" name="thumbnail" form="post-form" style="display: none;">
                         
                         {% if post and post.thumbnail %}
                         <div class="form-control mt-4">
                             <label class="label cursor-pointer justify-start gap-3">
-                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="remove_thumbnail" name="remove_thumbnail">
+                                <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" id="remove_thumbnail" name="remove_thumbnail" form="post-form">
                                 <span class="label-text text-sm break-words">Remove current thumbnail</span>
                             </label>
                         </div>
@@ -245,64 +407,148 @@
             </div>
         </div>
         
-        <!-- Action Buttons -->
-        <div class="card bg-base-200 mt-6">
-            <div class="card-body">
-                <div class="flex flex-wrap gap-2 sm:gap-3 justify-end">
-                    {% if post %}
-                        {% if post.is_published %}
-                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Save Changes</span>
-                            <span class="sm:hidden">Save</span>
-                        </button>
-                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
-                            <i data-lucide="archive" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Move to Draft</span>
-                            <span class="sm:hidden">Draft</span>
-                        </button>
-                        {% else %}
-                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Save Draft</span>
-                            <span class="sm:hidden">Save</span>
-                        </button>
-                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
-                            <i data-lucide="send" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Publish Now</span>
-                            <span class="sm:hidden">Publish</span>
-                        </button>
-                        {% endif %}
-                        <a href="{% url 'single' post.slug %}" class="btn btn-ghost btn-sm sm:btn-md">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Cancel</span>
-                        </a>
-                    {% else %}
-                        <button type="submit" name="action" value="draft" class="btn btn-outline btn-sm sm:btn-md">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Create as Draft</span>
-                            <span class="sm:hidden">Draft</span>
-                        </button>
-                        <button type="submit" name="action" value="publish" class="btn btn-primary btn-sm sm:btn-md">
-                            <i data-lucide="send" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Publish Now</span>
-                            <span class="sm:hidden">Publish</span>
-                        </button>
-                        <a href="{% url 'news' %}" class="btn btn-ghost btn-sm sm:btn-md">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Cancel</span>
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </form>
-
+    
 <!-- Cropper.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const easyMDE = new EasyMDE({
+        element: document.getElementById('content'),
+        placeholder: 'Write your post content here using Markdown...\n\n# Heading\n## Subheading\n\n**Bold** *Italic*\n\n- List item\n- Another item',
+        spellChecker: false,
+        forceSync: true,
+        autosave: {
+            enabled: true,
+            uniqueId: 'news-editor-{% if post %}{{ post.id }}{% else %}new{% endif %}',
+            delay: 1000,
+        },
+        toolbar: [
+            'bold', 'italic', 'heading', '|',
+            'quote', 'unordered-list', 'ordered-list', '|',
+            'link', 'image', 'table', '|',
+            'preview', 'side-by-side', 'fullscreen', '|',
+            'guide'
+        ],
+        status: ['lines', 'words', 'cursor'],
+    });
+
+    const postForm = document.getElementById('post-form');
+    if (postForm) {
+        postForm.addEventListener('submit', function(event) {
+            const markdownValue = easyMDE.value().trim();
+            if (!markdownValue) {
+                event.preventDefault();
+                showModal(
+                    '<i data-lucide="alert-circle" class="w-5 h-5 inline text-warning"></i> Content Required',
+                    'Please add post content before saving or publishing.',
+                    true
+                );
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+                easyMDE.codemirror.focus();
+                return;
+            }
+
+            // Ensure the hidden textarea is in sync right before submit.
+            easyMDE.codemirror.save();
+        });
+    }
+
+    const modal = document.getElementById('upload-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    function showModal(title, message, showClose = false) {
+        modalTitle.innerHTML = title;
+        modalMessage.innerHTML = message;
+        modalCloseBtn.style.display = showClose ? 'block' : 'none';
+        modal.showModal();
+    }
+
+    function hideModal() {
+        modal.close();
+    }
+
+    modalCloseBtn.addEventListener('click', hideModal);
+
+    const uploadBtn = document.getElementById('upload-image-btn');
+    const fileInput = document.getElementById('post-image-upload');
+
+    uploadBtn.addEventListener('click', async function() {
+        const file = fileInput.files[0];
+        if (!file) {
+            showModal(
+                '<i data-lucide="alert-circle" class="w-5 h-5 inline text-warning"></i> No File Selected',
+                'Please select an image file first.',
+                true
+            );
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            return;
+        }
+
+        showModal(
+            '<i data-lucide="upload" class="w-5 h-5 inline text-primary"></i> Uploading',
+            '<span class="loading loading-spinner loading-md"></span> Uploading your image...',
+            false
+        );
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        try {
+            const response = await fetch('{% url "wiki_upload_image" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const pos = easyMDE.codemirror.getCursor();
+                easyMDE.codemirror.replaceRange('\n' + data.markdown + '\n', pos);
+                fileInput.value = '';
+
+                showModal(
+                    '<i data-lucide="check-circle" class="w-5 h-5 inline text-success"></i> Success',
+                    'Image uploaded successfully and inserted into the editor.',
+                    true
+                );
+            } else {
+                showModal(
+                    '<i data-lucide="x-circle" class="w-5 h-5 inline text-error"></i> Upload Failed',
+                    'Error: ' + (data.error || 'Unknown error occurred'),
+                    true
+                );
+            }
+
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        } catch (error) {
+            showModal(
+                '<i data-lucide="x-circle" class="w-5 h-5 inline text-error"></i> Upload Failed',
+                'Error: ' + error.message,
+                true
+            );
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+    });
+
     // Thumbnail cropping with Cropper.js
     const thumbnailSourceInput = document.getElementById('thumbnail-source');
     const coverInput = document.getElementById('cover');
@@ -485,46 +731,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-    
-    // Auto-generate slug from title for new posts
-    const titleInput = document.getElementById('title');
-    const slugInput = document.getElementById('slug');
-    const isNewPost = !slugInput.value || slugInput.value === '';
-    
-    if (isNewPost && titleInput && slugInput) {
-        let manuallyEdited = false;
-        
-        // Function to generate slug from title
-        function generateSlug(title) {
-            return title
-                .toLowerCase()
-                .trim()
-                .replace(/[^\w\s-]/g, '') // Remove special characters
-                .replace(/\s+/g, '-')      // Replace spaces with hyphens
-                .replace(/-+/g, '-')       // Replace multiple hyphens with single hyphen
-                .replace(/^-+|-+$/g, '');  // Remove leading/trailing hyphens
-        }
-        
-        // Auto-generate slug when title changes
-        titleInput.addEventListener('input', function() {
-            if (!manuallyEdited) {
-                slugInput.value = generateSlug(this.value);
-            }
-        });
-        
-        // Mark as manually edited if user modifies the slug
-        slugInput.addEventListener('input', function() {
-            manuallyEdited = true;
-        });
-        
-        // Reset manual edit flag if slug is cleared
-        slugInput.addEventListener('blur', function() {
-            if (this.value === '') {
-                manuallyEdited = false;
-                this.value = generateSlug(titleInput.value);
-            }
-        });
-    }
     
     // Re-initialize lucide icons after DOM changes
     if (typeof lucide !== 'undefined') {

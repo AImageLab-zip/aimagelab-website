@@ -1,0 +1,28 @@
+{% extends 'main/base_with_hero.html' %}
+
+{% block title %}Page Not Found - AImageLab{% endblock %}
+
+{% block hero_title %}404{% endblock %}
+
+{% block hero_description %}
+The page you requested could not be found.
+{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12">
+    <div class="max-w-3xl mx-auto">
+        <div class="card bg-base-200 shadow-sm">
+            <div class="card-body lg:p-10">
+                <h2 class="card-title text-2xl text-primary mb-3">Page not found</h2>
+                <p class="text-base-content/80 mb-4">
+                    The URL may be incorrect, or the content may have been moved.
+                </p>
+                <div class="flex flex-wrap gap-3">
+                    <a href="{% url 'home' %}" class="btn btn-primary">Go to homepage</a>
+                    <a href="{% url 'contacts' %}" class="btn btn-ghost">Contact us</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
