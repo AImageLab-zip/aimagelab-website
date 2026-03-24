@@ -1,6 +1,7 @@
 # Main app models
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -483,6 +484,37 @@ class ResearchArea(models.Model):
         return self.title
 
 
+class ExternalRedirects(models.Model):
+    """Internal redirect entries managed from admin and used by dashboard cards."""
+
+    src_slug = models.SlugField(
+        max_length=100,
+        unique=True,
+        help_text="Source slug used in <current_site>/<src_slug>"
+    )
+    custom_dest = models.URLField(max_length=2000, help_text="Destination URL")
+    description = models.CharField(max_length=300, blank=True)
+    is_active = models.BooleanField(default=True)
+    click_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "External Redirect"
+        verbose_name_plural = "External Redirects"
+
+    def __str__(self):
+        return f"/{self.src_slug} -> {self.custom_dest}"
+
+    @property
+    def source_url(self):
+        return f"/{self.src_slug}"
+
+    def get_absolute_url(self):
+        return reverse('dashboard_redirect', kwargs={'src_slug': self.src_slug})
+
+
 class DashboardCard(models.Model):
     """Cards displayed on the user dashboard, manageable from the admin."""
 
@@ -514,7 +546,7 @@ class DashboardCard(models.Model):
     link_type = models.CharField(max_length=10, choices=LINK_TYPE_CHOICES, default='external')
     link_url = models.URLField(blank=True, help_text="External URL for the card link")
     link_file = models.FileField(upload_to='dashboard_files/', blank=True, help_text="File available for download")
-
+   
     display_order = models.IntegerField(default=0, help_text="Order within the section (lower first)")
     is_active = models.BooleanField(default=True)
 

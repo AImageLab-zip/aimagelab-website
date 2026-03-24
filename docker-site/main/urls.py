@@ -48,5 +48,8 @@ urlpatterns = [
     path('wiki/<slug:slug>/edit/', views.wiki_edit, name='wiki_edit'),
     path('wiki/<slug:slug>/history/', views.wiki_history, name='wiki_history'),
     path('wiki/<slug:slug>/version/<int:version_id>/', views.wiki_version, name='wiki_version'),
+
+    # Dashboard redirects (must stay last to avoid shadowing explicit routes)
+    re_path(r'^(?P<src_slug>[-a-zA-Z0-9_.]+)$', views.external_redirects, name='external_redirects'),
 ]
 
