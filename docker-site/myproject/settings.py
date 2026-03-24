@@ -221,7 +221,7 @@ LDAP_SYNC_HOUR = int(os.environ.get("LDAP_SYNC_HOUR", "2"))  # Default: 2 AM
 LDAP_SYNC_MINUTE = int(os.environ.get("LDAP_SYNC_MINUTE", "0"))  # Default: 00 minutes
 
 # LDAP Configuration
-LDAP_SERVER_URI = 'ldap://ailb-login-01.ing.unimore.it:389'
+LDAP_SERVER_URI = 'ldap://ailb-auth.ing.unimore.it:389'
 LDAP_SEARCH_BASE = 'dc=aimagelab,dc=unimore,dc=it'
 LDAP_BIND_DN = None  # Anonymous bind
 LDAP_BIND_PASSWORD = None
