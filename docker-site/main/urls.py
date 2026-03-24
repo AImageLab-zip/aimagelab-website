@@ -51,6 +51,6 @@ urlpatterns = [
     path('wiki/<slug:slug>/delete/', views.wiki_delete, name='wiki_delete'),
 
     # Dashboard redirects (must stay last to avoid shadowing explicit routes)
-    re_path(r'^(?P<src_slug>[-a-zA-Z0-9_.]+)$', views.external_redirects, name='external_redirects'),
+    re_path(r'^(?P<src_slug>[-a-zA-Z0-9_.]+)/$', views.external_redirects, name='external_redirects'),
 ]
 
