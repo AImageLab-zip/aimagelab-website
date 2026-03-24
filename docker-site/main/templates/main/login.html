@@ -12,59 +12,59 @@ Welcome to AImageLab - Please sign in to continue
 <div class="container mx-auto px-6 my-12 max-w-md">
     <div class="card bg-base-200">
         <div class="card-body">
-                    
-            <form method="post" action="{% url 'login' %}">
-                {% csrf_token %}
-                
-                <div class="form-control mb-4">
-                    <label class="label" for="username">
-                        <span class="label-text font-semibold">Username</span>
-                    </label>
-                    <div class="relative">
-                        <input 
-                            type="text" 
-                            id="username" 
-                            name="username" 
-                            class="input input-bordered w-full"
-                            required 
-                            placeholder="Enter your username"
-                            autofocus
-                        >
-                    </div>
-                </div>
-                
-                <div class="form-control mb-6">
-                    <label class="label" for="password">
-                        <span class="label-text font-semibold">Password</span>
-                    </label>
-                    <div class="relative">
-                        <input 
-                            type="password" 
-                            id="password" 
-                            name="password" 
-                            class="input input-bordered w-full"
-                            required 
-                            placeholder="Enter your password"
-                        >
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn btn-primary w-full">
-                    <i data-lucide="log-in" class="w-4 h-4"></i>
-                    Login
-                </button>
-            </form>
-            
-            <div class="divider">OR</div>
-            
-            <a href="{% url 'oidc_authentication_init' %}" class="btn btn-outline w-full">
+
+            <a href="{% url 'oidc_authentication_init' %}" class="btn btn-primary w-full btn-lg">
                 <i data-lucide="shield" class="w-4 h-4"></i>
                 Sign in with {{ OIDC_PROVIDER_NAME|default:"OIDC Provider" }}
             </a>
-            
-            <p class="text-center text-sm mt-6 opacity-70">
-                Please use your credentials to access the system
+            <p class="text-center text-sm mt-0 opacity-70">
+                Please use your server account to sign in
             </p>
+
+            <div class="collapse collapse-arrow bg-base-100 mt-6">
+                <input type="checkbox" />
+                <div class="collapse-title text-sm font-medium opacity-70">
+                    Administrator Only: Sign in with username and password
+                </div>
+                <div class="collapse-content">
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+
+                        <div class="form-control mb-4">
+                            <label class="label" for="username">
+                                <span class="label-text font-semibold">Username</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
+                                class="input input-bordered w-full"
+                                required
+                                placeholder="Enter your username"
+                            >
+                        </div>
+
+                        <div class="form-control mb-4">
+                            <label class="label" for="password">
+                                <span class="label-text font-semibold">Password</span>
+                            </label>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                class="input input-bordered w-full"
+                                required
+                                placeholder="Enter your password"
+                            >
+                        </div>
+
+                        <button type="submit" class="btn btn-outline w-full">
+                            <i data-lucide="log-in" class="w-4 h-4"></i>
+                            Login
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>

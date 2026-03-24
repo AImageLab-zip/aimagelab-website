@@ -49,16 +49,22 @@ echo ""
 
 PORT=$DEV_APACHE_PORT
 
+# Collect all DEV_ env vars to pass through sudo
+SUDO_ENV=""
+for var in $(compgen -v | grep '^DEV_\|^DB_\|^MYSQL_\|^SECRET_KEY\|^DEBUG\|^CELERY_\|^CACHE_\|^IRIS_\|^OIDC_\|^LDAP_\|^MAILINGLIST_\|^TZ'); do
+    SUDO_ENV="$SUDO_ENV $var=${!var}"
+done
+
 case "$COMMAND" in
     up)
         echo "Starting development stack..."
-        sudo DEV_APACHE_PORT=$PORT docker compose -p "$PROJECT_NAME" up -d \
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml up -d \
             dev-django-app dev-mysql-db dev-redis \
             dev-celery-worker dev-celery-beat apache-dev
         echo ""
         echo "✅ Stack '$STACK_NAME' is running!"
         echo "   Access URL: http://localhost:$PORT"
-        echo "   Django direct: http://localhost:$(sudo docker compose -p "$PROJECT_NAME" port dev-django-app 8000 2>/dev/null | cut -d: -f2 || echo "N/A")"
+        echo "   Django direct: http://localhost:$(sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml port dev-django-app 8000 2>/dev/null | cut -d: -f2 || echo "N/A")"
         echo ""
         echo "Useful commands:"
         echo "  View logs:    $0 $STACK_NAME logs"
@@ -68,21 +74,21 @@ case "$COMMAND" in
     
     down)
         echo "Stopping and removing development stack..."
-        sudo docker compose -p "$PROJECT_NAME" down
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml down
         echo "✅ Stack '$STACK_NAME' stopped and removed"
         ;;
     
     logs)
-        sudo docker compose -p "$PROJECT_NAME" logs -f "${@:3}"
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml logs -f "${@:3}"
         ;;
     
     ps)
-        sudo docker compose -p "$PROJECT_NAME" ps
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml ps
         ;;
     
     restart)
         echo "Restarting development stack..."
-        sudo DEV_APACHE_PORT=$PORT docker compose -p "$PROJECT_NAME" restart "${@:3}"
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml restart "${@:3}"
         echo "✅ Stack '$STACK_NAME' restarted"
         ;;
     
@@ -92,27 +98,27 @@ case "$COMMAND" in
             echo "Example: $0 $STACK_NAME exec dev-django-app python manage.py migrate"
             exit 1
         fi
-        sudo DEV_APACHE_PORT=$PORT docker compose -p "$PROJECT_NAME" exec "${@:3}"
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec "${@:3}"
         ;;
     
     shell)
         echo "Opening Django shell for stack '$STACK_NAME'..."
-        sudo DEV_APACHE_PORT=$PORT docker compose -p "$PROJECT_NAME" exec dev-django-app python manage.py shell
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec dev-django-app python manage.py shell
         ;;
     
     migrate)
         echo "Running migrations for stack '$STACK_NAME'..."
-        sudo DEV_APACHE_PORT=$PORT docker compose -p "$PROJECT_NAME" exec dev-django-app python manage.py migrate
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec dev-django-app python manage.py migrate
         ;;
 
     manage)
         echo "Running migrations for stack '$STACK_NAME'..."
-        sudo DEV_APACHE_PORT=$PORT docker compose -p "$PROJECT_NAME" exec dev-django-app python manage.py "${@:3}"
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec dev-django-app python manage.py "${@:3}"
         ;;
     
     build)
         echo "Building development stack..."
-        sudo DEV_APACHE_PORT=$PORT docker compose -p "$PROJECT_NAME" build \
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml build \
             dev-django-app dev-mysql-db dev-redis \
             dev-celery-worker dev-celery-beat apache-dev
         echo "✅ Stack '$STACK_NAME' built"
