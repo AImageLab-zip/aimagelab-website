@@ -8,11 +8,13 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .models import (
+    BlacklistedSender,
     ExternalRecipient,
     IncomingEmail,
     MailingListPreference,
     OutgoingEmail,
     UserExtraEmail,
+    WhitelistedSender,
 )
 from .tasks import process_approved_email, send_email_batch
 
@@ -111,6 +113,38 @@ def moderation_detail(request, email_id):
             incoming.save(update_fields=['status', 'moderated_by', 'moderated_at'])
             django_messages.info(request, f'Email "{incoming.subject}" has been rejected.')
 
+        elif action == 'blacklist':
+            BlacklistedSender.objects.get_or_create(
+                email=incoming.sender.lower(),
+                defaults={'added_by': request.user, 'reason': 'Blacklisted during moderation'}
+            )
+            # Update this email and all other pending emails from the same sender
+            updated = IncomingEmail.objects.filter(
+                sender__iexact=incoming.sender, status='pending'
+            ).exclude(pk=incoming.pk).update(
+                status='blacklisted',
+                moderated_by=request.user,
+                moderated_at=timezone.now(),
+            )
+            incoming.status = 'blacklisted'
+            incoming.moderated_by = request.user
+            incoming.moderated_at = timezone.now()
+            incoming.save(update_fields=['status', 'moderated_by', 'moderated_at'])
+            extra = f' ({updated} other pending email(s) from this sender also rejected.)' if updated else ''
+            django_messages.warning(request, f'"{incoming.sender}" has been blacklisted. Future emails from this address will be automatically rejected.{extra}')
+
+        elif action == 'whitelist':
+            WhitelistedSender.objects.get_or_create(
+                email=incoming.sender.lower(),
+                defaults={'added_by': request.user, 'reason': 'Whitelisted during moderation'}
+            )
+            incoming.status = 'approved'
+            incoming.moderated_by = request.user
+            incoming.moderated_at = timezone.now()
+            incoming.save(update_fields=['status', 'moderated_by', 'moderated_at'])
+            process_approved_email.delay(incoming.pk)
+            django_messages.success(request, f'"{incoming.sender}" has been whitelisted and this email approved. Future emails from this address will be auto-approved.')
+
         return redirect('mailinglist:moderation')
 
     deliveries = incoming.deliveries.all()[:50]
@@ -125,15 +159,11 @@ def moderation_detail(request, email_id):
 # ---------------------------------------------------------------------------
 
 def unsubscribe(request, token):
-    """Handle unsubscribe requests via unique token in email footer."""
+    """Handle unsubscribe requests via unique UUID token in email footer."""
 
-    # Case 1: user-{pk} token for primary user emails
-    if token.startswith('user-'):
-        try:
-            pref_pk = int(token.split('-', 1)[1])
-        except (ValueError, IndexError):
-            raise Http404
-        pref = get_object_or_404(MailingListPreference, pk=pref_pk)
+    # Case 1: UUID token for primary user email (MailingListPreference)
+    pref = MailingListPreference.objects.filter(unsubscribe_token=token).first()
+    if pref:
         target_label = pref.user.email or pref.user.get_full_name()
 
         if request.method == 'POST':

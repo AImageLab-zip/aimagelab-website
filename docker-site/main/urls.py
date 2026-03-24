@@ -48,5 +48,6 @@ urlpatterns = [
     path('wiki/<slug:slug>/edit/', views.wiki_edit, name='wiki_edit'),
     path('wiki/<slug:slug>/history/', views.wiki_history, name='wiki_history'),
     path('wiki/<slug:slug>/version/<int:version_id>/', views.wiki_version, name='wiki_version'),
+    path('wiki/<slug:slug>/delete/', views.wiki_delete, name='wiki_delete'),
 ]
 

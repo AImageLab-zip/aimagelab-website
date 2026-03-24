@@ -24,6 +24,7 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 
 from .models import (
+    BlacklistedSender,
     ExternalRecipient,
     IncomingEmail,
     IncomingEmailAttachment,
@@ -31,6 +32,7 @@ from .models import (
     OutgoingEmail,
     SubjectRoleRoute,
     UserExtraEmail,
+    WhitelistedSender,
 )
 
 logger = logging.getLogger(__name__)
@@ -106,28 +108,49 @@ def _persist_email(msg, raw_bytes):
         else:
             body_text = msg.get_content()
 
-    # Determine auto-approval
-    sender_domain = sender.split('@')[-1].lower() if '@' in sender else ''
-    trusted_domains = getattr(settings, 'MAILINGLIST_TRUSTED_DOMAINS', ['unimore.it'])
-    is_trusted = any(
-        sender_domain == d or sender_domain.endswith('.' + d)
-        for d in trusted_domains
+    # Determine auto-approval: check blacklist, then whitelist, then trusted domains
+    sender_lower = sender.lower()
+    if BlacklistedSender.objects.filter(email__iexact=sender_lower).exists():
+        logger.info("Rejecting email from blacklisted sender %s", sender)
+        routes, clean_subject = _match_routes(subject)
+        incoming = IncomingEmail.objects.create(
+            message_id=message_id,
+            sender=sender,
+            sender_name=sender_name,
+            subject=subject,
+            clean_subject=clean_subject,
+            body_text=body_text,
+            body_html=body_html,
+            raw_headers=str(msg.items()),
+            status='blacklisted',
+        )
+        incoming.matched_routes.set(routes)
+        return incoming
+
+    sender_domain = sender_lower.split('@')[-1] if '@' in sender_lower else ''
+    is_trusted = (
+        WhitelistedSender.objects.filter(email__iexact=sender_lower).exists()
+        or any(
+            sender_domain == d or sender_domain.endswith('.' + d)
+            for d in getattr(settings, 'MAILINGLIST_TRUSTED_DOMAINS', ['unimore.it'])
+        )
     )
 
     # Match route
-    route = _match_route(subject)
+    routes, clean_subject = _match_routes(subject)
 
     incoming = IncomingEmail.objects.create(
         message_id=message_id,
         sender=sender,
         sender_name=sender_name,
         subject=subject,
+        clean_subject=clean_subject,
         body_text=body_text,
         body_html=body_html,
         raw_headers=str(msg.items()),
         status='auto_approved' if is_trusted else 'pending',
-        matched_route=route,
     )
+    incoming.matched_routes.set(routes)
 
     # Save attachments
     if msg.is_multipart():
@@ -148,12 +171,26 @@ def _persist_email(msg, raw_bytes):
     return incoming
 
 
-def _match_route(subject):
-    """Find the first SubjectRoleRoute whose tag appears in the subject."""
-    for route in SubjectRoleRoute.objects.all():
-        if route.tag.lower() in subject.lower():
-            return route
-    return None
+def _match_routes(subject):
+    """Find all SubjectRoleRoutes whose @ailb-<tag> appears in the subject.
+
+    Tags are matched case-insensitively anywhere in the subject.
+    Returns (routes queryset, clean_subject) where clean_subject has all
+    matched tags stripped and extra whitespace collapsed.
+    """
+    import re
+    all_routes = list(SubjectRoleRoute.objects.all())
+    matched = []
+    clean = subject
+    for route in all_routes:
+        # Escape the tag and match it as a whole word preceded by @
+        pattern = re.compile(re.escape(route.tag), re.IGNORECASE)
+        if pattern.search(subject):
+            matched.append(route)
+            clean = pattern.sub('', clean)
+    # Collapse multiple spaces left by removed tags
+    clean = re.sub(r'\s{2,}', ' ', clean).strip()
+    return matched, clean
 
 
 # ---------------------------------------------------------------------------
@@ -164,38 +201,50 @@ def resolve_recipients(incoming_email):
     """Return a deduplicated set of email addresses for delivery.
 
     Rules:
-    - If a route matched, send only to users with roles in that route
-      (plus external recipients if the route allows).
-    - If no route matched, send to all subscribed active users + external.
+    - If routes matched, send to the union of users matching any route's roles
+      (plus external recipients if any route allows it).
+    - If no routes matched, send to all subscribed active users + external.
     - Respect per-user subscription preferences.
     """
     addresses = set()
-    route = incoming_email.matched_route
+    routes = list(incoming_email.matched_routes.all())
 
-    if route:
-        target_roles = route.roles or []
+    if routes:
+        # Union of all roles across matched routes
+        target_roles = set()
+        send_external = False
+        for route in routes:
+            target_roles.update(route.roles or [])
+            if route.send_to_external:
+                send_external = True
+
         users = User.objects.filter(
             is_active=True,
             profile__role__in=target_roles,
             mailing_preference__subscribed=True,
         ).select_related('profile', 'mailing_preference')
     else:
-        # No route → send to all active subscribed users
+        # No route → behave like @ailb-active: all active members, no external
+        send_external = False
+        active_roles = [
+            'rector', 'full_professor', 'assoc_professor',
+            'researcher_tt', 'researcher_a', 'researcher_b',
+            'postdoc', 'secretariat_staff', 'research_fellow',
+            'collaborator', 'phd', 'intern', 'guest',
+        ]
         users = User.objects.filter(
             is_active=True,
+            profile__role__in=active_roles,
             mailing_preference__subscribed=True,
         ).select_related('profile', 'mailing_preference')
 
     for user in users:
         if user.email:
             addresses.add(user.email.lower())
-        # Extra email addresses
         extras = UserExtraEmail.objects.filter(preference__user=user)
         for extra in extras:
             addresses.add(extra.email.lower())
 
-    # External recipients
-    send_external = (route is None) or (route and route.send_to_external)
     if send_external:
         for ext in ExternalRecipient.objects.filter(subscribed=True):
             addresses.add(ext.email.lower())
@@ -280,11 +329,18 @@ def _build_outgoing_message(delivery, list_addr, list_name):
     """Build a MIME message for a single outgoing delivery."""
     incoming = delivery.incoming
 
+    # Show original sender's name in From, but send via the list address.
+    # This satisfies Gmail SMTP (must send as authenticated address) while
+    # making the sender identity clear in email clients.
+    sender_display = incoming.sender_name or incoming.sender
     msg = MIMEMultipart('mixed')
-    msg['From'] = formataddr((list_name, list_addr))
+    msg['From'] = formataddr((f"{sender_display} via {list_name}", list_addr))
     msg['To'] = delivery.recipient_email
-    msg['Subject'] = incoming.subject
-    msg['Reply-To'] = list_addr
+    # Use clean_subject (tags stripped) for the forwarded email
+    msg['Subject'] = incoming.clean_subject or incoming.subject
+    # Reply-To points to the original sender so replies go back to them,
+    # not to the mailing list inbox.
+    msg['Reply-To'] = formataddr((sender_display, incoming.sender))
     if incoming.message_id:
         msg['References'] = incoming.message_id
 
@@ -296,20 +352,26 @@ def _build_outgoing_message(delivery, list_addr, list_name):
         msg['List-Unsubscribe'] = f"<{unsub_url}>"
         msg['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click'
 
-    # Body
-    if incoming.body_html:
-        # Add unsubscribe footer to HTML
-        footer_html = _build_footer_html(unsubscribe_token)
-        html_content = incoming.body_html
-        if '</body>' in html_content.lower():
-            html_content = html_content.replace('</body>', footer_html + '</body>')
-        else:
-            html_content += footer_html
-        msg.attach(MIMEText(html_content, 'html'))
-    if incoming.body_text:
-        footer_text = _build_footer_text(unsubscribe_token)
-        msg.attach(MIMEText(incoming.body_text + footer_text, 'plain'))
-    if not incoming.body_html and not incoming.body_text:
+    # Body — wrap text+html in multipart/alternative so clients pick one,
+    # not render both.
+    footer_html = _build_footer_html(unsubscribe_token)
+    footer_text = _build_footer_text(unsubscribe_token)
+
+    if incoming.body_html or incoming.body_text:
+        alt = MIMEMultipart('alternative')
+        # plain text first (lowest preference)
+        plain = incoming.body_text + footer_text if incoming.body_text else ''
+        alt.attach(MIMEText(plain, 'plain'))
+        # html second (highest preference — clients pick this when supported)
+        if incoming.body_html:
+            html_content = incoming.body_html
+            if '</body>' in html_content.lower():
+                html_content = html_content.replace('</body>', footer_html + '</body>')
+            else:
+                html_content += footer_html
+            alt.attach(MIMEText(html_content, 'html'))
+        msg.attach(alt)
+    else:
         msg.attach(MIMEText('', 'plain'))
 
     # Attachments
@@ -342,13 +404,11 @@ def _get_unsubscribe_token(email_addr):
     if ext:
         return str(ext.unsubscribe_token)
 
-    # Check user primary email → use preference
+    # Check user primary email → use preference UUID token
     user = User.objects.filter(email__iexact=email_lower).first()
     if user:
         pref, _ = MailingListPreference.objects.get_or_create(user=user)
-        # For primary user emails, we generate a token based on user id
-        # We store it as a pseudo-token in the URL using the preference pk
-        return f"user-{pref.pk}"
+        return str(pref.unsubscribe_token)
 
     return None
 
