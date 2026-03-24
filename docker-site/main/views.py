@@ -4,14 +4,17 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages as django_messages
 from django.http import JsonResponse
 from django.urls import reverse
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import json
 from functools import wraps
 from urllib.parse import quote
 from django_ratelimit.decorators import ratelimit
+import logging
 from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
+
+logger = logging.getLogger(__name__)
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField, F
 from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage, IRISImportLog
@@ -417,7 +420,10 @@ def publications(request):
 
 def post_single(request, slug):
     """Single post detail view."""
-    post = Post.objects.get(slug=slug)
+    if request.user.is_authenticated and request.user.is_staff:
+        post = get_object_or_404(Post, slug=slug)
+    else:
+        post = get_object_or_404(Post, slug=slug, is_published=True)
     return render(request, 'main/single.html', {'post': post})
 
 def privacy_policy(request):
@@ -581,7 +587,7 @@ def login_view(request):
             django_messages.success(request, 'Login successful!')
             return redirect('home')
         else:
-            django_messages.error(request, 'Invalid username or password.')
+            django_messages.error(request, 'Invalid credentials.')
     
     context = {
         'OIDC_PROVIDER_NAME': getattr(settings, 'OIDC_PROVIDER_NAME', 'OIDC Provider')
@@ -1021,8 +1027,11 @@ def edit_reservation(request, reservation_id):
     
     # Only allow editing own reservations (or superusers)
     if reservation.user != request.user and not request.user.is_superuser:
-        django_messages.error(request, 'You can only edit your own reservations.')
-        return redirect('rooms_calendar')
+        logger.warning(
+            "Unauthorized reservation edit attempt: user=%s tried to edit reservation_id=%s owned by %s",
+            request.user.username, reservation_id, reservation.user.username
+        )
+        raise PermissionDenied("You can only edit your own reservations.")
     
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -1073,7 +1082,11 @@ def delete_reservation(request, reservation_id):
     
     # Only allow deleting own reservations (or superusers)
     if reservation.user != request.user and not request.user.is_superuser:
-        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+        logger.warning(
+            "Unauthorized reservation delete attempt: user=%s tried to delete reservation_id=%s owned by %s",
+            request.user.username, reservation_id, reservation.user.username
+        )
+        raise PermissionDenied("You can only delete your own reservations.")
     
     if request.method == 'POST':
         reservation.delete()
