@@ -38,11 +38,12 @@ ALLOWED_HOSTS = [
     "www.aimagelab.ing.unimo.it",
     "aimagelab.unimo.it",
     "aimagelab.ing.unimo.it",
-    "0.0.0.0",
     "django-app",
     "dev-django-app",
-    "testserver",
 ]
+
+if DEBUG:
+    ALLOWED_HOSTS += ["testserver"]
 
 # CSRF trusted origins for cross-site requests
 CSRF_TRUSTED_ORIGINS = [
