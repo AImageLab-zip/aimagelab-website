@@ -10,6 +10,7 @@ from django.core.files.base import ContentFile
 import json
 from functools import wraps
 from urllib.parse import quote
+from django_ratelimit.decorators import ratelimit
 from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField
@@ -567,6 +568,7 @@ def people(request):
     return render(request, 'main/people.html', {'grouped_profiles': grouped_profiles})
 
 
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def login_view(request):
     """Login page view with Hello World message."""
     if request.method == 'POST':
@@ -792,6 +794,7 @@ def serve_media(request, path):
     return FileResponse(open(file_path, 'rb'))
 
 
+@ratelimit(key='user', rate='3/h', method='POST', block=True)
 @is_staff_required
 def trigger_iris_import(request):
     """
