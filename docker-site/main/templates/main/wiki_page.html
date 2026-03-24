@@ -148,6 +148,13 @@
                     <i data-lucide="home" class="w-4 h-4"></i>
                     Dashboard
                 </a>
+                {% if user.is_superuser %}
+                <div class="divider my-1"></div>
+                <a href="{% url 'wiki_delete' page.slug %}" class="btn btn-error btn-outline btn-block justify-start">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    Delete Page
+                </a>
+                {% endif %}
             </div>
         </div>
     </div>

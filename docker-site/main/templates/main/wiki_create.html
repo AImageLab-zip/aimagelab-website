@@ -371,6 +371,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Sync EasyMDE content to textarea before form submission
+    // (EasyMDE hides the original <textarea>; without this the POST value is empty)
+    const form = document.getElementById('wiki-form');
+    form.addEventListener('submit', function(e) {
+        // Push the editor value into the underlying textarea
+        const content = easyMDE.value();
+        document.getElementById('wiki-content').value = content;
+
+        // Validate manually (textarea is hidden so browser can't enforce 'required')
+        const title = document.querySelector('input[name="title"]').value.trim();
+        if (!title || !content.trim()) {
+            e.preventDefault();
+            if (!content.trim()) {
+                alert('Content is required.');
+            }
+            return;
+        }
+
+        // Clear autosave so the old draft isn't restored if something fails
+        localStorage.removeItem('smde_wiki-create');
+    });
+
     // Initialize lucide icons
     lucide.createIcons();
 });

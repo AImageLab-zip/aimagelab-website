@@ -1,0 +1,97 @@
+{% extends 'main/base_with_sidebar.html' %}
+{% load static %}
+
+{% block title %}Delete {{ page.title }} - Wiki - AImageLab{% endblock %}
+
+{% block hero_title %}Delete Wiki Page{% endblock %}
+
+{% block hero_description %}
+<div class="breadcrumbs text-sm">
+    <ul>
+        <li><a href="{% url 'wiki_home' %}">Wiki Home</a></li>
+        <li><a href="{% url 'wiki_page' page.slug %}">{{ page.title }}</a></li>
+        <li>Delete</li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block main_content %}
+<div class="card bg-base-200">
+    <div class="card-body">
+        <div class="flex items-center gap-3 mb-4">
+            <i data-lucide="trash-2" class="w-8 h-8 text-error"></i>
+            <h2 class="card-title text-error text-2xl">Confirm Deletion</h2>
+        </div>
+
+        <div class="alert alert-error mb-6">
+            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+            <div>
+                <h3 class="font-bold">This action cannot be undone.</h3>
+                <p class="text-sm">
+                    Deleting this page will permanently remove it along with all its version history
+                    and associated change requests.
+                </p>
+            </div>
+        </div>
+
+        <p class="text-lg mb-2">
+            You are about to delete the wiki page:
+        </p>
+        <p class="text-xl font-bold mb-6">&ldquo;{{ page.title }}&rdquo;</p>
+
+        {% if page.children.exists %}
+        <div class="alert alert-warning mb-6">
+            <i data-lucide="folder-open" class="w-5 h-5"></i>
+            <div>
+                <h3 class="font-bold">This page has sub-pages.</h3>
+                <p class="text-sm">
+                    The following child pages will become top-level pages after deletion:
+                    {% for child in page.children.all %}
+                        <strong>{{ child.title }}</strong>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="flex gap-3 flex-wrap">
+                <button type="submit" class="btn btn-error">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    Yes, delete this page
+                </button>
+                <a href="{% url 'wiki_page' page.slug %}" class="btn btn-ghost">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar_content %}
+<div class="card bg-base-200">
+    <div class="card-body">
+        <h2 class="card-title text-primary mb-4">
+            <i data-lucide="info" class="w-6 h-6"></i>
+            Page Info
+        </h2>
+        <ul class="space-y-2 text-sm">
+            <li class="flex items-center gap-2">
+                <i data-lucide="user" class="w-4 h-4 opacity-60"></i>
+                Created by {{ page.created_by.username|default:"Unknown" }}
+            </li>
+            <li class="flex items-center gap-2">
+                <i data-lucide="calendar" class="w-4 h-4 opacity-60"></i>
+                {{ page.created_at|date:"F d, Y" }}
+            </li>
+            <li class="flex items-center gap-2">
+                <i data-lucide="layers" class="w-4 h-4 opacity-60"></i>
+                {{ page.versions.count }} version(s)
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

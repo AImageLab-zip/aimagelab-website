@@ -83,20 +83,28 @@ def home(request):
     
     featured_profiles = []
     
-    rcucchiara_profile = UserProfile.objects.select_related('user').get(
-            user__username='rcucchiara'
-        )
-    
-    # Check avatar first, then avatar_iris
-    if (rcucchiara_profile.avatar and hasattr(rcucchiara_profile.avatar, 'url') and rcucchiara_profile.avatar.url) or \
-       (rcucchiara_profile.avatar_iris and hasattr(rcucchiara_profile.avatar_iris, 'url') and rcucchiara_profile.avatar_iris.url):
-            featured_profiles.append(rcucchiara_profile)
-    
-    # Filter profiles that have either avatar or avatar_iris
-    featured_profiles.extend(UserProfile.objects.select_related('user').filter(
-        Q(avatar__isnull=False) | Q(avatar_iris__isnull=False),
-        is_visible=True
-    ).exclude(user__username='rcucchiara').exclude(avatar='', avatar_iris='').order_by('?')[:2])
+    # Try to get rcucchiara profile if it exists
+    try:
+        rcucchiara_profile = UserProfile.objects.select_related('user').get(
+                user__username='rcucchiara'
+            )
+        
+        # Check avatar first, then avatar_iris
+        if (rcucchiara_profile.avatar and hasattr(rcucchiara_profile.avatar, 'url') and rcucchiara_profile.avatar.url) or \
+           (rcucchiara_profile.avatar_iris and hasattr(rcucchiara_profile.avatar_iris, 'url') and rcucchiara_profile.avatar_iris.url):
+                featured_profiles.append(rcucchiara_profile)
+        
+        # Filter profiles that have either avatar or avatar_iris, excluding rcucchiara
+        featured_profiles.extend(UserProfile.objects.select_related('user').filter(
+            Q(avatar__isnull=False) | Q(avatar_iris__isnull=False),
+            is_visible=True
+        ).exclude(user__username='rcucchiara').exclude(avatar='', avatar_iris='').order_by('?')[:2])
+    except UserProfile.DoesNotExist:
+        # If rcucchiara doesn't exist, just get 3 random featured profiles
+        featured_profiles.extend(UserProfile.objects.select_related('user').filter(
+            Q(avatar__isnull=False) | Q(avatar_iris__isnull=False),
+            is_visible=True
+        ).exclude(avatar='', avatar_iris='').order_by('?')[:3])
     
     research_areas = ResearchArea.objects.all()
 
@@ -1544,3 +1552,19 @@ def wiki_upload_image(request):
 def custom_404(request, exception):
     """Render a custom 404 page."""
     return render(request, 'main/404.html', status=404)
+  
+@login_required
+def wiki_delete(request, slug):
+    """Delete a wiki page — superusers only."""
+    if not request.user.is_superuser:
+        django_messages.error(request, 'You do not have permission to delete wiki pages.')
+        return redirect('wiki_page', slug=slug)
+
+    page = get_object_or_404(WikiPage, slug=slug)
+
+    if request.method == 'POST':
+        page.delete()
+        django_messages.success(request, f'Wiki page "{page.title}" has been deleted.')
+        return redirect('wiki_home')
+
+    return render(request, 'main/wiki_delete.html', {'page': page})

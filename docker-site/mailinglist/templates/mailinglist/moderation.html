@@ -33,8 +33,8 @@
                                 </p>
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
-                                {% if email.matched_route %}
-                                <span class="badge badge-info badge-sm">{{ email.matched_route.tag }}</span>
+                                {% if email.matched_routes.all %}
+                                {% for route in email.matched_routes.all %}<span class="badge badge-info badge-sm">{{ route.tag }}</span> {% endfor %}
                                 {% endif %}
                                 <span class="badge badge-warning badge-sm">Pending</span>
                                 <span class="text-xs text-base-content/50">
@@ -86,11 +86,13 @@
                                 <span class="badge badge-info badge-sm">Auto</span>
                                 {% elif email.status == 'rejected' %}
                                 <span class="badge badge-error badge-sm">Rejected</span>
+                                {% elif email.status == 'blacklisted' %}
+                                <span class="badge badge-error badge-sm">Blacklisted</span>
                                 {% endif %}
                             </td>
                             <td>
-                                {% if email.matched_route %}
-                                <span class="badge badge-ghost badge-sm">{{ email.matched_route.tag }}</span>
+                                {% if email.matched_routes.all %}
+                                {% for route in email.matched_routes.all %}<span class="badge badge-ghost badge-sm">{{ route.tag }}</span> {% endfor %}
                                 {% else %}
                                 <span class="text-base-content/30">—</span>
                                 {% endif %}
