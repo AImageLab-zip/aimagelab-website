@@ -1,43 +1,50 @@
 # Mailing List
 
 The AImageLab mailing list allows authorised senders to broadcast messages to lab members and external recipients.  
-Incoming emails are checked against a list of trusted senders, routed to the right audience via **subject tags**, and either delivered automatically or held for moderator review.
+Incoming emails are checked against a list of trusted senders, routed to the right audience via **plus-addressing**, and either delivered automatically or held for moderator review.
 
 ---
 
 ## Sending an email
 
-Send a message to the list address:
+Send a message to one of the plus-addressed list addresses below.
+The suffix after the `+` determines who receives the message:
 
-```
-anonymous.user.conferences@gmail.com
-```
-
-Include one or more **routing tags** at the start of the subject line to control who receives the message:
-
-| Tag | Recipients |
+| Address | Recipients |
 |---|---|
-| `@ailb-all` | All active members + external recipients |
-| `@ailb-active` | All active members (no externals) |
-| `@ailb-esterni` | External recipients only |
-| `@ailb-strutturati` | Rector, professors, RTT/RTD-A/RTD-B researchers |
-| `@ailb-docenti` | Rector, full professors, associate professors |
-| `@ailb-dottorandi` | PhD students |
-| `@ailb-postdocs` | Postdoctoral researchers |
-| `@ailb-staff` | Secretariat and administrative staff |
+| `aimagelab+all@unimore.it` | All active members + external recipients |
+| `aimagelab+active@unimore.it` | All active members (no externals) |
+| `aimagelab+esterni@unimore.it` | External recipients only |
+| `aimagelab+strutturati@unimore.it` | Rector, professors, RTT/RTD-A/RTD-B researchers |
+| `aimagelab+docenti@unimore.it` | Rector, full professors, associate professors |
+| `aimagelab+dottorandi@unimore.it` | PhD students |
+| `aimagelab+postdocs@unimore.it` | Postdoctoral researchers |
+| `aimagelab+staff@unimore.it` | Secretariat and administrative staff |
 
 **Examples:**
 
 ```
-Subject: @ailb-all Department seminar on Friday
-Subject: @ailb-dottorandi PhD course — schedule update
-Subject: @ailb-strutturati @ailb-staff Faculty board reminder
+To: aimagelab+all@unimore.it
+Subject: Department seminar on Friday
+
+To: aimagelab+dottorandi@unimore.it
+Subject: PhD course — schedule update
+
+To: aimagelab+strutturati@unimore.it, aimagelab+staff@unimore.it
+Subject: Faculty board reminder
 ```
 
-Multiple tags are supported. The final recipient list is the **union** of all matched groups.  
-Tags are stripped from the subject before the message is forwarded, so recipients only see the clean subject.
+To send to multiple groups, add multiple recipients in the To or Cc field.
+The final recipient list is the **union** of all matched groups.
 
-If **no tag** is specified, the message is delivered to all active members (equivalent to `@ailb-active`).
+If the email is sent to `aimagelab@unimore.it` (without a `+suffix`), the message is delivered to all active members (equivalent to `aimagelab+active@unimore.it`).
+
+### Replying
+
+Every forwarded email includes the list address(es) in Cc:
+
+- **Reply** — goes to the original sender only.
+- **Reply All** — goes to the original sender **and** back to the list (e.g. `aimagelab+strutturati@unimore.it`), so the reply is redistributed to the same group.
 
 ---
 
@@ -89,15 +96,15 @@ To re-subscribe or manage extra email addresses, log in and visit your profile p
 
 ### Routing rules
 
-Routing rules (tags → role lists) are managed from the Django admin:
+Routing rules (plus-address suffixes → role lists) are managed from the Django admin:
 
 ```
 /admin/mailinglist/subjectroleroute/
 ```
 
 Each rule defines:
-- **Tag** — the `@ailb-*` string to match in the subject
-- **Roles** — list of user roles that receive messages with this tag
+- **Tag** — the plus-address suffix (e.g. `staff` for `aimagelab+staff@unimore.it`)
+- **Roles** — list of user roles that receive messages sent to this address
 - **Send to external** — whether external (non-system) recipients are included
 
 To seed the default production routes:

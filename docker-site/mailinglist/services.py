@@ -9,14 +9,13 @@ Handles:
 import email
 import imaplib
 import logging
-import re
 import smtplib
 from email import policy
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-from email.utils import formataddr
+from email.utils import formataddr, getaddresses
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -112,13 +111,13 @@ def _persist_email(msg, raw_bytes):
     sender_lower = sender.lower()
     if BlacklistedSender.objects.filter(email__iexact=sender_lower).exists():
         logger.info("Rejecting email from blacklisted sender %s", sender)
-        routes, clean_subject = _match_routes(subject)
+        routes = _match_routes(msg)
         incoming = IncomingEmail.objects.create(
             message_id=message_id,
             sender=sender,
             sender_name=sender_name,
             subject=subject,
-            clean_subject=clean_subject,
+            clean_subject=subject,
             body_text=body_text,
             body_html=body_html,
             raw_headers=str(msg.items()),
@@ -136,15 +135,15 @@ def _persist_email(msg, raw_bytes):
         )
     )
 
-    # Match route
-    routes, clean_subject = _match_routes(subject)
+    # Match route via plus-addressing in To/Cc headers
+    routes = _match_routes(msg)
 
     incoming = IncomingEmail.objects.create(
         message_id=message_id,
         sender=sender,
         sender_name=sender_name,
         subject=subject,
-        clean_subject=clean_subject,
+        clean_subject=subject,
         body_text=body_text,
         body_html=body_html,
         raw_headers=str(msg.items()),
@@ -171,26 +170,35 @@ def _persist_email(msg, raw_bytes):
     return incoming
 
 
-def _match_routes(subject):
-    """Find all SubjectRoleRoutes whose @ailb-<tag> appears in the subject.
+def _match_routes(msg):
+    """Find routes by parsing To/Cc for aimagelab+<suffix>@domain addresses.
 
-    Tags are matched case-insensitively anywhere in the subject.
-    Returns (routes queryset, clean_subject) where clean_subject has all
-    matched tags stripped and extra whitespace collapsed.
+    Returns a list of matched SubjectRoleRoute objects.
     """
-    import re
-    all_routes = list(SubjectRoleRoute.objects.all())
-    matched = []
-    clean = subject
-    for route in all_routes:
-        # Escape the tag and match it as a whole word preceded by @
-        pattern = re.compile(re.escape(route.tag), re.IGNORECASE)
-        if pattern.search(subject):
-            matched.append(route)
-            clean = pattern.sub('', clean)
-    # Collapse multiple spaces left by removed tags
-    clean = re.sub(r'\s{2,}', ' ', clean).strip()
-    return matched, clean
+    list_address = getattr(settings, 'MAILINGLIST_LIST_ADDRESS', 'aimagelab@unimore.it')
+    local_part, domain = list_address.rsplit('@', 1)
+    local_lower = local_part.lower()
+    domain_lower = domain.lower()
+
+    raw_to = msg.get('To', '') or ''
+    raw_cc = msg.get('Cc', '') or ''
+    all_addrs = getaddresses([raw_to, raw_cc])
+
+    suffixes = set()
+    for _, addr in all_addrs:
+        addr_lower = addr.lower().strip()
+        if '@' not in addr_lower:
+            continue
+        addr_local, addr_domain = addr_lower.rsplit('@', 1)
+        if addr_domain == domain_lower and addr_local.startswith(local_lower + '+'):
+            suffix = addr_local[len(local_lower) + 1:]
+            if suffix:
+                suffixes.add(suffix)
+
+    if not suffixes:
+        return []
+
+    return list(SubjectRoleRoute.objects.filter(tag__in=suffixes))
 
 
 # ---------------------------------------------------------------------------
@@ -213,16 +221,30 @@ def resolve_recipients(incoming_email):
         # Union of all roles across matched routes
         target_roles = set()
         send_external = False
+        send_to_admins = False
         for route in routes:
-            target_roles.update(route.roles or [])
+            for role in (route.roles or []):
+                if role == '__admin__':
+                    send_to_admins = True
+                else:
+                    target_roles.add(role)
             if route.send_to_external:
                 send_external = True
 
-        users = User.objects.filter(
-            is_active=True,
-            profile__role__in=target_roles,
-            mailing_preference__subscribed=True,
-        ).select_related('profile', 'mailing_preference')
+        qs = User.objects.none()
+        if target_roles:
+            qs = qs | User.objects.filter(
+                is_active=True,
+                profile__role__in=target_roles,
+                mailing_preference__subscribed=True,
+            )
+        if send_to_admins:
+            qs = qs | User.objects.filter(
+                is_active=True,
+                is_staff=True,
+                mailing_preference__subscribed=True,
+            )
+        users = qs.distinct().select_related('profile', 'mailing_preference')
     else:
         # No route → behave like @ailb-active: all active members, no external
         send_external = False
@@ -336,13 +358,25 @@ def _build_outgoing_message(delivery, list_addr, list_name):
     msg = MIMEMultipart('mixed')
     msg['From'] = formataddr((f"{sender_display} via {list_name}", list_addr))
     msg['To'] = delivery.recipient_email
-    # Use clean_subject (tags stripped) for the forwarded email
+    # Use clean_subject (identical to subject now that tags are no longer in subject)
     msg['Subject'] = incoming.clean_subject or incoming.subject
     # Reply-To points to the original sender so replies go back to them,
     # not to the mailing list inbox.
     msg['Reply-To'] = formataddr((sender_display, incoming.sender))
     if incoming.message_id:
         msg['References'] = incoming.message_id
+
+    # Cc the matched route addresses so "Reply All" sends back to the list.
+    # Add RFC 2369 List-Post / List-Id so clients show "Reply to List".
+    routes = list(incoming.matched_routes.all())
+    if routes:
+        ml_list_address = getattr(settings, 'MAILINGLIST_LIST_ADDRESS', 'aimagelab@unimore.it')
+        ml_local, ml_domain = ml_list_address.rsplit('@', 1)
+        cc_addrs = [f"{ml_local}+{r.tag}@{ml_domain}" for r in routes]
+        msg['Cc'] = ', '.join(cc_addrs)
+        primary = cc_addrs[0]
+        msg['List-Post'] = f'<mailto:{primary}>'
+        msg['List-Id'] = f'{list_name} <{primary.replace("@", ".")}>'
 
     # Unsubscribe header (RFC 8058)
     unsubscribe_token = _get_unsubscribe_token(delivery.recipient_email)

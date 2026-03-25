@@ -36,7 +36,7 @@
                         {% endif %}
 
                         {% if email.matched_routes.all %}
-                        {% for route in email.matched_routes.all %}<span class="badge badge-ghost">{{ route.tag }}</span> {% endfor %}
+                        {% for route in email.matched_routes.all %}<span class="badge badge-ghost">+{{ route.tag }}</span> {% endfor %}
                         {% endif %}
                     </div>
                 </div>
@@ -45,7 +45,7 @@
                 <div class="alert alert-info mb-4">
                     <i data-lucide="route" class="w-5 h-5"></i>
                     <div>
-                        <p class="font-semibold">Routes: {% for route in email.matched_routes.all %}{{ route.tag }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+                        <p class="font-semibold">Routes: {% for route in email.matched_routes.all %}aimagelab+{{ route.tag }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
                         <p class="text-sm">
                             Target roles: {% for route in email.matched_routes.all %}{{ route.roles|join:"," }}{% if not forloop.last %} + {% endif %}{% endfor %}
                             {% for route in email.matched_routes.all %}{% if route.send_to_external %} + external recipients{% endif %}{% endfor %}

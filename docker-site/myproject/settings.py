@@ -394,6 +394,10 @@ MAILINGLIST_SMTP_PORT = int(os.environ.get('MAILINGLIST_SMTP_PORT', '587'))
 # Display name used in the From header of outgoing emails
 MAILINGLIST_FROM_NAME = os.environ.get('MAILINGLIST_FROM_NAME', 'AImageLab Mailing List')
 
+# Public-facing list address used for plus-addressing routing
+# e.g. aimagelab@unimore.it → aimagelab+staff@unimore.it
+MAILINGLIST_LIST_ADDRESS = os.environ.get('MAILINGLIST_LIST_ADDRESS', 'aimagelab@unimore.it')
+
 # Base URL for unsubscribe and moderation links
 MAILINGLIST_BASE_URL = os.environ.get('MAILINGLIST_BASE_URL', 'https://aimagelab.unimore.it')
 

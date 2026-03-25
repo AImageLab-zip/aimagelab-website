@@ -16,25 +16,25 @@ ACTIVE_ROLES = [
 
 DEFAULT_ROUTES = [
     {
-        'tag': '@ailb-all',
+        'tag': 'all',
         'description': 'All active lab members + external recipients',
         'roles': ACTIVE_ROLES,
         'send_to_external': True,
     },
     {
-        'tag': '@ailb-active',
-        'description': 'All active lab members (no external) — default when no tag is used',
+        'tag': 'active',
+        'description': 'All active lab members (no external) — default when no suffix is used',
         'roles': ACTIVE_ROLES,
         'send_to_external': False,
     },
     {
-        'tag': '@ailb-esterni',
+        'tag': 'esterni',
         'description': 'External recipients only (no internal users)',
         'roles': [],
         'send_to_external': True,
     },
     {
-        'tag': '@ailb-strutturati',
+        'tag': 'strutturati',
         'description': 'Structured staff only (rector, professors, RTT/RTD researchers)',
         'roles': [
             'rector', 'full_professor', 'assoc_professor',
@@ -43,7 +43,7 @@ DEFAULT_ROUTES = [
         'send_to_external': False,
     },
     {
-        'tag': '@ailb-docenti',
+        'tag': 'docenti',
         'description': 'Professors only (rector, full and associate professors)',
         'roles': [
             'rector', 'full_professor', 'assoc_professor',
@@ -51,7 +51,7 @@ DEFAULT_ROUTES = [
         'send_to_external': False,
     },
     {
-        'tag': '@ailb-dottorandi',
+        'tag': 'dottorandi',
         'description': 'PhD students only',
         'roles': [
             'phd',
@@ -59,7 +59,7 @@ DEFAULT_ROUTES = [
         'send_to_external': False,
     },
     {
-        'tag': '@ailb-postdocs',
+        'tag': 'postdocs',
         'description': 'Postdoctoral researchers only',
         'roles': [
             'postdoc',
@@ -67,10 +67,18 @@ DEFAULT_ROUTES = [
         'send_to_external': False,
     },
     {
-        'tag': '@ailb-staff',
+        'tag': 'staff',
         'description': 'Secretariat and administrative staff',
         'roles': [
             'secretariat_staff',
+        ],
+        'send_to_external': False,
+    },
+    {
+        'tag': 'admin',
+        'description': 'Site administrators (Django staff users)',
+        'roles': [
+            '__admin__',
         ],
         'send_to_external': False,
     },

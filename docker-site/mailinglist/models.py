@@ -54,17 +54,17 @@ class ExternalRecipient(models.Model):
 
 
 class SubjectRoleRoute(models.Model):
-    """Maps a subject tag like @ailb-all to a set of recipient roles.
+    """Maps a plus-address suffix to a set of recipient roles.
 
-    Tags use the @ailb-<name> syntax and are stripped from the subject
-    when the email is forwarded.  Multiple tags may appear in a single
-    subject; recipients are the union of all matching routes.
+    Routing uses plus-addressing: sending to aimagelab+<tag>@unimore.it
+    selects the route with the matching tag.  Multiple routes can be
+    targeted by adding multiple recipients.
     If ``send_to_external`` is True, external recipients also receive the mail.
     """
     tag = models.CharField(
         max_length=100,
         unique=True,
-        help_text="Tag in the email subject using @ailb- syntax, e.g. @ailb-all"
+        help_text="Plus-address suffix, e.g. 'staff' for aimagelab+staff@unimore.it"
     )
     description = models.CharField(max_length=255, blank=True)
     roles = models.JSONField(
@@ -77,7 +77,7 @@ class SubjectRoleRoute(models.Model):
     )
 
     def __str__(self):
-        return self.tag
+        return f'aimagelab+{self.tag}'
 
 
 class IncomingEmail(models.Model):
