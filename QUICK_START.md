@@ -19,9 +19,11 @@ cd /home/administrator/aimagelab
 
 ### Start Services
 ```bash
-./start-all.sh      # Start everything
-./dev-start.sh      # Development only
-./deploy-prod.sh    # Production only
+./start-all.sh                  # Start everything
+./dev-stack.sh mystack init     # First-time dev setup (build + migrate + static)
+./dev-stack.sh mystack up       # Start existing dev stack
+./deploy.sh init                # First-time production deployment
+./deploy.sh update              # Update running production
 ```
 
 ### Create Superuser
@@ -90,16 +92,18 @@ aimagelab/
 ├── docker-compose.dev.yml          # Dev-only (optional)
 ├── docker-compose.prod.yml         # Prod-only (optional)
 ├── start-all.sh                    # Start everything
-├── dev-start.sh                    # Start dev only
-├── deploy-prod.sh                  # Deploy production
+├── dev-stack.sh                    # Dev stack management (init, up, down, etc.)
+├── deploy.sh                       # Production deployment (init, update)
 ├── .env                            # Environment variables
 ├── Dockerfile.dev                  # Django dev container
 ├── Dockerfile.prod                 # Django prod container
-├── Dockerfile.apache.unified       # Apache container
+├── Dockerfile.apache.dev           # Apache dev container
+├── Dockerfile.apache.prod          # Apache prod container
 ├── Dockerfile.celery               # Celery worker
 ├── Dockerfile.beat                 # Celery beat
 ├── Dockerfile.certbot              # Certbot
-├── apache-aimagelab-unified.conf   # Apache config
+├── apache-dev.conf                 # Apache dev config
+├── apache-prod.conf                # Apache prod config
 ├── entrypoint.sh                   # Django entrypoint
 ├── wait-for-db.py                  # DB wait script
 ├── docker-site/                    # Django application

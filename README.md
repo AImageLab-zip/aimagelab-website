@@ -61,21 +61,18 @@ sudo docker compose down dev-django-app dev-mysql-db dev-redis dev-celery-worker
 
 **Multiple isolated development stacks** (recommended):
 
-**Note**: First create `.env` from `.env.example` in your project folder.
+**Note**: First create `.env` from `.env.example` in your project folder. Per-stack env files (`.env.<stack-name>`) with unique ports are auto-generated on first run.
 
 ```bash
-# Start stack with auto-assigned port
+# Start stack (auto-creates .env.feature1 with unique ports)
 ./dev-stack.sh feature1 up
 
-# Start stack on specific port
-./dev-stack.sh feature2 up 8090
-
-# Start another stack
-./dev-stack.sh user1 up 8091
+# Start another stack (auto-creates .env.user1)
+./dev-stack.sh user1 up
 
 # Stop specific stack
 ./dev-stack.sh feature1 down
-./dev-stack.sh feature2 down
+./dev-stack.sh user1 down
 ```
 
 ### Option 3: Start Only Production
@@ -208,14 +205,18 @@ sudo docker compose stop dev-django-app dev-mysql-db dev-redis dev-celery-worker
 
 ### Environment Configuration
 
-The development Apache port can be customized in `.env`:
+When you run `dev-stack.sh` with a stack name, a `.env.<stack-name>` file is auto-generated if it doesn't exist, with unique ports derived from the stack name:
 
 ```bash
-# Set custom development port (default: 8080)
-DEV_APACHE_PORT=8000
+# Auto-generated .env.myfeature example:
+DEV_APACHE_PORT=8142
+DEV_REDIS_PORT=6442
+DEV_MYSQL_PORT=3442
+DEV_DJANGO_PORT=9042
+DEV_DEBUGPY_PORT=5742
 ```
 
-This allows running multiple development stacks on the same host by changing the port for each stack.
+To customise ports, edit the `.env.<stack-name>` file before starting the stack. These files are git-ignored.
 
 ### Running Migrations
 
@@ -332,8 +333,7 @@ The `dev-stack.sh` script allows you to run multiple isolated development enviro
 
 **Start a new stack:**
 ```bash
-./dev-stack.sh myfeature up          # Auto-assigns port
-./dev-stack.sh myfeature up 8090     # Use specific port 8090
+./dev-stack.sh myfeature up          # Auto-creates .env.myfeature with unique ports
 ```
 
 **Common operations:**
@@ -366,7 +366,8 @@ sudo docker ps --filter "name=aimagelab-dev-"
 ```
 
 Each stack gets:
-- Unique container names (`aimagelab-dev-myfeature-*`)
+- Unique container names
+- Auto-generated `.env.<stack-name>` with unique ports (git-ignored)
 - Isolated database and Redis instances
 - Separate volumes
 - Independent Apache port

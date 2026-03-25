@@ -12,8 +12,8 @@ This directory should contain your Shibboleth SP configuration files:
 
 If you don't need Shibboleth authentication, you can disable it by:
 
-1. Removing Shibboleth-related sections from `apache-aimagelab-unified.conf`
-2. Commenting out Shibboleth installation in `Dockerfile.apache.unified`
+1. Removing Shibboleth-related sections from the Apache config (`apache-dev.conf` / `apache-prod.conf`)
+2. Commenting out Shibboleth installation in the Apache Dockerfiles (`Dockerfile.apache.dev` / `Dockerfile.apache.prod`)
 
 ## With Shibboleth
 

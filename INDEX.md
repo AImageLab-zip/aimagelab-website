@@ -94,7 +94,8 @@ aimagelab/
 │   ├── docker-compose.prod.yml          # Prod-only (optional)
 │   ├── Dockerfile.dev                   # Django dev (runserver)
 │   ├── Dockerfile.prod                  # Django prod (Gunicorn)
-│   ├── Dockerfile.apache.unified        # Apache (unified)
+│   ├── Dockerfile.apache.dev            # Apache (dev)
+│   ├── Dockerfile.apache.prod           # Apache (prod)
 │   ├── Dockerfile.celery                # Celery workers
 │   ├── Dockerfile.beat                  # Celery beat
 │   ├── Dockerfile.certbot               # SSL certificates
@@ -104,16 +105,16 @@ aimagelab/
 │   ├── .env                             # Environment variables
 │   ├── .env.example                     # Environment template
 │   ├── .gitignore                       # Git ignore rules
-│   ├── apache-aimagelab-unified.conf    # Apache configuration
+│   ├── apache-dev.conf                  # Apache dev configuration
+│   ├── apache-prod.conf                 # Apache prod configuration
 │   ├── ports.conf                       # Apache ports (80, 443, 8443)
 │
 ├── 🚀 Deployment Scripts
 │   ├── start-all.sh                     # Start everything
-│   ├── dev-start.sh                     # Start dev only
-│   ├── deploy-prod.sh                   # Deploy production
+│   ├── dev-stack.sh                     # Dev stack management (init, up, down, etc.)
+│   ├── deploy.sh                        # Production deployment (init, update)
 │   ├── entrypoint.sh                    # Django entrypoint
 │   ├── wait-for-db.py                   # Database wait script
-│   └── docker-entrypoint-apache-unified.sh
 │
 ├── 📂 certbot-scripts/                  # SSL certificate management
 │   ├── obtain-cert.sh

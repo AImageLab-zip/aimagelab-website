@@ -14,7 +14,7 @@ COMMAND="${2:-up}"
 if [ -z "$STACK_NAME" ]; then
     echo "Usage: $0 <stack-name> <command> [port]"
     echo "  stack-name: unique identifier (e.g., feature1, user1)"
-    echo "  command: up, down, logs, ps, restart, exec, shell"
+    echo "  command: up, down, logs, ps, restart, exec, shell, migrate, manage, build, init"
     echo "  port: custom Apache port (optional, auto-assigned if not provided)"
     echo ""
     echo "Examples:"
@@ -29,6 +29,22 @@ fi
 # Generate project name
 PROJECT_NAME="${STACK_NAME}"
 ENV_FILE=".env.${PROJECT_NAME}"
+
+# Auto-create env file with unique ports if it doesn't exist
+if [ ! -f "${ENV_FILE}" ]; then
+    # Derive a deterministic offset (0–99) from the stack name
+    HASH=$(echo -n "$STACK_NAME" | cksum | awk '{print $1}')
+    OFFSET=$((HASH % 100))
+    cat > "${ENV_FILE}" <<EOF
+# Dev stack configuration for ${STACK_NAME} (auto-generated)
+DEV_APACHE_PORT=$((8100 + OFFSET))
+DEV_REDIS_PORT=$((6400 + OFFSET))
+DEV_MYSQL_PORT=$((3400 + OFFSET))
+DEV_DJANGO_PORT=$((9000 + OFFSET))
+DEV_DEBUGPY_PORT=$((5700 + OFFSET))
+EOF
+    echo "📝 Created ${ENV_FILE} with auto-assigned ports (offset ${OFFSET})"
+fi
 
 
 # Always load base .env file first
@@ -112,7 +128,7 @@ case "$COMMAND" in
         ;;
 
     manage)
-        echo "Running migrations for stack '$STACK_NAME'..."
+        echo "Running manage.py command for stack '$STACK_NAME'..."
         sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec dev-django-app python manage.py "${@:3}"
         ;;
     
@@ -123,10 +139,44 @@ case "$COMMAND" in
             dev-celery-worker dev-celery-beat apache-dev
         echo "✅ Stack '$STACK_NAME' built"
         ;;
+
+    init)
+        echo "Initialising development stack '$STACK_NAME' (build → up → migrate → collectstatic)..."
+        echo ""
+
+        echo "📦 Building containers..."
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml build \
+            dev-django-app dev-mysql-db dev-redis \
+            dev-celery-worker dev-celery-beat apache-dev
+
+        echo "🚀 Starting services..."
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml up -d \
+            dev-django-app dev-mysql-db dev-redis \
+            dev-celery-worker dev-celery-beat apache-dev
+
+        echo "⏳ Waiting for services to be ready..."
+        sleep 10
+
+        echo "🗄️  Running migrations..."
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec -T dev-django-app python manage.py migrate
+
+        echo "📁 Collecting static files..."
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec -T dev-django-app python manage.py collectstatic --noinput
+
+        echo "🔄 Restarting Apache..."
+        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml restart apache-dev
+
+        echo ""
+        echo "✅ Stack '$STACK_NAME' initialised!"
+        echo "   Access URL: http://localhost:$PORT"
+        echo ""
+        echo "To create a superuser:"
+        echo "  $0 $STACK_NAME manage createsuperuser"
+        ;;
     
     *)
         echo "Unknown command: $COMMAND"
-        echo "Available commands: up, down, logs, ps, restart, exec, shell, migrate, build"
+        echo "Available commands: up, down, logs, ps, restart, exec, shell, migrate, manage, build, init"
         exit 1
         ;;
 esac

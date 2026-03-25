@@ -30,6 +30,9 @@ celerybeat-schedule.db
 .env
 .env.local
 .env.oidc
+.env.*
+!.env.example
+!.env.oidc.example
 secrets.yml
 
 # IDE
@@ -52,4 +55,3 @@ Thumbs.db
 *.sql
 
 docker-site/media/
-.env.mmorini
