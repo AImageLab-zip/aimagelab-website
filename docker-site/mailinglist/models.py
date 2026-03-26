@@ -132,6 +132,7 @@ class OutgoingEmail(models.Model):
     """Individual delivery record – one per recipient per incoming mail."""
     STATUS_CHOICES = [
         ('queued', 'Queued'),
+        ('sending', 'Sending'),
         ('sent', 'Sent'),
         ('failed', 'Failed'),
     ]
@@ -147,6 +148,7 @@ class OutgoingEmail(models.Model):
 
     class Meta:
         ordering = ['created_at']
+        unique_together = [('incoming', 'recipient_email')]
 
     def __str__(self):
         return f"→ {self.recipient_email} [{self.status}]"

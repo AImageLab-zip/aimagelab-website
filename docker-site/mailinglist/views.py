@@ -16,6 +16,7 @@ from .models import (
     UserExtraEmail,
     WhitelistedSender,
 )
+from .services import resolve_recipients
 from .tasks import process_approved_email, send_email_batch
 
 logger = logging.getLogger(__name__)
@@ -148,9 +149,11 @@ def moderation_detail(request, email_id):
         return redirect('mailinglist:moderation')
 
     deliveries = incoming.deliveries.all()[:50]
+    recipients = sorted(resolve_recipients(incoming))
     return render(request, 'mailinglist/moderation_detail.html', {
         'email': incoming,
         'deliveries': deliveries,
+        'recipients': recipients,
     })
 
 

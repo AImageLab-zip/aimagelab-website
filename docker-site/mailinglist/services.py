@@ -305,12 +305,30 @@ def send_batch(batch_size=None):
     if batch_size is None:
         batch_size = getattr(settings, 'MAILINGLIST_BATCH_SIZE', 20)
 
-    queued = OutgoingEmail.objects.filter(status='queued').select_related(
-        'incoming'
-    ).order_by('created_at')[:batch_size]
-
-    if not queued:
+    # Read candidate IDs first (slicing is not allowed with select_for_update).
+    candidate_ids = list(
+        OutgoingEmail.objects.filter(status='queued')
+        .order_by('created_at')
+        .values_list('id', flat=True)[:batch_size]
+    )
+    if not candidate_ids:
         return 0
+
+    # Atomically claim this batch by transitioning queued → sending.
+    # The WHERE status='queued' guard acts as a mutex: if two tasks race on
+    # the same candidates, the second UPDATE finds 0 matching rows (PostgreSQL
+    # locks the row on UPDATE, so it sees the already-changed status from the
+    # first task) and does nothing, preventing double-delivery.
+    claimed = OutgoingEmail.objects.filter(
+        id__in=candidate_ids, status='queued'
+    ).update(status='sending')
+    if claimed == 0:
+        return 0
+
+    queued = list(
+        OutgoingEmail.objects.filter(id__in=candidate_ids, status='sending')
+        .select_related('incoming')
+    )
 
     smtp_host = settings.MAILINGLIST_SMTP_HOST
     smtp_port = settings.MAILINGLIST_SMTP_PORT
@@ -343,6 +361,8 @@ def send_batch(batch_size=None):
         server.quit()
     except Exception:
         logger.exception("SMTP connection error")
+        # Reset any still-claimed deliveries back to queued so they can be retried.
+        OutgoingEmail.objects.filter(id__in=candidate_ids, status='sending').update(status='queued')
 
     return sent_count
 

@@ -54,12 +54,20 @@
                 </div>
                 {% endif %}
 
-                {% if email.moderated_by %}
-                <div class="text-sm text-base-content/60">
-                    Moderated by <strong>{{ email.moderated_by.get_full_name }}</strong>
-                    on {{ email.moderated_at|date:"F d, Y H:i" }}
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    {% if email.moderated_by %}
+                    <div class="text-sm text-base-content/60">
+                        Moderated by <strong>{{ email.moderated_by.get_full_name }}</strong>
+                        on {{ email.moderated_at|date:"F d, Y H:i" }}
+                    </div>
+                    {% else %}
+                    <div></div>
+                    {% endif %}
+                    <button type="button" onclick="document.getElementById('modal-recipients').showModal()" class="btn btn-ghost btn-sm gap-2">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        View Recipients ({{ recipients|length }})
+                    </button>
                 </div>
-                {% endif %}
             </div>
         </div>
 
@@ -121,6 +129,8 @@
                                 <td>
                                     {% if d.status == 'queued' %}
                                     <span class="badge badge-ghost badge-xs">Queued</span>
+                                    {% elif d.status == 'sending' %}
+                                    <span class="badge badge-warning badge-xs">Sending</span>
                                     {% elif d.status == 'sent' %}
                                     <span class="badge badge-success badge-xs">Sent</span>
                                     {% elif d.status == 'failed' %}
@@ -168,6 +178,37 @@
         <form id="form-reject" method="post" class="hidden">{% csrf_token %}<input type="hidden" name="action" value="reject"></form>
         <form id="form-blacklist" method="post" class="hidden">{% csrf_token %}<input type="hidden" name="action" value="blacklist"></form>
         <form id="form-whitelist" method="post" class="hidden">{% csrf_token %}<input type="hidden" name="action" value="whitelist"></form>
+
+        <!-- Modal: Recipients -->
+        <dialog id="modal-recipients" class="modal">
+            <div class="modal-box max-w-lg">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    Recipients
+                    <span class="badge badge-ghost">{{ recipients|length }}</span>
+                </h3>
+                <p class="text-sm text-base-content/60 pt-2">
+                    {% if email.status == 'pending' %}
+                    These addresses would receive this email if approved.
+                    {% else %}
+                    These addresses are targeted by the routing rules for this email.
+                    {% endif %}
+                </p>
+                {% if recipients %}
+                <div class="overflow-y-auto max-h-80 mt-3 space-y-1">
+                    {% for addr in recipients %}
+                    <div class="text-sm font-mono bg-base-200 rounded px-3 py-1.5">{{ addr }}</div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="italic text-base-content/40 py-4">No recipients found.</p>
+                {% endif %}
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-recipients').close()">Close</button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
 
         <!-- Modal: Approve -->
         <dialog id="modal-approve" class="modal">
