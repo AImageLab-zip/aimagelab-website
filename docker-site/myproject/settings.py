@@ -360,12 +360,12 @@ OIDC_PROVIDER_NAME = os.environ.get('OIDC_PROVIDER_NAME', 'OIDC Provider')
 MARKDOWNIFY = {
     "default": {
         "WHITELIST_TAGS": [
-            'a', 'abbr', 'acronym', 'b', 'blockquote', 'br', 'code', 'div', 'em', 
-            'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img', 'li', 'ol', 'p', 
-            'pre', 'span', 'strong', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul'
+            'a', 'abbr', 'acronym', 'b', 'blockquote', 'br', 'button', 'code', 'div',
+            'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img', 'li', 'ol',
+            'p', 'pre', 'span', 'strong', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul'
         ],
         "WHITELIST_ATTRS": [
-            'href', 'src', 'alt', 'title', 'class', 'id'
+            'href', 'src', 'alt', 'title', 'class', 'id', 'data-ml-tag'
         ],
         "MARKDOWN_EXTENSIONS": [
             'markdown.extensions.fenced_code',

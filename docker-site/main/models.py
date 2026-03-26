@@ -8,6 +8,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 class UserProfile(models.Model):
     """Extended user profile for team members"""
     
+    # TODO align with LDAP_ROLE_MAPPING
     ROLE_CHOICES = [
         ('rector', 'UniMORE Rector & AImageLab Head'),
         ('full_professor', 'Full Professor'),
@@ -21,9 +22,7 @@ class UserProfile(models.Model):
         ('collaborator', 'External Collaborator'),
         ('phd', 'PhD Student'),
         ('intern', 'Research Intern'),
-        ('alumni', 'Alumni'),
         ('past_member', 'Past Member'),
-        ('guest', 'Visitor Researcher'), # ?
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')

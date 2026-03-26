@@ -6,25 +6,31 @@ from django.core.management.base import BaseCommand
 from mailinglist.models import SubjectRoleRoute
 
 
-# Roles considered "active" lab members (excludes alumni and past members).
+# Current active roles — all profile roles except past_member.
 ACTIVE_ROLES = [
     'rector', 'full_professor', 'assoc_professor',
     'researcher_tt', 'researcher_a', 'researcher_b',
     'postdoc', 'secretariat_staff', 'research_fellow',
-    'collaborator', 'phd', 'intern', 'guest',
+    'collaborator', 'phd', 'intern',
 ]
 
 DEFAULT_ROUTES = [
     {
         'tag': 'all',
-        'description': 'All active lab members + external recipients',
-        'roles': ACTIVE_ROLES,
+        'description': 'All active members + past members + external recipients',
+        'roles': ACTIVE_ROLES + ['past_member'],
         'send_to_external': True,
     },
     {
-        'tag': 'active',
-        'description': 'All active lab members (no external) — default when no suffix is used',
+        'tag': 'default',
+        'description': 'All active lab members (no past members, no externals) — used when no suffix is specified',
         'roles': ACTIVE_ROLES,
+        'send_to_external': False,
+    },
+    {
+        'tag': 'past',
+        'description': 'Past lab members only',
+        'roles': ['past_member'],
         'send_to_external': False,
     },
     {
@@ -35,7 +41,7 @@ DEFAULT_ROUTES = [
     },
     {
         'tag': 'strutturati',
-        'description': 'Structured staff only (rector, professors, RTT/RTD researchers)',
+        'description': 'Structured staff (rector, professors, RTT/RTD-A/RTD-B researchers)',
         'roles': [
             'rector', 'full_professor', 'assoc_professor',
             'researcher_tt', 'researcher_a', 'researcher_b',
@@ -43,8 +49,8 @@ DEFAULT_ROUTES = [
         'send_to_external': False,
     },
     {
-        'tag': 'docenti',
-        'description': 'Professors only (rector, full and associate professors)',
+        'tag': 'proff',
+        'description': 'Professors (rector, full and associate professors)',
         'roles': [
             'rector', 'full_professor', 'assoc_professor',
         ],
@@ -53,42 +59,45 @@ DEFAULT_ROUTES = [
     {
         'tag': 'dottorandi',
         'description': 'PhD students only',
-        'roles': [
-            'phd',
-        ],
+        'roles': ['phd'],
         'send_to_external': False,
     },
     {
-        'tag': 'postdocs',
-        'description': 'Postdoctoral researchers only',
-        'roles': [
-            'postdoc',
-        ],
+        'tag': 'non-strutturati',
+        'description': 'Non-structured members (research fellows, collaborators, interns, PhD students)',
+        'roles': ['research_fellow', 'collaborator', 'intern', 'phd'],
         'send_to_external': False,
     },
     {
         'tag': 'staff',
         'description': 'Secretariat and administrative staff',
-        'roles': [
-            'secretariat_staff',
-        ],
+        'roles': ['secretariat_staff'],
         'send_to_external': False,
     },
     {
         'tag': 'admin',
         'description': 'Site administrators (Django staff users)',
-        'roles': [
-            '__admin__',
-        ],
+        'roles': ['__admin__'],
         'send_to_external': False,
     },
 ]
 
+# Tags that have been retired and should be removed from the database.
+OBSOLETE_TAGS = ['active', 'docenti', 'postdocs']
+
 
 class Command(BaseCommand):
-    help = 'Create default subject-role routing rules for the mailing list'
+    help = 'Create or update default subject-role routing rules for the mailing list'
 
     def handle(self, *args, **options):
+        # Remove obsolete routes
+        deleted, _ = SubjectRoleRoute.objects.filter(tag__in=OBSOLETE_TAGS).delete()
+        if deleted:
+            self.stdout.write(self.style.WARNING(
+                f'Removed {deleted} obsolete route(s): {", ".join(OBSOLETE_TAGS)}'
+            ))
+
+        # Upsert current routes
         for route_data in DEFAULT_ROUTES:
             obj, created = SubjectRoleRoute.objects.update_or_create(
                 tag=route_data['tag'],

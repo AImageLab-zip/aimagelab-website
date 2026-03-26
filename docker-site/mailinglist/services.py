@@ -205,20 +205,14 @@ def _match_routes(msg):
 # Recipient resolution
 # ---------------------------------------------------------------------------
 
-def resolve_recipients(incoming_email):
-    """Return a deduplicated set of email addresses for delivery.
+def resolve_recipients_for_routes(routes):
+    """Return a deduplicated set of email addresses for a given list of routes.
 
-    Rules:
-    - If routes matched, send to the union of users matching any route's roles
-      (plus external recipients if any route allows it).
-    - If no routes matched, send to all subscribed active users + external.
-    - Respect per-user subscription preferences.
+    Shared by resolve_recipients() and the tag-recipients API view.
     """
     addresses = set()
-    routes = list(incoming_email.matched_routes.all())
 
     if routes:
-        # Union of all roles across matched routes
         target_roles = set()
         send_external = False
         send_to_admins = False
@@ -246,13 +240,13 @@ def resolve_recipients(incoming_email):
             )
         users = qs.distinct().select_related('profile', 'mailing_preference')
     else:
-        # No route → behave like @ailb-active: all active members, no external
+        # No route → all active members (equivalent to the 'default' tag), no external
         send_external = False
         active_roles = [
             'rector', 'full_professor', 'assoc_professor',
             'researcher_tt', 'researcher_a', 'researcher_b',
             'postdoc', 'secretariat_staff', 'research_fellow',
-            'collaborator', 'phd', 'intern', 'guest',
+            'collaborator', 'phd', 'intern',
         ]
         users = User.objects.filter(
             is_active=True,
@@ -271,11 +265,23 @@ def resolve_recipients(incoming_email):
         for ext in ExternalRecipient.objects.filter(subscribed=True):
             addresses.add(ext.email.lower())
 
-    # Never send back to the list address itself
     list_addr = getattr(settings, 'MAILINGLIST_EMAIL_ADDRESS', '').lower()
     addresses.discard(list_addr)
 
     return addresses
+
+
+def resolve_recipients(incoming_email):
+    """Return a deduplicated set of email addresses for delivery.
+
+    Rules:
+    - If routes matched, send to the union of users matching any route's roles
+      (plus external recipients if any route allows it).
+    - If no routes matched, send to all subscribed active users + external.
+    - Respect per-user subscription preferences.
+    """
+    routes = list(incoming_email.matched_routes.all())
+    return resolve_recipients_for_routes(routes)
 
 
 # ---------------------------------------------------------------------------

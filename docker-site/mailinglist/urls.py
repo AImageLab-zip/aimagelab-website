@@ -11,6 +11,9 @@ urlpatterns = [
     path('moderation/', views.moderation_queue, name='moderation'),
     path('moderation/<int:email_id>/', views.moderation_detail, name='moderation_detail'),
 
+    # Tag recipients API (authenticated users only)
+    path('api/tag-recipients/', views.tag_recipients_api, name='tag_recipients_api'),
+
     # Unsubscribe (public, token-based)
     path('unsubscribe/<str:token>/', views.unsubscribe, name='unsubscribe'),
 

@@ -2,7 +2,7 @@ import logging
 
 from django.contrib import messages as django_messages
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -13,10 +13,11 @@ from .models import (
     IncomingEmail,
     MailingListPreference,
     OutgoingEmail,
+    SubjectRoleRoute,
     UserExtraEmail,
     WhitelistedSender,
 )
-from .services import resolve_recipients
+from .services import resolve_recipients, resolve_recipients_for_routes
 from .tasks import process_approved_email, send_email_batch
 
 logger = logging.getLogger(__name__)
@@ -153,6 +154,36 @@ def moderation_detail(request, email_id):
     return render(request, 'mailinglist/moderation_detail.html', {
         'email': incoming,
         'deliveries': deliveries,
+        'recipients': recipients,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Tag recipients API (authenticated users only)
+# ---------------------------------------------------------------------------
+
+@login_required
+def tag_recipients_api(request):
+    """Return the resolved recipient list for a routing tag as JSON.
+
+    Used by the wiki mailing-list page to let members preview who receives
+    each group's emails.  Requires login — the list of member emails must
+    not be exposed to unauthenticated visitors.
+    """
+    tag = request.GET.get('tag', '').strip()
+    if not tag:
+        return JsonResponse({'error': 'Missing tag parameter.'}, status=400)
+
+    try:
+        route = SubjectRoleRoute.objects.get(tag=tag)
+    except SubjectRoleRoute.DoesNotExist:
+        return JsonResponse({'error': f'Unknown tag: {tag}'}, status=404)
+
+    recipients = sorted(resolve_recipients_for_routes([route]))
+    return JsonResponse({
+        'tag': tag,
+        'description': route.description,
+        'count': len(recipients),
         'recipients': recipients,
     })
 
