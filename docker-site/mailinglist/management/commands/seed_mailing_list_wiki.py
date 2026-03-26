@@ -49,6 +49,7 @@ to all current active lab members (equivalent to `+default`).
 | `aimagelab+non-strutturati@unimore.it` | Research fellows, collaborators, interns, PhD students | <button class="btn btn-ghost btn-xs" data-ml-tag="non-strutturati">View recipients</button> |
 | `aimagelab+dottorandi@unimore.it` | PhD students | <button class="btn btn-ghost btn-xs" data-ml-tag="dottorandi">View recipients</button> |
 | `aimagelab+staff@unimore.it` | Secretariat and administrative staff | <button class="btn btn-ghost btn-xs" data-ml-tag="staff">View recipients</button> |
+| `aimagelab+admin@unimore.it` | Site administrators (Django staff users) | <button class="btn btn-ghost btn-xs" data-ml-tag="admin">View recipients</button> |
 
 The **View recipients** button shows the current live list of addresses that would receive a \
 message for that tag.
@@ -132,9 +133,6 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml exec django-app 
 
 > **Note:** running the seed command also removes obsolete tags (`active`, `docenti`, `postdocs`) \
 > if they are still present in the database.
-
-The `admin` tag (`aimagelab+admin@unimore.it`) is intentionally excluded from the table above \
-as it targets only Django staff users and is not intended for general use.
 
 ### Blacklist / Whitelist
 
