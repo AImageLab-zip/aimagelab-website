@@ -149,7 +149,7 @@ def moderation_detail(request, email_id):
 
         return redirect('mailinglist:moderation')
 
-    deliveries = incoming.deliveries.all()[:50]
+    deliveries = incoming.deliveries.all()
     recipients = sorted(resolve_recipients(incoming))
     return render(request, 'mailinglist/moderation_detail.html', {
         'email': incoming,
