@@ -88,6 +88,7 @@ class IncomingEmail(models.Model):
         ('rejected', 'Rejected'),
         ('auto_approved', 'Auto-approved'),
         ('blacklisted', 'Rejected (blacklisted sender)'),
+        ('not_direct_recipient', 'Rejected (not directly addressed)'),
     ]
 
     message_id = models.CharField(max_length=255, unique=True)

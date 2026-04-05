@@ -73,6 +73,38 @@ def fetch_new_emails():
     return created_ids
 
 
+def _is_direct_recipient(msg):
+    """Check if the configured list address is a direct recipient (To or Cc).
+    
+    Returns True if the list address appears in To or Cc headers,
+    False otherwise (e.g., BCC or mailing list forwarding).
+    """
+    list_address = getattr(settings, 'MAILINGLIST_LIST_ADDRESS', 'aimagelab@unimore.it')
+    list_local, list_domain = list_address.rsplit('@', 1)
+    list_address_lower = list_address.lower()
+    list_local_lower = list_local.lower()
+    list_domain_lower = list_domain.lower()
+    
+    # Parse To and Cc headers
+    raw_to = msg.get('To', '') or ''
+    raw_cc = msg.get('Cc', '') or ''
+    all_recipients = getaddresses([raw_to, raw_cc])
+    
+    # Check if list address (or plus-addressed variant) is in recipients
+    for _, addr in all_recipients:
+        addr_lower = addr.lower().strip()
+        if '@' not in addr_lower:
+            continue
+        addr_local, addr_domain = addr_lower.rsplit('@', 1)
+        
+        # Match exact address or plus-addressed variants (aimagelab+tag@unimore.it)
+        if addr_domain == list_domain_lower:
+            if addr_local == list_local_lower or addr_local.startswith(list_local_lower + '+'):
+                return True
+    
+    return False
+
+
 def _persist_email(msg, raw_bytes):
     """Parse an email.message.Message and save as IncomingEmail."""
     message_id = msg.get('Message-ID', '')
@@ -88,6 +120,24 @@ def _persist_email(msg, raw_bytes):
     if '<' in sender:
         sender_name = sender.split('<')[0].strip().strip('"')
         sender = sender.split('<')[1].rstrip('>')
+
+    # Check if the configured list address is a direct recipient (To/Cc)
+    # Reject emails where we're not directly addressed (e.g., from mailing lists)
+    if not _is_direct_recipient(msg):
+        logger.info("Rejecting email not directly addressed to list: %s from %s", 
+                    msg.get('Subject', '(no subject)'), sender)
+        incoming = IncomingEmail.objects.create(
+            message_id=message_id,
+            sender=sender,
+            sender_name=sender_name,
+            subject=msg.get('Subject', '(no subject)'),
+            clean_subject=msg.get('Subject', '(no subject)'),
+            body_text='',
+            body_html='',
+            raw_headers=str(msg.items()),
+            status='not_direct_recipient',
+        )
+        return incoming
 
     subject = msg.get('Subject', '(no subject)')
 
