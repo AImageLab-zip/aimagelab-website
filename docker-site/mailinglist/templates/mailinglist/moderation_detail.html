@@ -33,6 +33,8 @@
                         <span class="badge badge-error">Rejected</span>
                         {% elif email.status == 'blacklisted' %}
                         <span class="badge badge-error">Blacklisted Sender</span>
+                        {% elif email.status == 'not_direct_recipient' %}
+                        <span class="badge badge-warning">Not Directly Addressed</span>
                         {% endif %}
 
                         {% if email.matched_routes.all %}

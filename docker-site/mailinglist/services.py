@@ -121,26 +121,9 @@ def _persist_email(msg, raw_bytes):
         sender_name = sender.split('<')[0].strip().strip('"')
         sender = sender.split('<')[1].rstrip('>')
 
-    # Check if the configured list address is a direct recipient (To/Cc)
-    # Reject emails where we're not directly addressed (e.g., from mailing lists)
-    if not _is_direct_recipient(msg):
-        logger.info("Rejecting email not directly addressed to list: %s from %s", 
-                    msg.get('Subject', '(no subject)'), sender)
-        incoming = IncomingEmail.objects.create(
-            message_id=message_id,
-            sender=sender,
-            sender_name=sender_name,
-            subject=msg.get('Subject', '(no subject)'),
-            clean_subject=msg.get('Subject', '(no subject)'),
-            body_text='',
-            body_html='',
-            raw_headers=str(msg.items()),
-            status='not_direct_recipient',
-        )
-        return incoming
-
     subject = msg.get('Subject', '(no subject)')
 
+    # Parse email body content
     body_text = ''
     body_html = ''
     if msg.is_multipart():
@@ -156,6 +139,24 @@ def _persist_email(msg, raw_bytes):
             body_html = msg.get_content()
         else:
             body_text = msg.get_content()
+
+    # Check if the configured list address is a direct recipient (To/Cc)
+    # Reject emails where we're not directly addressed (e.g., from mailing lists)
+    if not _is_direct_recipient(msg):
+        logger.info("Rejecting email not directly addressed to list: %s from %s", 
+                    subject, sender)
+        incoming = IncomingEmail.objects.create(
+            message_id=message_id,
+            sender=sender,
+            sender_name=sender_name,
+            subject=subject,
+            clean_subject=subject,
+            body_text=body_text,
+            body_html=body_html,
+            raw_headers=str(msg.items()),
+            status='not_direct_recipient',
+        )
+        return incoming
 
     # Determine auto-approval: check blacklist, then whitelist, then trusted domains
     sender_lower = sender.lower()

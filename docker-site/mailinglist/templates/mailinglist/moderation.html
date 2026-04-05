@@ -88,6 +88,8 @@
                                 <span class="badge badge-error badge-sm">Rejected</span>
                                 {% elif email.status == 'blacklisted' %}
                                 <span class="badge badge-error badge-sm">Blacklisted</span>
+                                {% elif email.status == 'not_direct_recipient' %}
+                                <span class="badge badge-warning badge-sm">Not Direct</span>
                                 {% endif %}
                             </td>
                             <td>
