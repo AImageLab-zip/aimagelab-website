@@ -217,11 +217,12 @@
                         </button>
                         <p class="label form-copy">Each attachment requires a name and file.</p>
 
-                        {% if post and post.attachments.all %}
+                        {% with post.attachments.all as current_attachments %}
+                        {% if post and current_attachments %}
                         <div class="mt-4">
                             <p class="text-sm font-semibold mb-2">Current Attachments:</p>
                             <div class="space-y-2">
-                                {% for attachment in post.attachments.all %}
+                                {% for attachment in current_attachments %}
                                 <label class="label cursor-pointer justify-start gap-3 border border-base-300 rounded-md px-3 py-2">
                                     <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" name="remove_attachment_ids" value="{{ attachment.id }}" form="post-form">
                                     <span class="label-text text-sm break-words">Remove {{ attachment.name }}</span>
@@ -230,6 +231,7 @@
                             </div>
                         </div>
                         {% endif %}
+                        {% endwith %}
 
                         <div class="mt-4">
                             <p class="text-sm font-semibold mb-2">New Attachments (pending save):</p>
@@ -532,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const openAttachmentModalBtn = document.getElementById('open-attachment-modal');
     const addAttachmentBtn = document.getElementById('add-attachment-btn');
     const attachmentNameInput = document.getElementById('attachment-name');
-    const attachmentFileInput = document.getElementById('attachment-file');
+    let attachmentFileInput = document.getElementById('attachment-file');
     const pendingAttachmentsList = document.getElementById('pending-attachments-list');
     const pendingAttachmentsEmpty = document.getElementById('pending-attachments-empty');
     const attachmentHiddenInputs = document.getElementById('attachment-hidden-inputs');
@@ -584,27 +586,52 @@ document.addEventListener('DOMContentLoaded', function() {
             hiddenNameInput.name = 'new_attachment_names';
             hiddenNameInput.value = attachmentName;
 
-            const hiddenFileInput = document.createElement('input');
-            hiddenFileInput.type = 'file';
-            hiddenFileInput.name = 'new_attachments';
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(attachmentFile);
-            hiddenFileInput.files = dataTransfer.files;
-
+            // Move the actual file input (which already holds the selected file) into the
+            // hidden wrapper so the browser submits it reliably with the form.
+            // DataTransfer.files assignment is not reliable across all browsers.
+            const fileInputParent = attachmentFileInput.parentNode;
+            const fileInputClass = attachmentFileInput.className;
+            attachmentFileInput.name = 'new_attachments';
             wrapper.appendChild(hiddenNameInput);
-            wrapper.appendChild(hiddenFileInput);
+            wrapper.appendChild(attachmentFileInput);
             attachmentHiddenInputs.appendChild(wrapper);
 
+            // Replace the moved input with a fresh one for the next attachment.
+            const newFileInput = document.createElement('input');
+            newFileInput.type = 'file';
+            newFileInput.id = 'attachment-file';
+            newFileInput.className = fileInputClass;
+            newFileInput.required = true;
+            fileInputParent.appendChild(newFileInput);
+            attachmentFileInput = newFileInput;
+
+            // Build the pending list item using DOM methods to prevent XSS.
             const pendingItem = document.createElement('div');
             pendingItem.className = 'flex items-center justify-between gap-2 border border-base-300 rounded-md px-3 py-2';
             pendingItem.dataset.attachmentIndex = attachmentIndex;
-            pendingItem.innerHTML = `
-                <div class="min-w-0">
-                    <p class="text-sm font-medium break-words">${attachmentName}</p>
-                    <p class="text-xs opacity-70 break-all">${attachmentFile.name}</p>
-                </div>
-                <button type="button" class="btn btn-ghost btn-xs" data-remove-staged="${attachmentIndex}">Remove</button>
-            `;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'min-w-0';
+
+            const namePara = document.createElement('p');
+            namePara.className = 'text-sm font-medium break-words';
+            namePara.textContent = attachmentName;
+
+            const filePara = document.createElement('p');
+            filePara.className = 'text-xs opacity-70 break-all';
+            filePara.textContent = attachmentFile.name;
+
+            contentDiv.appendChild(namePara);
+            contentDiv.appendChild(filePara);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-ghost btn-xs';
+            removeBtn.dataset.removeStaged = attachmentIndex;
+            removeBtn.textContent = 'Remove';
+
+            pendingItem.appendChild(contentDiv);
+            pendingItem.appendChild(removeBtn);
             pendingAttachmentsList.appendChild(pendingItem);
             pendingAttachmentsEmpty.style.display = 'none';
 
