@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, Category, Post, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
+from .models import UserProfile, Category, Post, PostAttachment, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
 
 admin.site.site_header = "AImageLab Admin"
 admin.site.site_title = "AImageLab Admin"
@@ -44,7 +44,15 @@ class CategoryAdmin(admin.ModelAdmin):
     pass
 
 class PostAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ('title', 'slug', 'description', 'content')
+
+
+@admin.register(PostAttachment)
+class PostAttachmentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'post', 'uploaded_at')
+    list_filter = ('uploaded_at',)
+    search_fields = ('name', 'post__title')
+    autocomplete_fields = ['post']
 
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ('title', 'name', 'project_type', 'start_date', 'end_date')

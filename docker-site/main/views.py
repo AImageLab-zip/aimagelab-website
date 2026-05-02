@@ -12,12 +12,12 @@ from functools import wraps
 from urllib.parse import quote
 from django_ratelimit.decorators import ratelimit
 import logging
-from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
+from .models import UserProfile, Post, PostAttachment, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
 
 logger = logging.getLogger(__name__)
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Case, When, IntegerField, F
-from .models import UserProfile, Post, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage, IRISImportLog
+from .models import UserProfile, Post, PostAttachment, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage, IRISImportLog
 from datetime import datetime, timedelta
 
 from django.http import FileResponse, Http404
@@ -424,7 +424,8 @@ def post_single(request, slug):
         post = get_object_or_404(Post, slug=slug)
     else:
         post = get_object_or_404(Post, slug=slug, is_published=True)
-    return render(request, 'main/single.html', {'post': post})
+    attachments = post.attachments.all()
+    return render(request, 'main/single.html', {'post': post, 'attachments': attachments})
 
 def privacy_policy(request):
     """Privacy Policy page view."""
@@ -467,6 +468,9 @@ def post_form(request, slug=None):
         cover = request.FILES.get('cover')
         thumbnail = request.FILES.get('thumbnail')
         category_ids = request.POST.getlist('categories')
+        attachment_names = request.POST.getlist('new_attachment_names')
+        attachment_files = request.FILES.getlist('new_attachments')
+        remove_attachment_ids = request.POST.getlist('remove_attachment_ids')
         is_pinned = request.POST.get('is_pinned') == 'on'
         
         # Handle event_date
@@ -522,6 +526,9 @@ def post_form(request, slug=None):
                 post.is_published = is_published
             post.save()
             post.categories.set(category_ids)
+
+            if remove_attachment_ids:
+                PostAttachment.objects.filter(post=post, id__in=remove_attachment_ids).delete()
         else:
             # Create new post
             post = Post.objects.create(
@@ -536,6 +543,19 @@ def post_form(request, slug=None):
                 is_pinned=is_pinned,
             )
             post.categories.set(category_ids)
+
+        for idx, attachment_file in enumerate(attachment_files):
+            attachment_name = ''
+            if idx < len(attachment_names):
+                attachment_name = attachment_names[idx].strip()
+            if not attachment_name:
+                attachment_name = os.path.splitext(attachment_file.name)[0]
+
+            PostAttachment.objects.create(
+                post=post,
+                name=attachment_name[:200],
+                file=attachment_file,
+            )
         
         if action == 'publish':
             django_messages.success(request, 'Post published successfully!')

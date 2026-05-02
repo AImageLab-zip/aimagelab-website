@@ -102,6 +102,33 @@
         </form>
     </dialog>
 
+    <dialog id="attachment-modal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">Add Attachment</h3>
+            <p class="py-2 text-sm">Choose a file and assign a display name for this news attachment.</p>
+
+            <fieldset class="fieldset mb-3">
+                <legend class="fieldset-legend form-legend">Attachment Name *</legend>
+                <input type="text" id="attachment-name" class="input w-full" maxlength="200" placeholder="Example: Slides PDF" required>
+            </fieldset>
+
+            <fieldset class="fieldset mb-2">
+                <legend class="fieldset-legend form-legend">File *</legend>
+                <input type="file" id="attachment-file" class="file-input w-full" required>
+            </fieldset>
+
+            <div class="modal-action">
+                <button type="button" id="add-attachment-btn" class="btn btn-primary">Add Attachment</button>
+                <form method="dialog">
+                    <button class="btn btn-ghost">Cancel</button>
+                </form>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
     <form id="post-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         
@@ -175,6 +202,43 @@
                     </div>
                 </div>
 
+
+                <!-- Attachments Card -->
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title text-primary mb-4">
+                            <i data-lucide="paperclip" class="w-5 h-5"></i>
+                            Attachments
+                        </h2>
+
+                        <button type="button" id="open-attachment-modal" class="btn btn-outline btn-sm w-full mb-3">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            Add Attachment
+                        </button>
+                        <p class="label form-copy">Each attachment requires a name and file.</p>
+
+                        {% if post and post.attachments.all %}
+                        <div class="mt-4">
+                            <p class="text-sm font-semibold mb-2">Current Attachments:</p>
+                            <div class="space-y-2">
+                                {% for attachment in post.attachments.all %}
+                                <label class="label cursor-pointer justify-start gap-3 border border-base-300 rounded-md px-3 py-2">
+                                    <input class="checkbox checkbox-primary flex-shrink-0" type="checkbox" name="remove_attachment_ids" value="{{ attachment.id }}" form="post-form">
+                                    <span class="label-text text-sm break-words">Remove {{ attachment.name }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="mt-4">
+                            <p class="text-sm font-semibold mb-2">New Attachments (pending save):</p>
+                            <div id="pending-attachments-list" class="space-y-2">
+                                <p id="pending-attachments-empty" class="text-xs opacity-70">No new attachments added yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                    <!-- Action Buttons -->
         <div class="card bg-base-200 mt-6">
             <div class="card-body">
@@ -228,6 +292,8 @@
             </div>
         </div>
         </div>
+
+        <div id="attachment-hidden-inputs"></div>
     </form>
 {% endblock %}
 
@@ -462,6 +528,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalMessage = document.getElementById('modal-message');
     const modalCloseBtn = document.getElementById('modal-close-btn');
 
+    const attachmentModal = document.getElementById('attachment-modal');
+    const openAttachmentModalBtn = document.getElementById('open-attachment-modal');
+    const addAttachmentBtn = document.getElementById('add-attachment-btn');
+    const attachmentNameInput = document.getElementById('attachment-name');
+    const attachmentFileInput = document.getElementById('attachment-file');
+    const pendingAttachmentsList = document.getElementById('pending-attachments-list');
+    const pendingAttachmentsEmpty = document.getElementById('pending-attachments-empty');
+    const attachmentHiddenInputs = document.getElementById('attachment-hidden-inputs');
+    let stagedAttachmentIndex = 0;
+
     function showModal(title, message, showClose = false) {
         modalTitle.innerHTML = title;
         modalMessage.innerHTML = message;
@@ -474,6 +550,94 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     modalCloseBtn.addEventListener('click', hideModal);
+
+    if (openAttachmentModalBtn && attachmentModal) {
+        openAttachmentModalBtn.addEventListener('click', function() {
+            attachmentModal.showModal();
+        });
+    }
+
+    if (addAttachmentBtn) {
+        addAttachmentBtn.addEventListener('click', function() {
+            const attachmentName = attachmentNameInput.value.trim();
+            const attachmentFile = attachmentFileInput.files[0];
+
+            if (!attachmentName || !attachmentFile) {
+                showModal(
+                    '<i data-lucide="alert-circle" class="w-5 h-5 inline text-warning"></i> Attachment Required',
+                    'Please provide both attachment name and file.',
+                    true
+                );
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+                return;
+            }
+
+            const wrapper = document.createElement('div');
+            const attachmentIndex = stagedAttachmentIndex;
+            wrapper.dataset.attachmentIndex = attachmentIndex;
+            wrapper.style.display = 'none';
+
+            const hiddenNameInput = document.createElement('input');
+            hiddenNameInput.type = 'hidden';
+            hiddenNameInput.name = 'new_attachment_names';
+            hiddenNameInput.value = attachmentName;
+
+            const hiddenFileInput = document.createElement('input');
+            hiddenFileInput.type = 'file';
+            hiddenFileInput.name = 'new_attachments';
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(attachmentFile);
+            hiddenFileInput.files = dataTransfer.files;
+
+            wrapper.appendChild(hiddenNameInput);
+            wrapper.appendChild(hiddenFileInput);
+            attachmentHiddenInputs.appendChild(wrapper);
+
+            const pendingItem = document.createElement('div');
+            pendingItem.className = 'flex items-center justify-between gap-2 border border-base-300 rounded-md px-3 py-2';
+            pendingItem.dataset.attachmentIndex = attachmentIndex;
+            pendingItem.innerHTML = `
+                <div class="min-w-0">
+                    <p class="text-sm font-medium break-words">${attachmentName}</p>
+                    <p class="text-xs opacity-70 break-all">${attachmentFile.name}</p>
+                </div>
+                <button type="button" class="btn btn-ghost btn-xs" data-remove-staged="${attachmentIndex}">Remove</button>
+            `;
+            pendingAttachmentsList.appendChild(pendingItem);
+            pendingAttachmentsEmpty.style.display = 'none';
+
+            attachmentNameInput.value = '';
+            attachmentFileInput.value = '';
+            attachmentModal.close();
+            stagedAttachmentIndex += 1;
+        });
+    }
+
+    if (pendingAttachmentsList) {
+        pendingAttachmentsList.addEventListener('click', function(event) {
+            const removeBtn = event.target.closest('[data-remove-staged]');
+            if (!removeBtn) {
+                return;
+            }
+
+            const targetIndex = removeBtn.getAttribute('data-remove-staged');
+            const hiddenWrapper = attachmentHiddenInputs.querySelector(`[data-attachment-index="${targetIndex}"]`);
+            const listItem = pendingAttachmentsList.querySelector(`[data-attachment-index="${targetIndex}"]`);
+
+            if (hiddenWrapper) {
+                hiddenWrapper.remove();
+            }
+            if (listItem) {
+                listItem.remove();
+            }
+
+            if (!pendingAttachmentsList.querySelector('[data-attachment-index]')) {
+                pendingAttachmentsEmpty.style.display = 'block';
+            }
+        });
+    }
 
     const uploadBtn = document.getElementById('upload-image-btn');
     const fileInput = document.getElementById('post-image-upload');
