@@ -194,6 +194,10 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
+# Prevent a hung task (e.g. a stalled network call) from permanently
+# occupying a worker slot and blocking the rest of the queue.
+CELERY_TASK_SOFT_TIME_LIMIT = 240  # seconds; raises SoftTimeLimitExceeded in-task
+CELERY_TASK_TIME_LIMIT = 300  # seconds; SIGKILLs the worker process if still stuck
 
 # Cache Configuration (for IRIS import locking and other caching)
 CACHES = {
