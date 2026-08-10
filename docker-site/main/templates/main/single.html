@@ -43,6 +43,20 @@
                     <div class="text max-w-none mb-6 space-y-3">
                         {{ post.content|markdownify|linebreaks  }}
                     </div>
+
+                    {% if attachments %}
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-3">Attachments</h3>
+                        <div class="space-y-2">
+                            {% for attachment in attachments %}
+                            <a href="{{ attachment.file.url }}" class="btn btn-outline btn-sm w-full justify-start" target="_blank" rel="noopener">
+                                <i data-lucide="paperclip" class="w-4 h-4"></i>
+                                {{ attachment.name }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
                     
                     <div class="divider"></div>
                     

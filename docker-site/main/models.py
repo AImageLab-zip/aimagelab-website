@@ -345,6 +345,21 @@ class Post(models.Model):
         return self.title
 
 
+class PostAttachment(models.Model):
+    """Named file attachment for a news post."""
+
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='attachments')
+    name = models.CharField(max_length=200, help_text="Display name for this attachment")
+    file = models.FileField(upload_to='news_attachments/%Y/%m/', help_text="Attachment file")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name', '-uploaded_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.post.title})"
+
+
 class ShortLink(models.Model):
     """Short URL redirect model (Go links)"""
 
