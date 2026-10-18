@@ -30,8 +30,10 @@ RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python dependencies
-COPY docker-site/requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+COPY docker-site/requirements.txt docker-site/requirements-dev.txt ./
+# Dev image installs requirements-dev.txt, which pulls in requirements.txt
+# via "-r" and adds debugpy. Production images install only the prod file.
+RUN pip install --upgrade pip && pip install -r requirements-dev.txt
 
 # Install debugging tools for VS Code
 RUN pip install debugpy

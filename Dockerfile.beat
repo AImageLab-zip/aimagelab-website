@@ -38,4 +38,16 @@ COPY docker-site/ .
 COPY wait-for-db.py /app/wait-for-db.py
 
 # Run Celery beat scheduler
+
+# Run as an unprivileged user instead of root.
+#
+# uid/gid 1000 deliberately matches the host account that owns the
+# bind-mounted ./docker-site tree, so the container can read the source and
+# write to the static/media volumes without chmod 777 anywhere.
+# Apache keeps running as root in its own image because it binds :80/:443 and
+# already drops privileges to www-data for its workers.
+RUN groupadd -g 1000 app && useradd -u 1000 -g 1000 -m -s /usr/sbin/nologin app \
+    && chown -R app:app /app /opt/venv
+USER app
+
 CMD ["celery", "-A", "myproject", "beat", "--loglevel=info"]

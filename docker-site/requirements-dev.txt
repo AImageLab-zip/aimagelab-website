@@ -1,0 +1,9 @@
+# Development-only dependencies. Installed by Dockerfile.dev, never by the
+# production images.
+#
+# debugpy accepts unauthenticated attach, i.e. remote code execution. It has
+# no place in a production image even when its port is not published.
+
+-r requirements.txt
+
+debugpy==1.8.22
