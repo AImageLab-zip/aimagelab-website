@@ -14,6 +14,9 @@ python manage.py migrate --noinput
 echo "⏰ Setting up LDAP sync schedule..."
 python manage.py setup_ldap_sync
 
+echo "⏰ Setting up IRIS profile photos schedule..."
+python manage.py setup_iris_photos_sync
+
 # Collect static files if needed (in production)
 if [ "$DEBUG" = "0" ]; then
     echo "📁 Collecting static files..."
