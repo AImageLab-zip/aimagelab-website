@@ -1,20 +1,30 @@
-Django>=4.2.0
-gunicorn>=21.2.0
-tzdata>=2023.3
-mysqlclient>=2.1.0
-PyYAML>=6.0
-djangorestframework>=3.14.0
-celery>=5.3.0
-django-celery-beat>=2.5.0
-redis>=5.0.0
-django-redis>=5.3.0
-pytz>=2023.3
-debugpy>=1.8.16
-requests>=2.31.0
-Pillow>=10.0.0
-django-phonenumber-field[phonenumbers]>=7.0.0
-python-ldap>=3.4.0
-django-sass>=1.1.0
-mozilla-django-oidc>=4.0.0
-django-markdownify
-django-ratelimit>=4.1.0
+# Production dependencies, pinned to exact versions.
+#
+# Pins are deliberate: `>=` made builds non-reproducible and silently pulled
+# whatever upstream had published at `docker compose build` time, including a
+# compromised release. These versions are the ones that were running in
+# production on 2026-10-18 and are therefore known-good.
+#
+# To upgrade: bump a pin, rebuild, test, commit. Never relax one back to `>=`.
+# Development-only tooling (debugpy) lives in requirements-dev.txt so it is
+# never installed into the production image.
+
+Django==5.2.18
+gunicorn==26.2.0
+tzdata==2026.5
+mysqlclient==2.3.0
+PyYAML==6.0.3
+djangorestframework==3.18.3
+celery==5.6.3
+django-celery-beat==2.9.0
+redis==8.1.0
+django-redis==7.0.0
+pytz==2026.5
+requests==2.34.2
+Pillow==12.3.0
+django-phonenumber-field[phonenumbers]==8.5.0
+python-ldap==3.4.8
+django-sass==1.1.0
+mozilla-django-oidc==5.0.2
+django-markdownify==0.9.7
+django-ratelimit==4.1.0
