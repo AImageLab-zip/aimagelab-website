@@ -6,7 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AImageLab - AI Vision Research Laboratory{% endblock %}</title>
     {% load static %}
-    <link rel="icon" href="{% static 'main/assets/logo.svg' %}" type="image/svg+xml">
+    {# Icons. logo.svg is the full wordmark (927x654) - as a favicon it was
+       letterboxed down to an illegible sliver, so these use an eye-only,
+       square crop of the same artwork. favicon.svg carries a
+       prefers-color-scheme rule so the dark mark does not vanish on a dark
+       tab bar; .ico is the fallback for clients that cannot use SVG. #}
+    <link rel="icon" href="{% static 'main/assets/favicon.svg' %}" type="image/svg+xml">
+    <link rel="icon" href="{% static 'main/assets/favicon.ico' %}" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="{% static 'main/assets/apple-touch-icon.png' %}">
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
