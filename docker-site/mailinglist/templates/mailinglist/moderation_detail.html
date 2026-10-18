@@ -78,9 +78,22 @@
             <div class="card-body">
                 <h3 class="font-semibold mb-3">Email Content</h3>
                 {% if email.body_html %}
-                <div class="bg-white rounded-lg p-4 border border-base-300 text-black overflow-auto max-h-[600px]">
-                    {{ email.body_html|safe }}
-                </div>
+                {% comment %}
+                SECURITY: body_html is attacker-controlled - it is the raw
+                text/html part of an inbound email (see mailinglist/services.py).
+                It is rendered inside a fully sandboxed iframe: the bare
+                `sandbox` attribute applies every restriction, so scripts,
+                forms, popups and same-origin access to this page are all
+                blocked. `srcdoc` is auto-escaped by Django, which is what
+                reconstructs the HTML inside the frame.
+                Do NOT add |safe here and do NOT add allow-scripts or
+                allow-same-origin to the sandbox list.
+                {% endcomment %}
+                <iframe srcdoc="{{ email.body_html }}"
+                        sandbox
+                        referrerpolicy="no-referrer"
+                        title="Email content (untrusted, sandboxed)"
+                        class="bg-white rounded-lg border border-base-300 w-full h-[600px]"></iframe>
                 {% elif email.body_text %}
                 <pre class="bg-base-300 rounded-lg p-4 whitespace-pre-wrap text-sm overflow-auto max-h-[600px]">{{ email.body_text }}</pre>
                 {% else %}

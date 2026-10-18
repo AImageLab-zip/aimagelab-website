@@ -5,9 +5,12 @@
 while true; do
     echo "Checking for certificate renewals at $(date)"
     
-    # Run certbot renew with deploy hook
+    # Run certbot renew. No deploy hook is needed: the apache-prod container
+    # watches /etc/letsencrypt/live/$DOMAIN/fullchain.pem on the shared
+    # letsencrypt_data volume and reloads itself when the cert changes.
+    # This container therefore no longer needs /var/run/docker.sock, which
+    # granted it root-equivalent control of the host.
     certbot renew --webroot -w /var/www/html \
-        --deploy-hook "docker exec aimagelab-apache-prod-1 apache2ctl graceful" \
         --quiet 2>&1 || echo "Renewal check completed"
     
     echo "Next check in 12 hours"

@@ -1,7 +1,9 @@
 FROM certbot/certbot:latest
 
-# Install additional tools for the scripts, including docker CLI
-RUN apk add --no-cache curl bash openssl docker-cli
+# Install additional tools for the scripts.
+# docker-cli is intentionally absent: this container no longer talks to the
+# Docker socket (apache-prod self-reloads on certificate change).
+RUN apk add --no-cache curl bash openssl
 
 # Copy certbot scripts
 COPY certbot-scripts/ /usr/local/bin/

@@ -6,7 +6,9 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      # Loopback-only: Redis has no auth and must never be internet-reachable.
+      # App containers reach it as redis://redis:6379 over prod-network.
+      - "127.0.0.1:6379:6379"
     restart: unless-stopped
     volumes:
       - redis_data:/data
@@ -30,7 +32,9 @@ services:
       - mysql_data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
     ports:
-      - "3307:3306"  # Use port 3307 on host to avoid conflicts
+      # Loopback-only: MySQL still allows root@'%', so this must not be
+      # internet-reachable. Use an SSH tunnel for remote admin access.
+      - "127.0.0.1:3307:3306"  # Use port 3307 on host to avoid conflicts
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
@@ -48,7 +52,11 @@ services:
       context: .
       dockerfile: Dockerfile.prod
     ports:
-      - "8000:8000"
+      # Loopback-only: public traffic must terminate at apache-prod (TLS +
+      # security headers), which proxies to http://django-app:8000 over
+      # shared-network. Exposing this publicly also let clients spoof
+      # X-Forwarded-Proto, which SECURE_PROXY_SSL_HEADER trusts.
+      - "127.0.0.1:8000:8000"
     volumes:
       - ./docker-site:/app
       - static_volume:/app/static
@@ -189,7 +197,10 @@ services:
     volumes:
       - letsencrypt_data:/etc/letsencrypt
       - letsencrypt_webroot:/var/www/html
-      - /var/run/docker.sock:/var/run/docker.sock  # Allow docker commands
+      # NOTE: /var/run/docker.sock is deliberately NOT mounted here.
+      # Access to the Docker socket is root-equivalent on the host. Apache
+      # now self-reloads by watching the cert on letsencrypt_data (see
+      # docker-entrypoint-apache-prod.sh:watch_certificate).
     environment:
       - DOMAIN=aimagelab.unimore.it
       - EMAIL=${CERTBOT_EMAIL}

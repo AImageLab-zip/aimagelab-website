@@ -3,7 +3,9 @@ services:
   dev-redis:
     image: redis:7-alpine
     ports:
-      - "${DEV_REDIS_PORT:-6380}:6379"  # Use port 6380 for development to avoid conflicts
+      # Loopback-only: Redis has no auth. Tunnel if you need host access:
+      #   ssh -L 6380:127.0.0.1:${DEV_REDIS_PORT:-6380} <user>@aimagelab.unimore.it
+      - "127.0.0.1:${DEV_REDIS_PORT:-6380}:6379"  # Use port 6380 for development to avoid conflicts
     restart: unless-stopped
     volumes:
       - dev_redis_data:/data
@@ -27,7 +29,10 @@ services:
       - dev_mysql_data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
     ports:
-      - "0.0.0.0:${DEV_MYSQL_PORT:-3308}:3306"  # Use port 3308 for development to avoid conflicts
+      # Loopback-only. Was 0.0.0.0, which exposed dev MySQL (root@'%') to the
+      # internet. Tunnel for GUI clients:
+      #   ssh -L 3308:127.0.0.1:${DEV_MYSQL_PORT:-3308} <user>@aimagelab.unimore.it
+      - "127.0.0.1:${DEV_MYSQL_PORT:-3308}:3306"  # Use port 3308 for development to avoid conflicts
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
@@ -45,8 +50,13 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - "${DEV_DJANGO_PORT:-8001}:8000"  # Use port 8001 for development to avoid conflicts
-      - "${DEV_DEBUGPY_PORT:-5678}:5678"  # Debugpy port for VS Code debugging
+      # Loopback-only. This service runs DEBUG=1 (full tracebacks) and debugpy
+      # accepts unauthenticated attach = remote code execution, so neither may
+      # be internet-reachable. Reach them over an SSH tunnel:
+      #   ssh -L 8001:127.0.0.1:${DEV_DJANGO_PORT:-8001} \
+      #       -L 5678:127.0.0.1:${DEV_DEBUGPY_PORT:-5678} <user>@aimagelab.unimore.it
+      - "127.0.0.1:${DEV_DJANGO_PORT:-8001}:8000"  # Use port 8001 for development to avoid conflicts
+      - "127.0.0.1:${DEV_DEBUGPY_PORT:-5678}:5678"  # Debugpy port for VS Code debugging
     volumes:
       # Mount the entire project directory for development - live code reloading
       - ./docker-site:/app
@@ -155,7 +165,10 @@ services:
       context: .
       dockerfile: Dockerfile.apache.dev
     ports:
-      - "${DEV_APACHE_PORT:-8080}:80"
+      # Loopback-only: fronts a DEBUG=1 Django over plaintext HTTP.
+      #   ssh -L 8080:127.0.0.1:${DEV_APACHE_PORT:-8080} <user>@aimagelab.unimore.it
+      #   then browse http://localhost:8080
+      - "127.0.0.1:${DEV_APACHE_PORT:-8080}:80"
     volumes:
       - dev_static_volume:/var/www/html/static-dev
     depends_on:
