@@ -205,6 +205,7 @@
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 
+{{ events|json_script:"calendar-events" }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
@@ -215,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const reservationIdInput = document.getElementById('reservationId');
     
     // Store all events
-    const allEvents = {{ events|safe }};
+    const allEvents = JSON.parse(document.getElementById('calendar-events').textContent);
     
     // Get selected room IDs
     function getSelectedRoomIds() {

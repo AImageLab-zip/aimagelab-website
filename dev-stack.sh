@@ -8,22 +8,45 @@
 
 set -e
 
-STACK_NAME="${1:-default}"
+STACK_NAME="${1:-}"
 COMMAND="${2:-up}"
+KNOWN_COMMANDS="up down logs ps restart exec shell migrate manage build init"
 
-if [ -z "$STACK_NAME" ]; then
-    echo "Usage: $0 <stack-name> <command> [port]"
+usage() {
+    echo "Usage: $0 <stack-name> [command] [args...]"
     echo "  stack-name: unique identifier (e.g., feature1, user1)"
-    echo "  command: up, down, logs, ps, restart, exec, shell, migrate, manage, build, init"
-    echo "  port: custom Apache port (optional, auto-assigned if not provided)"
+    echo "  command:    $KNOWN_COMMANDS (default: up)"
+    echo "  Ports are auto-assigned per stack in .env.<stack-name>; edit that file to change them."
     echo ""
     echo "Examples:"
-    echo "  $0 feature1 up           # Start stack 'feature1' with auto port"
-    echo "  $0 feature1 up 8090      # Start stack 'feature1' on port 8090"
+    echo "  $0 feature1 up           # Start stack 'feature1'"
     echo "  $0 feature1 logs         # View logs for stack 'feature1'"
     echo "  $0 feature1 shell        # Open Django shell in stack 'feature1'"
     echo "  $0 feature1 down         # Stop and remove stack 'feature1'"
     exit 1
+}
+
+[ -n "$STACK_NAME" ] || usage
+
+# The first argument is the stack NAME. Running `./dev-stack.sh restart` used
+# to silently create and start a whole new stack called "restart".
+for c in $KNOWN_COMMANDS; do
+    if [ "$STACK_NAME" = "$c" ]; then
+        echo "❌ '$STACK_NAME' is a command, not a stack name."
+        echo "   Did you mean: $0 <stack-name> $STACK_NAME"
+        exit 1
+    fi
+done
+
+# Compose project names allow lowercase letters, digits, '-' and '_'.
+if ! [[ "$STACK_NAME" =~ ^[a-z0-9][a-z0-9_-]*$ ]]; then
+    echo "❌ Invalid stack name '$STACK_NAME': use lowercase letters, digits, '-' or '_'."
+    exit 1
+fi
+
+if ! [[ " $KNOWN_COMMANDS " == *" $COMMAND "* ]]; then
+    echo "❌ Unknown command: $COMMAND"
+    usage
 fi
 
 # Generate project name
@@ -46,41 +69,37 @@ EOF
     echo "📝 Created ${ENV_FILE} with auto-assigned ports (offset ${OFFSET})"
 fi
 
+# Compose reads the env files itself (a later --env-file overrides an earlier
+# one), so no secret is exported into this shell or passed to sudo as an
+# argument. The old `sudo VAR=value ... docker compose` form put every secret
+# on the command line, where `ps` and the sudo log exposed it to all users.
+ENV_ARGS=()
+[ -f .env ] && ENV_ARGS+=(--env-file .env)
+ENV_ARGS+=(--env-file "${ENV_FILE}")
+COMPOSE=(sudo docker compose -p "$PROJECT_NAME" "${ENV_ARGS[@]}" -f docker-compose.yml -f docker-compose.dev.yml)
 
-# Always load base .env file first
-if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs)
-fi
+# Read a single non-secret value for display only.
+env_value() {
+    grep -hE "^$1=" .env "${ENV_FILE}" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d "\"'"
+}
 
-# Check if custom env file exists and override with its values
-if [ -f "${ENV_FILE}" ]; then
-    echo "Using custom environment file: ${ENV_FILE}"
-    export $(grep -v '^#' ${ENV_FILE} | xargs)
-fi
+PORT=$(env_value DEV_APACHE_PORT)
 
 echo "🚀 Development Stack: $STACK_NAME"
 echo "📦 Project Name: $PROJECT_NAME"
-echo "🌐 Apache Port: $DEV_APACHE_PORT"
+echo "🌐 Apache Port: $PORT (loopback only; tunnel with: ssh -L $PORT:127.0.0.1:$PORT <user>@aimagelab.unimore.it)"
 echo ""
-
-PORT=$DEV_APACHE_PORT
-
-# Collect all DEV_ env vars to pass through sudo
-SUDO_ENV=""
-for var in $(compgen -v | grep '^DEV_\|^DB_\|^MYSQL_\|^SECRET_KEY\|^DEBUG\|^CELERY_\|^CACHE_\|^IRIS_\|^OIDC_\|^LDAP_\|^MAILINGLIST_\|^TZ'); do
-    SUDO_ENV="$SUDO_ENV $var=${!var}"
-done
 
 case "$COMMAND" in
     up)
         echo "Starting development stack..."
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml up -d \
+        "${COMPOSE[@]}" up -d \
             dev-django-app dev-mysql-db dev-redis \
             dev-celery-worker dev-celery-beat apache-dev
         echo ""
         echo "✅ Stack '$STACK_NAME' is running!"
         echo "   Access URL: http://localhost:$PORT"
-        echo "   Django direct: http://localhost:$(sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml port dev-django-app 8000 2>/dev/null | cut -d: -f2 || echo "N/A")"
+        echo "   Django direct: http://localhost:$("${COMPOSE[@]}" port dev-django-app 8000 2>/dev/null | cut -d: -f2 || echo "N/A")"
         echo ""
         echo "Useful commands:"
         echo "  View logs:    $0 $STACK_NAME logs"
@@ -90,21 +109,21 @@ case "$COMMAND" in
     
     down)
         echo "Stopping and removing development stack..."
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml down
+        "${COMPOSE[@]}" down
         echo "✅ Stack '$STACK_NAME' stopped and removed"
         ;;
     
     logs)
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml logs -f "${@:3}"
+        "${COMPOSE[@]}" logs -f "${@:3}"
         ;;
     
     ps)
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml ps
+        "${COMPOSE[@]}" ps
         ;;
     
     restart)
         echo "Restarting development stack..."
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml restart "${@:3}"
+        "${COMPOSE[@]}" restart "${@:3}"
         echo "✅ Stack '$STACK_NAME' restarted"
         ;;
     
@@ -114,27 +133,27 @@ case "$COMMAND" in
             echo "Example: $0 $STACK_NAME exec dev-django-app python manage.py migrate"
             exit 1
         fi
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec "${@:3}"
+        "${COMPOSE[@]}" exec "${@:3}"
         ;;
     
     shell)
         echo "Opening Django shell for stack '$STACK_NAME'..."
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec dev-django-app python manage.py shell
+        "${COMPOSE[@]}" exec dev-django-app python manage.py shell
         ;;
     
     migrate)
         echo "Running migrations for stack '$STACK_NAME'..."
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec dev-django-app python manage.py migrate
+        "${COMPOSE[@]}" exec dev-django-app python manage.py migrate
         ;;
 
     manage)
         echo "Running manage.py command for stack '$STACK_NAME'..."
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec dev-django-app python manage.py "${@:3}"
+        "${COMPOSE[@]}" exec dev-django-app python manage.py "${@:3}"
         ;;
     
     build)
         echo "Building development stack..."
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml build \
+        "${COMPOSE[@]}" build \
             dev-django-app dev-mysql-db dev-redis \
             dev-celery-worker dev-celery-beat apache-dev
         echo "✅ Stack '$STACK_NAME' built"
@@ -145,12 +164,12 @@ case "$COMMAND" in
         echo ""
 
         echo "📦 Building containers..."
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml build \
+        "${COMPOSE[@]}" build \
             dev-django-app dev-mysql-db dev-redis \
             dev-celery-worker dev-celery-beat apache-dev
 
         echo "🚀 Starting services..."
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml up -d \
+        "${COMPOSE[@]}" up -d \
             dev-django-app dev-mysql-db dev-redis \
             dev-celery-worker dev-celery-beat apache-dev
 
@@ -158,13 +177,13 @@ case "$COMMAND" in
         sleep 10
 
         echo "🗄️  Running migrations..."
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec -T dev-django-app python manage.py migrate
+        "${COMPOSE[@]}" exec -T dev-django-app python manage.py migrate
 
         echo "📁 Collecting static files..."
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml exec -T dev-django-app python manage.py collectstatic --noinput
+        "${COMPOSE[@]}" exec -T dev-django-app python manage.py collectstatic --noinput
 
         echo "🔄 Restarting Apache..."
-        sudo $SUDO_ENV docker compose -p "$PROJECT_NAME" -f docker-compose.yml -f docker-compose.dev.yml restart apache-dev
+        "${COMPOSE[@]}" restart apache-dev
 
         echo ""
         echo "✅ Stack '$STACK_NAME' initialised!"
