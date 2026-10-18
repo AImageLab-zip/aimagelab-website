@@ -230,6 +230,13 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 LDAP_SYNC_HOUR = int(os.environ.get("LDAP_SYNC_HOUR", "2"))  # Default: 2 AM
 LDAP_SYNC_MINUTE = int(os.environ.get("LDAP_SYNC_MINUTE", "0"))  # Default: 00 minutes
 
+# IRIS profile-photo import schedule. Runs AFTER the LDAP sync, because the
+# photo lookup is keyed on codice_fiscale and that is populated from LDAP's
+# employeeNumber - a person who gets an employeeNumber at 02:00 then gets
+# their photo the same night. Kept clear of the 03:20 database backup.
+IRIS_PHOTOS_SYNC_HOUR = int(os.environ.get("IRIS_PHOTOS_SYNC_HOUR", "3"))
+IRIS_PHOTOS_SYNC_MINUTE = int(os.environ.get("IRIS_PHOTOS_SYNC_MINUTE", "0"))
+
 # LDAP Configuration
 LDAP_SERVER_URI = 'ldap://ailb-auth.ing.unimore.it:389'
 LDAP_SEARCH_BASE = 'dc=aimagelab,dc=unimore,dc=it'

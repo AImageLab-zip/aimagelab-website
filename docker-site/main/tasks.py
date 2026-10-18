@@ -152,7 +152,11 @@ def import_iris_publications(self):
         cache.delete(IRIS_IMPORT_LOCK_KEY)
 
 
-@shared_task(bind=True)
+# Measured ~0.9s per profile (~1 min for the ~72 eligible profiles), but each
+# IRIS request allows up to 30s, so a slow upstream could run far longer. The
+# project-wide limits (soft 240s / hard 300s SIGKILL) would cut the import off
+# part-way, so this task gets its own generous ceiling instead.
+@shared_task(bind=True, soft_time_limit=900, time_limit=1080)
 def import_iris_profile_photos(self):
     """
     Import profile photos from IRIS for all staff members with Codice Fiscale.
