@@ -178,9 +178,11 @@ class Command(BaseCommand):
                         else:
                             self.stdout.write(f'User {username} already up to date')
                     else:
+                        # Existing user, no --update-existing: leave the User
+                        # record alone, but still fall through to the profile
+                        # step so an absent codice_fiscale can be backfilled.
                         self.stdout.write(f'Skipped existing user: {username}')
                         skipped_count += 1
-                        continue
 
                     # Create or update profile
                     profile, profile_created = UserProfile.objects.get_or_create(
@@ -193,12 +195,27 @@ class Command(BaseCommand):
                         }
                     )
 
-                    if not profile_created and update_existing:
-                        profile.role = role
-                        profile.is_visible = True
-                        profile.codice_fiscale = cf
-                        profile.save()
-                    print(profile.codice_fiscale)
+                    if not profile_created:
+                        # codice_fiscale is objective LDAP-derived data with no
+                        # curated value, and the IRIS photo import is keyed on
+                        # it, so backfill it on every run. Without this, anyone
+                        # who gains an employeeNumber after their profile was
+                        # created never gets a CF, and so never gets a photo.
+                        if cf and profile.codice_fiscale != cf:
+                            profile.codice_fiscale = cf
+                            profile.save(update_fields=['codice_fiscale'])
+                            self.stdout.write(self.style.SUCCESS(
+                                f'  backfilled codice_fiscale for {username}'))
+
+                        # role and is_visible are curated in the admin, so they
+                        # are only overwritten on explicit request. is_visible
+                        # is deliberately NOT forced back to True: that would
+                        # silently un-hide anyone an admin had hidden, on every
+                        # nightly run.
+                        if update_existing:
+                            if profile.role != role:
+                                profile.role = role
+                                profile.save(update_fields=['role'])
 
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f'Error processing user {uid}: {e}'))
