@@ -60,23 +60,28 @@ CSRF_TRUSTED_ORIGINS = [
     "https://www.aimagelab.ing.unimo.it",
     "https://aimagelab.unimo.it",
     "https://aimagelab.ing.unimo.it",
-    # Development origins
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://localhost:8001",
-    "http://localhost:8002",
-    "http://localhost:8003",
-    "http://localhost:8080",
-    "http://localhost:8081",
-    "http://localhost:8082",
-    "http://aimagelab-app.ing.unimore.it:8000",
-    "http://aimagelab-app.ing.unimore.it:8001",
-    "http://aimagelab-app.ing.unimore.it:8002",
-    "http://aimagelab-app.ing.unimore.it:8003",
-    "http://aimagelab-app.ing.unimore.it:8080",
-    "http://aimagelab-app.ing.unimore.it:8081",
-    "http://aimagelab-app.ing.unimore.it:8082",
 ]
+
+# Plaintext development origins are trusted only by dev stacks. Production
+# must never accept a cross-origin POST from an http:// page.
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS += [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:8001",
+        "http://localhost:8002",
+        "http://localhost:8003",
+        "http://localhost:8080",
+        "http://localhost:8081",
+        "http://localhost:8082",
+        "http://aimagelab-app.ing.unimore.it:8000",
+        "http://aimagelab-app.ing.unimore.it:8001",
+        "http://aimagelab-app.ing.unimore.it:8002",
+        "http://aimagelab-app.ing.unimore.it:8003",
+        "http://aimagelab-app.ing.unimore.it:8080",
+        "http://aimagelab-app.ing.unimore.it:8081",
+        "http://aimagelab-app.ing.unimore.it:8082",
+    ]
 
 # Security settings for proxy setup
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

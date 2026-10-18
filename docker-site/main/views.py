@@ -4,10 +4,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages as django_messages
 from django.http import JsonResponse
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-import json
 from functools import wraps
 from urllib.parse import quote
 from django_ratelimit.decorators import ratelimit
@@ -791,8 +791,14 @@ def sync_ldap(request):
         except Exception as e:
             django_messages.error(request, f'Error starting LDAP sync: {str(e)}')
     
-    # Redirect back to the previous page or home
-    return redirect(request.META.get('HTTP_REFERER', 'home'))
+    # Redirect back to the previous page or home. The Referer header is
+    # client-controlled, so only follow it when it points back at this site.
+    next_url = request.META.get('HTTP_REFERER', '')
+    if not url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        next_url = 'home'
+    return redirect(next_url)
 def serve_media(request, path):
     """Serve media files with access control."""
     # Directories that are publicly visible (used on unauthenticated pages)
@@ -955,7 +961,10 @@ def rooms_calendar(request):
     
     return render(request, 'main/rooms_calendar.html', {
         'rooms': rooms,
-        'events': json.dumps(events),
+        # Passed as a list: the template serialises it with json_script, which
+        # escapes </script> and friends. json.dumps + |safe did not, so a
+        # reservation title could break out of the <script> block.
+        'events': events,
     })
 
 
