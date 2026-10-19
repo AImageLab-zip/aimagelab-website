@@ -118,6 +118,14 @@ class PublicationIRIS(models.Model):
     # Publication details
     tipo = models.CharField(max_length=200, blank=True, verbose_name="Type")
     rivista = models.CharField(max_length=500, blank=True, verbose_name="Journal/Conference")
+    # Conference venue, recovered from the citation string. IRIS's /products
+    # endpoint returns no conference field at all (and /products;full 500s),
+    # so for "Relazione in Atti di Convegno" the venue exists only inside
+    # `citation`. `conferenza` keeps the full venue text for display;
+    # `conferenza_nome` is the normalised key (usually the acronym) that the
+    # venue filter groups by, since the full strings are unique per edition.
+    conferenza = models.CharField(max_length=500, blank=True, verbose_name="Conference")
+    conferenza_nome = models.CharField(max_length=200, blank=True, db_index=True, verbose_name="Conference Name")
     abstract = models.TextField(blank=True, verbose_name="Abstract")
     doi = models.CharField(max_length=200, blank=True, verbose_name="DOI")
     isbn = models.CharField(max_length=100, blank=True, verbose_name="ISBN")

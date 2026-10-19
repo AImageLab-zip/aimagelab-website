@@ -19,6 +19,10 @@ urlpatterns = [
     path('research/', views.research, name='research'),
     path('news/', views.news, name='news'),
     path('publications/', views.publications, name='publications'),
+    # Citation downloads. Bulk export honours the same query string as the
+    # page, so "download what I am looking at" needs no extra state.
+    path('publications/export/<str:fmt>/', views.publications_export, name='publications_export'),
+    path('publications/<int:pk>/cite/<str:fmt>/', views.publication_cite, name='publication_cite'),
     path('projects/', views.projects, name='projects'),
     path('news/add/', views.post_form, name='post_add'),
     path('news/<slug:slug>/', views.post_single, name='single'),

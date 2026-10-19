@@ -368,6 +368,7 @@ def process_publication_json(pub_data, user_profile, stats):
         serie_title = serie.get('title', '')
         if serie_title:
             publication.rivista = serie_title[:200]
+
     
     # Abstract and description
     publication.abstract = pub_data.get('descriptionAbstractAll', '')
@@ -396,6 +397,18 @@ def process_publication_json(pub_data, user_profile, stats):
     
     # Citation
     publication.citation = pub_data.get('citation', '')[:1000]
+    # Conference venue. IRIS exposes no conference field on /products, so for
+    # proceedings the venue is recovered from the citation's last
+    # parenthetical group (see main/venue_parser.py).
+    from main.venue_parser import extract_venue, short_name
+    venue = extract_venue(publication.citation)
+    if venue:
+        publication.conferenza = venue[:500]
+        publication.conferenza_nome = short_name(venue)[:200]
+        # Give proceedings a venue in `rivista` too, so existing views and
+        # exports that read it keep working for conference papers.
+        if not publication.rivista:
+            publication.rivista = (publication.conferenza_nome or venue)[:500]
     
     # State/status
     publication.stato = pub_data.get('stato', '')[:100]
