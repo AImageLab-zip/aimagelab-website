@@ -54,18 +54,26 @@ Explore our research publications: papers, articles, and conference proceedings 
 
                 </form>
 
+                {% comment %}
+                Venue filter only appears for types that actually have a venue.
+                Journal and Type describe the same axis, so showing both freely
+                allowed impossible queries such as a doctoral thesis "in" a
+                journal, which always returned nothing.
+                {% endcomment %}
+                {% if venue_mode != 'none' %}
                 <form method="get" action="{% url 'publications' %}" class="space-y-2">
                     <input type="hidden" name="search" value="{{ search_query }}" />
                     <input type="hidden" name="year" value="{{ year_query }}" />
                     <input type="hidden" name="type" value="{{ type_query }}" />
                     <select name="journal" class="select select-bordered select-sm w-full" onchange="this.form.submit()">
-                        <option value="">All Journals</option>
+                        <option value="">{% if venue_mode == 'conference' %}All Conferences{% else %}All Journals{% endif %}</option>
                         {% for journal in available_journals %}
                             <option value="{{ journal }}" {% if journal_query == journal %}selected{% endif %}>{{ journal|truncatewords:8 }}</option>
                         {% endfor %}
 
                     </select>
                 </form>
+                {% endif %}
 
                 <form method="get" action="{% url 'publications' %}" class="space-y-2">
                     <input type="hidden" name="search" value="{{ search_query }}" />
@@ -99,7 +107,7 @@ Explore our research publications: papers, articles, and conference proceedings 
                 {% endif %}
                 {% if journal_query %}
                 <span class="badge badge-primary gap-2">
-                    Journal: {{ journal_query }}
+                    {% if venue_mode == 'conference' %}Conference{% else %}Journal{% endif %}: {{ journal_query }}
                     <a href="?search={{ search_query }}&year={{ year_query }}&type={{ type_query }}&author={{ author_username }}" class="text-xs hover:text-white">✕</a>
                 </span>
                 {% endif %}
@@ -198,6 +206,14 @@ Explore our research publications: papers, articles, and conference proceedings 
                             IRIS
                         </a>
                         {% endif %}
+                        <a href="{% url 'publication_cite' pub.pk 'bibtex' %}" class="btn btn-xs btn-outline btn-secondary" title="Download this reference as BibTeX">
+                            <i data-lucide="quote" class="h-4 w-4"></i>
+                            BibTeX
+                        </a>
+                        <a href="{% url 'publication_cite' pub.pk 'apa' %}" class="btn btn-xs btn-outline btn-secondary" title="Download this reference in APA style">
+                            <i data-lucide="type" class="h-4 w-4"></i>
+                            APA
+                        </a>
                     </div>
                 </div>
             </div>
@@ -244,6 +260,21 @@ Explore our research publications: papers, articles, and conference proceedings 
         <p class="text-sm text-base-content/60">
             Page {{ publications.number }} of {{ publications.paginator.num_pages }} • Total publications: {{ publications.paginator.count }}
         </p>
+        {% comment %}
+        Bulk export. The querystring is forwarded verbatim so the file contains
+        exactly the publications currently being viewed, filters and all.
+        {% endcomment %}
+        <div class="flex items-center gap-2 mt-2">
+            <span class="text-sm text-base-content/60">Download all {{ publications.paginator.count }} matching:</span>
+            <a href="{% url 'publications_export' 'bibtex' %}?{{ export_querystring }}" class="btn btn-xs btn-outline btn-secondary">
+                <i data-lucide="quote" class="h-4 w-4"></i>
+                BibTeX
+            </a>
+            <a href="{% url 'publications_export' 'apa' %}?{{ export_querystring }}" class="btn btn-xs btn-outline btn-secondary">
+                <i data-lucide="type" class="h-4 w-4"></i>
+                APA
+            </a>
+        </div>
     </div>
     {% endif %}
 

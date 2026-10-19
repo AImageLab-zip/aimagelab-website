@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages as django_messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -16,7 +16,8 @@ from .models import UserProfile, Post, PostAttachment, Category, Project, Public
 
 logger = logging.getLogger(__name__)
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q, Case, When, IntegerField, F
+from django.db.models import Q, Case, When, IntegerField, F, CharField
+from django.db.models.functions import MD5, Cast
 from datetime import datetime, timedelta
 
 from django.http import FileResponse, Http404
@@ -243,76 +244,118 @@ def projects(request):
         'show_all': show_all,
     })
 
+# --- Publications: shared filtering ------------------------------------
+# The page view and the BibTeX/APA exports must select exactly the same rows,
+# so the filter logic lives here rather than being duplicated per view.
+
+def venue_mode(type_query):
+    """Which venue filter, if any, makes sense for the selected type.
+
+    Journal and type were previously independent controls even though they
+    describe the same axis, so you could ask for "Tesi di dottorato published
+    in IEEE TPAMI" and get nothing.
+    """
+    t = (type_query or '').strip().lower()
+    if not t:
+        return 'all'
+    if 'rivista' in t:
+        return 'journal'
+    if 'convegno' in t:
+        return 'conference'
+    return 'none'
+
+
+def filter_publications(request):
+    """Return (queryset, params) for the current request's filters."""
+    params = {
+        'search': request.GET.get('search', ''),
+        'year': request.GET.get('year', ''),
+        'journal': request.GET.get('journal', ''),
+        'type': request.GET.get('type', ''),
+        'author': request.GET.get('author', ''),
+    }
+    mode = venue_mode(params['type'])
+    # A venue the current type cannot have is dropped rather than applied,
+    # so switching type never silently returns zero results.
+    if mode == 'none':
+        params['journal'] = ''
+
+    tokens = params['search'].split()
+    author_tokens = [t[1:].strip(' ,.;:') for t in tokens if t.startswith('@') and len(t) > 1]
+    keyword_tokens = [t[1:].strip(' ,.;:') for t in tokens if t.startswith('#') and len(t) > 1]
+    text_tokens = [t for t in tokens if not t.startswith(('@', '#'))]
+    if not params['author'] and author_tokens:
+        params['author'] = author_tokens[0]
+
+    qs = PublicationIRIS.objects.filter(hidden=False)
+
+    if text_tokens:
+        query = Q()
+        for word in text_tokens:
+            query &= (Q(titolo__icontains=word) | Q(autori__icontains=word)
+                      | Q(abstract__icontains=word))
+        qs = qs.filter(query)
+
+    for keyword in keyword_tokens:
+        if keyword:
+            qs = qs.filter(keywords__contains=[keyword])
+
+    if params['year']:
+        qs = qs.filter(anno=params['year'])
+
+    if params['journal']:
+        if mode == 'conference':
+            qs = qs.filter(Q(conferenza_nome__icontains=params['journal'])
+                           | Q(conferenza__icontains=params['journal']))
+        else:
+            qs = qs.filter(rivista__icontains=params['journal'])
+
+    if params['type']:
+        qs = qs.filter(tipo__icontains=params['type'])
+
+    if params['author']:
+        qs = qs.filter(authors__user__username=params['author'])
+
+    params['venue_mode'] = mode
+    params['keyword_tokens'] = keyword_tokens
+    params['text_tokens'] = text_tokens
+    return order_publications(qs), params
+
+
+def order_publications(qs):
+    """Newest first, then a stable shuffle within each year.
+
+    Ordering by title put every author whose work begins with "A" at the top
+    of each year. MD5 over the id gives an arbitrary but *deterministic*
+    order, which matters: a per-request random sort makes paginated results
+    repeat and drop rows between pages.
+    """
+    return qs.annotate(
+        shuffle=MD5(Cast('id', output_field=CharField()))
+    ).order_by('-anno', 'shuffle')
+
+
 def publications(request):
     """Publications page view with pagination, search, and filters."""
-    search_query = request.GET.get('search', '')
-    year_query = request.GET.get('year', '')
-    journal_query = request.GET.get('journal', '')
-    type_query = request.GET.get('type', '')
-    author_username = request.GET.get('author', '')
+    publications_qs, params = filter_publications(request)
 
-    # Parse @author and #keyword tokens from the search query
+    search_query = params['search']
+    year_query = params['year']
+    journal_query = params['journal']
+    type_query = params['type']
+    author_username = params['author']
+    keyword_tokens = params['keyword_tokens']
+
     tokens = search_query.split()
-    author_tokens = []
-    keyword_tokens = []
-    text_tokens = []
-    for token in tokens:
-        if token.startswith('@') and len(token) > 1:
-            author_tokens.append(token[1:].strip(' ,.;:'))
-        elif token.startswith('#') and len(token) > 1:
-            keyword_tokens.append(token[1:].strip(' ,.;:'))
-        else:
-            text_tokens.append(token)
-
-    # Use the first @author token when explicit author filter is not provided
-    if not author_username and author_tokens:
-        author_username = author_tokens[0]
-
-    # Keep variants for clearing filters in the UI
     search_query_without_author = " ".join([t for t in tokens if not t.startswith('@')])
     search_query_without_keywords = " ".join([t for t in tokens if not t.startswith('#')])
     
-    # Start with all non-hidden publications
-    publications_qs = PublicationIRIS.objects.filter(hidden=False)
-    
-    # Apply search filter (title or authors)
-    if text_tokens:
-        # Split search query into individual words
-        words = text_tokens
-        query = Q()
-        for word in words:
-            query &= (
-                Q(titolo__icontains=word) |
-                Q(autori__icontains=word) |
-                Q(abstract__icontains=word)
-            )
-        publications_qs = publications_qs.filter(query)
+    # Querystring for the bulk-export links: the active filters minus `page`,
+    # so the downloaded file matches the filtered set rather than one page.
+    export_params = request.GET.copy()
+    export_params.pop('page', None)
+    export_querystring = export_params.urlencode()
 
-    # Apply keyword filter from #tokens
-    if keyword_tokens:
-        for keyword in keyword_tokens:
-            if keyword:
-                publications_qs = publications_qs.filter(keywords__contains=[keyword])
-        
-    # Apply year filter
-    if year_query:
-        publications_qs = publications_qs.filter(anno=year_query)
-    
-    # Apply journal filter
-    if journal_query:
-        publications_qs = publications_qs.filter(rivista__icontains=journal_query)
-    
-    # Apply type filter
-    if type_query:
-        publications_qs = publications_qs.filter(tipo__icontains=type_query)
-    
-    # Apply author filter using UserProfile through UserProfilePublicationIRIS
-    if author_username:
-        publications_qs = publications_qs.filter(authors__user__username=author_username)
-    
-    # Order by year descending, then by title
-    publications_qs = publications_qs.order_by('-anno', 'titolo')
-    
     # Pagination
     paginator = Paginator(publications_qs, PUBLICATION_PER_PAGE)
     page = request.GET.get('page', 1)
@@ -335,16 +378,35 @@ def publications(request):
     )
     
     # Get available journals (top journals with > 2 publications)
-    available_journals = (
-        PublicationIRIS.objects.filter(hidden=False)
-        .exclude(rivista='')
-        .values('rivista')
-        .annotate(count=Count('id'))
-        .filter(count__gt=2)
-        .order_by('rivista')
-        .values_list('rivista', flat=True)
-    )
-    
+    # Venue options follow the selected type. Journals and conferences are the
+    # same axis as `tipo`, so offering both independently let you build
+    # impossible queries ("Tesi di dottorato" in a journal).
+    mode = params['venue_mode']
+    if mode == 'conference':
+        available_journals = (
+            PublicationIRIS.objects.filter(hidden=False, tipo__icontains='convegno')
+            .exclude(conferenza_nome='')
+            .values('conferenza_nome')
+            .annotate(count=Count('id'))
+            .filter(count__gt=2)
+            .order_by('conferenza_nome')
+            .values_list('conferenza_nome', flat=True)
+        )
+    elif mode == 'none':
+        available_journals = []
+    else:
+        journal_qs = PublicationIRIS.objects.filter(hidden=False)
+        if mode == 'journal':
+            journal_qs = journal_qs.filter(tipo__icontains='rivista')
+        available_journals = (
+            journal_qs.exclude(rivista='')
+            .values('rivista')
+            .annotate(count=Count('id'))
+            .filter(count__gt=2)
+            .order_by('rivista')
+            .values_list('rivista', flat=True)
+        )
+
     # Get available types (with > 2 publications)
     available_types = (
         PublicationIRIS.objects.filter(hidden=False)
@@ -411,6 +473,8 @@ def publications(request):
         'search_query_without_keywords': search_query_without_keywords,
         'available_years': available_years,
         'available_journals': available_journals,
+        'venue_mode': params['venue_mode'],
+        'export_querystring': export_querystring,
         'available_types': available_types,
         'available_authors': available_authors,
         'available_authors_data': available_authors_data,
@@ -1615,3 +1679,59 @@ def wiki_delete(request, slug):
         return redirect('wiki_home')
 
     return render(request, 'main/wiki_delete.html', {'page': page})
+
+
+# --- Publications: citation export -------------------------------------
+
+CITATION_FORMATS = {
+    'bibtex': ('bib', 'application/x-bibtex'),
+    'apa': ('txt', 'text/plain'),
+}
+# Guard against someone exporting the whole corpus by accident, and against a
+# crawler walking the export URL with no filters.
+EXPORT_MAX = 2000
+
+
+def _render_citations(publications, fmt):
+    from main.citations import to_bibtex, to_apa
+    render = to_bibtex if fmt == 'bibtex' else to_apa
+    sep = '\n\n' if fmt == 'bibtex' else '\n\n'
+    return sep.join(render(p) for p in publications)
+
+
+def publication_cite(request, pk, fmt):
+    """Download a single publication as BibTeX or APA."""
+    if fmt not in CITATION_FORMATS:
+        raise Http404('Unknown citation format')
+    pub = get_object_or_404(PublicationIRIS, pk=pk, hidden=False)
+    ext, content_type = CITATION_FORMATS[fmt]
+    body = _render_citations([pub], fmt)
+    from main.citations import cite_key
+    filename = f'{cite_key(pub)}.{ext}'
+    response = HttpResponse(body, content_type=f'{content_type}; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+def publications_export(request, fmt):
+    """Download every publication matching the current filters, as one file."""
+    if fmt not in CITATION_FORMATS:
+        raise Http404('Unknown citation format')
+    publications_qs, params = filter_publications(request)
+    total = publications_qs.count()
+    publications = list(publications_qs[:EXPORT_MAX])
+    ext, content_type = CITATION_FORMATS[fmt]
+
+    header_bits = [f'{len(publications)} publications']
+    for label in ('search', 'year', 'journal', 'type', 'author'):
+        if params.get(label):
+            header_bits.append(f'{label}={params[label]}')
+    header = 'AImageLab publications export - ' + '; '.join(header_bits)
+    if total > EXPORT_MAX:
+        header += f' (truncated from {total}; narrow the filters for the rest)'
+    comment = f'% {header}\n\n' if fmt == 'bibtex' else f'{header}\n\n'
+
+    response = HttpResponse(comment + _render_citations(publications, fmt),
+                            content_type=f'{content_type}; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="aimagelab-publications.{ext}"'
+    return response
