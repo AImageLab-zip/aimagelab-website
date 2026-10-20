@@ -104,6 +104,32 @@ class UserProfile(models.Model):
                 return ""
 
 
+# IRIS returns Italian type labels. They are kept verbatim in the database -
+# filters and the IRIS import both match on them - and only translated for
+# display, so the site reads as English without re-importing anything.
+PUBLICATION_TYPE_LABELS = {
+    'Relazione in Atti di Convegno': 'Conference Paper',
+    'Abstract in Atti di Convegno': 'Conference Abstract',
+    'Articolo su rivista': 'Journal Article',
+    'Abstract in Rivista': 'Journal Abstract',
+    'Capitolo/Saggio': 'Book Chapter',
+    'Monografia/Trattato scientifico': 'Monograph',
+    'Curatela': 'Edited Volume',
+    'Tesi di dottorato': 'PhD Thesis',
+    'Brevetto': 'Patent',
+    'Poster': 'Poster',
+    'Banca dati': 'Dataset',
+    'Breve Introduzione': 'Short Introduction',
+    'Prefazione o Postfazione': 'Preface or Afterword',
+    'Working paper': 'Working Paper',
+}
+
+
+def translate_publication_type(value):
+    """English label for an IRIS type, falling back to the original string."""
+    return PUBLICATION_TYPE_LABELS.get((value or '').strip(), value or '')
+
+
 class PublicationIRIS(models.Model):
     """Publication imported from IRIS"""
     # Primary fields from IRIS GW REST API
@@ -168,6 +194,25 @@ class PublicationIRIS(models.Model):
         related_name='publications'
     )
     
+    @property
+    def tipo_display(self):
+        """English label for the Italian IRIS type."""
+        return translate_publication_type(self.tipo)
+
+    @property
+    def venue_display(self):
+        """Human-readable venue: full conference name, acronym in brackets.
+
+        Conference papers store the raw citation fragment in `conferenza`
+        (and an acronym in `conferenza_nome`); showing either alone gave
+        cards reading just "BMVC", or a name trailed by a city and dates.
+        Journal articles keep using `rivista`.
+        """
+        if 'convegno' in (self.tipo or '').lower() and self.conferenza:
+            from main.venue_parser import display_name
+            return display_name(self.conferenza) or self.rivista
+        return self.rivista
+
     class Meta:
         verbose_name = "IRIS Publication"
         verbose_name_plural = "IRIS Publications"

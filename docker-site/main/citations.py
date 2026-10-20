@@ -65,10 +65,12 @@ def cite_key(pub):
 
 
 def _venue(pub):
-    """Journal for articles, conference for proceedings."""
-    if 'convegno' in (pub.tipo or '').lower():
-        return pub.conferenza or pub.rivista or ''
-    return pub.rivista or ''
+    """Journal for articles, conference for proceedings.
+
+    Uses the same cleaned label the page shows, so a downloaded BibTeX
+    booktitle matches the card rather than carrying the city and dates.
+    """
+    return pub.venue_display or pub.rivista or ''
 
 
 def _escape_bibtex(value):
