@@ -12,7 +12,7 @@ from functools import wraps
 from urllib.parse import quote
 from django_ratelimit.decorators import ratelimit
 import logging
-from .models import UserProfile, Post, PostAttachment, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage, IRISImportLog
+from .models import translate_publication_type, UserProfile, Post, PostAttachment, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage, IRISImportLog
 
 logger = logging.getLogger(__name__)
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -417,7 +417,13 @@ def publications(request):
         .order_by('tipo')
         .values_list('tipo', flat=True)
     )
-    
+    # Pair each stored Italian value with its English label: the value keeps
+    # doing the filtering, the label is all the reader sees.
+    available_types = sorted(
+        ((t, translate_publication_type(t)) for t in available_types),
+        key=lambda pair: pair[1],
+    )
+
     # Get available authors (UserProfiles that have publications)
     available_authors = (
         UserProfile.objects.filter(
@@ -474,6 +480,7 @@ def publications(request):
         'available_years': available_years,
         'available_journals': available_journals,
         'venue_mode': params['venue_mode'],
+        'type_query_label': translate_publication_type(type_query),
         'export_querystring': export_querystring,
         'available_types': available_types,
         'available_authors': available_authors,

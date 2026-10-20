@@ -81,8 +81,8 @@ Explore our research publications: papers, articles, and conference proceedings 
                     <input type="hidden" name="journal" value="{{ journal_query }}" />
                     <select name="type" class="select select-bordered select-sm w-full" onchange="this.form.submit()">
                         <option value="">All Types</option>
-                        {% for type in available_types %}
-                            <option value="{{ type }}" {% if type_query == type %}selected{% endif %}>{{ type }}</option>
+                        {% for value, label in available_types %}
+                            <option value="{{ value }}" {% if type_query == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </form>
@@ -113,7 +113,7 @@ Explore our research publications: papers, articles, and conference proceedings 
                 {% endif %}
                 {% if type_query %}
                 <span class="badge badge-primary gap-2">
-                    Type: {{ type_query }}
+                    Type: {{ type_query_label }}
                     <a href="?search={{ search_query }}&year={{ year_query }}&journal={{ journal_query }}&author={{ author_username }}" class="text-xs hover:text-white">✕</a>
                 </span>
                 {% endif %}
@@ -155,7 +155,7 @@ Explore our research publications: papers, articles, and conference proceedings 
                 <!-- Journal/Conference -->
                 {% if pub.rivista %}
                 <p class="text-sm text-base-content/80">
-                    <strong>Published in:</strong> {{ pub.rivista }}
+                    <strong>Published in:</strong> {{ pub.venue_display }}
                 </p>
                 {% endif %}
 
@@ -181,7 +181,7 @@ Explore our research publications: papers, articles, and conference proceedings 
                         {% if pub.tipo %}
                         <span class="badge badge-sm badge-outline">
                             <i data-lucide="file-text" class="h-4 w-4"></i>
-                            {{ pub.tipo }}
+                            {{ pub.tipo_display }}
                         </span>
                         {% endif %}
                     </div>
