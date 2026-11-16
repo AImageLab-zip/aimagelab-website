@@ -443,15 +443,19 @@ def _build_outgoing_message(delivery, list_addr, list_name):
     if incoming.message_id:
         msg['References'] = incoming.message_id
 
-    # Cc the matched route addresses so "Reply All" sends back to the list.
-    # Add RFC 2369 List-Post / List-Id so clients show "Reply to List".
+    # The route addresses are NOT added as Cc. They used to be, "so Reply All
+    # sends back to the list": the reply then arrived directly addressed, from
+    # a trusted domain, was auto-approved and went out to every subscriber
+    # (issue #29). Reply and Reply All now both go to the original sender
+    # only, via Reply-To above.
+    #
+    # RFC 2369 List-Post / List-Id stay, so clients still offer an explicit
+    # "Reply to list" and filters keep working; the footer names the list
+    # the message was sent to.
     routes = list(incoming.matched_routes.all())
-    if routes:
-        ml_list_address = getattr(settings, 'MAILINGLIST_LIST_ADDRESS', 'aimagelab@unimore.it')
-        ml_local, ml_domain = ml_list_address.rsplit('@', 1)
-        cc_addrs = [f"{ml_local}+{r.tag}@{ml_domain}" for r in routes]
-        msg['Cc'] = ', '.join(cc_addrs)
-        primary = cc_addrs[0]
+    list_addrs = _route_addresses(routes)
+    if list_addrs:
+        primary = list_addrs[0]
         msg['List-Post'] = f'<mailto:{primary}>'
         msg['List-Id'] = f'{list_name} <{primary.replace("@", ".")}>'
 
@@ -465,8 +469,8 @@ def _build_outgoing_message(delivery, list_addr, list_name):
 
     # Body — wrap text+html in multipart/alternative so clients pick one,
     # not render both.
-    footer_html = _build_footer_html(unsubscribe_token)
-    footer_text = _build_footer_text(unsubscribe_token)
+    footer_html = _build_footer_html(unsubscribe_token, list_addrs)
+    footer_text = _build_footer_text(unsubscribe_token, list_addrs)
 
     if incoming.body_html or incoming.body_text:
         alt = MIMEMultipart('alternative')
@@ -524,26 +528,41 @@ def _get_unsubscribe_token(email_addr):
     return None
 
 
-def _build_footer_html(unsubscribe_token):
+def _route_addresses(routes):
+    """Plus-addressed list addresses for the given routes."""
+    ml_list_address = getattr(settings, 'MAILINGLIST_LIST_ADDRESS', 'aimagelab@unimore.it')
+    ml_local, ml_domain = ml_list_address.rsplit('@', 1)
+    return [f"{ml_local}+{r.tag}@{ml_domain}" for r in routes]
+
+
+def _footer_sentence(list_addrs):
+    if list_addrs:
+        return f"This email was sent via the AImageLab mailing list to {', '.join(list_addrs)}."
+    return "This email was sent via the AImageLab mailing list."
+
+
+def _build_footer_html(unsubscribe_token, list_addrs=()):
     base_url = getattr(settings, 'MAILINGLIST_BASE_URL', 'https://aimagelab.unimore.it')
     if unsubscribe_token:
         unsub_url = f"{base_url}/mailinglist/unsubscribe/{unsubscribe_token}/"
         return (
             '<hr style="margin-top:30px;border:none;border-top:1px solid #ddd;">'
             '<p style="font-size:11px;color:#888;margin-top:10px;">'
-            'This email was sent via the AImageLab mailing list. '
+            f'{_footer_sentence(list_addrs)} '
+            'Replies go to the sender only. '
             f'<a href="{unsub_url}">Unsubscribe</a>'
             '</p>'
         )
     return ''
 
 
-def _build_footer_text(unsubscribe_token):
+def _build_footer_text(unsubscribe_token, list_addrs=()):
     base_url = getattr(settings, 'MAILINGLIST_BASE_URL', 'https://aimagelab.unimore.it')
     if unsubscribe_token:
         unsub_url = f"{base_url}/mailinglist/unsubscribe/{unsubscribe_token}/"
         return (
-            f"\n\n---\nThis email was sent via the AImageLab mailing list.\n"
+            f"\n\n---\n{_footer_sentence(list_addrs)}\n"
+            f"Replies go to the sender only.\n"
             f"Unsubscribe: {unsub_url}\n"
         )
     return ''
