@@ -400,16 +400,29 @@ def process_publication_json(pub_data, user_profile, stats):
     # Conference venue. IRIS exposes no conference field on /products, so for
     # proceedings the venue is recovered from the citation's last
     # parenthetical group (see main/venue_parser.py).
+    #
+    # Proceedings only, the same test backfill_conference_venues uses. The
+    # parser takes the last long parenthetical it finds, so on a journal
+    # article or a thesis it would pick one out of the title - "(Extended
+    # Abstract)" - and file the paper under that as if it were a conference.
     from main.venue_parser import extract_venue, short_name
-    venue = extract_venue(publication.citation)
-    if venue:
-        publication.conferenza = venue[:500]
-        publication.conferenza_nome = short_name(venue)[:200]
-        # Give proceedings a venue in `rivista` too, so existing views and
-        # exports that read it keep working for conference papers.
-        if not publication.rivista:
-            publication.rivista = (publication.conferenza_nome or venue)[:500]
-    
+    if 'convegno' in (publication.tipo or '').lower():
+        venue = extract_venue(publication.citation)
+        if venue:
+            publication.conferenza = venue[:500]
+            publication.conferenza_nome = short_name(venue)[:200]
+            # Give proceedings a venue in `rivista` too, so existing views and
+            # exports that read it keep working for conference papers.
+            if not publication.rivista:
+                publication.rivista = (publication.conferenza_nome or venue)[:500]
+    else:
+        # Undo what earlier imports stored on non-proceedings.
+        if publication.conferenza and publication.rivista in (
+                publication.conferenza, publication.conferenza_nome):
+            publication.rivista = ''
+        publication.conferenza = ''
+        publication.conferenza_nome = ''
+
     # State/status
     publication.stato = pub_data.get('stato', '')[:100]
     
