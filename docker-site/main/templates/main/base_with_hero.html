@@ -7,11 +7,16 @@
         <div>
             {% block hero_content %}
             <h1 class="mb-5 text-2xl md:text-5xl font-bold text-primary text-balance">{% block hero_title %}AImage<sup>Lab</sup>{% endblock %}</h1>
-            <p class="mb-5 text-balance">
+            {% comment %}
+            A <div>, not a <p>: wiki pages put their breadcrumbs (a <div> with a
+            <ul>) in this block, and a <p> cannot contain block elements - the
+            browser closed the paragraph early and left an empty one behind.
+            {% endcomment %}
+            <div class="mb-5 text-balance">
                 {% block hero_description %}
                 Pioneering advances in Artificial Intelligence and Computer Vision since 1998.
                 {% endblock %}
-            </p>
+            </div>
             {% endblock %}
         </div>
     </div>
