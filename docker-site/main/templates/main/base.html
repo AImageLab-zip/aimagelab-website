@@ -21,16 +21,13 @@
     <link rel="apple-touch-icon" href="{% static 'main/assets/apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="192x192" href="{% static 'main/assets/icon-192.png' %}">
     <link rel="icon" type="image/png" sizes="512x512" href="{% static 'main/assets/icon-512.png' %}">
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/colors/properties-extended.css" rel="stylesheet" type="text/css" />
-    <link rel="preconnect" href="https://rsms.me/">
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    {% comment %}
+    Tailwind + daisyUI, compiled ahead of time by frontend/build.sh (Tailwind
+    standalone CLI). Classes built at render time must be safelisted in
+    frontend/input.css or they will not exist in this file.
+    {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <link rel="stylesheet" href="{% static 'main/css/styles.css' %}">
-    <!-- Maplibre GL -->
-    <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
-    <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
     {% block extra_css %}{% endblock %}
 </head>
 
@@ -175,7 +172,11 @@
             }, 10);
         });
     </script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    {% comment %}
+    Third-party libraries are vendored under static/main/vendor/ at pinned
+    versions (see frontend/vendor.sh); nothing is loaded from a CDN.
+    {% endcomment %}
+    <script src="{% static 'main/vendor/lucide-1.73.0/lucide.min.js' %}"></script>
     <script>
         lucide.createIcons();
     </script>

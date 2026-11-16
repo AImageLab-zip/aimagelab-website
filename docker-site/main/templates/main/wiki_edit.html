@@ -1,4 +1,5 @@
 {% extends 'main/base_full_width.html' %}
+{% load static %}
 {% load markdownify %}
 
 {% block title %}Edit {{ page.title }} - Wiki - AImageLab{% endblock %}
@@ -14,7 +15,8 @@ Suggest changes to this page. Your changes will be reviewed by staff.
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+<link rel="stylesheet" href="{% static 'main/vendor/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+<link rel="stylesheet" href="{% static 'main/vendor/easymde-2.21.0/easymde.min.css' %}">
 <style>
     /* Editor styling */
     .EasyMDEContainer .CodeMirror {
@@ -246,11 +248,12 @@ Suggest changes to this page. Your changes will be reviewed by staff.
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<script src="{% static 'main/vendor/easymde-2.21.0/easymde.min.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize EasyMDE
     const easyMDE = new EasyMDE({
+        autoDownloadFontAwesome: false,
         element: document.getElementById('wiki-content'),
         spellChecker: false,
         autosave: {

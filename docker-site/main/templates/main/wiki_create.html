@@ -1,4 +1,5 @@
 {% extends 'main/base_full_width.html' %}
+{% load static %}
 
 {% block title %}Create Wiki Page - AImageLab{% endblock %}
 
@@ -9,7 +10,8 @@ Add a new page to the lab knowledge base with full markdown support.
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+<link rel="stylesheet" href="{% static 'main/vendor/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+<link rel="stylesheet" href="{% static 'main/vendor/easymde-2.21.0/easymde.min.css' %}">
 <style>
     .form-copy {
         white-space: normal;
@@ -234,11 +236,12 @@ Add a new page to the lab knowledge base with full markdown support.
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<script src="{% static 'main/vendor/easymde-2.21.0/easymde.min.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize EasyMDE
     const easyMDE = new EasyMDE({
+        autoDownloadFontAwesome: false,
         element: document.getElementById('wiki-content'),
         placeholder: 'Write your content here using Markdown...\\n\\n# Heading 1\\n## Heading 2\\n\\n**Bold** *Italic*\\n\\n- List item\\n- Another item',
         spellChecker: false,

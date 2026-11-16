@@ -32,7 +32,7 @@
                         </div>
                         {% else %}
                         <div class="mask mask-squircle {% if card_size == 'large' %}w-24{% elif card_size == 'small' %}w-16{% else %}w-24{% endif %} bg-base-300">
-                            <img id="dicebear-avatar-img" data-seed="{{ profile.get_full_name|default:profile.user.username|urlencode }}" alt="Default avatar" />
+                            {% include 'main/avatar_placeholder.html' with name=profile.get_full_name|default:profile.user.username text_size='text-2xl' %}
                         </div>
                         {% endif %}
                     </div>
@@ -112,7 +112,7 @@
                             </div>
                             {% else %}
                             <div class="mask mask-squircle w-48 md:w-64 bg-base-300">
-                                <img id="dicebear-avatar-img" data-seed="{{ profile.get_full_name|default:profile.user.username|urlencode }}" alt="Default avatar" />
+                                {% include 'main/avatar_placeholder.html' with name=profile.get_full_name|default:profile.user.username text_size='text-6xl' %}
                             </div>
                             {% endif %}
                         </div>

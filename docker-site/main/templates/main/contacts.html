@@ -1,4 +1,5 @@
 {% extends 'main/base_with_hero.html' %}
+{% load static %}
 
 {% block title %}Contact Us - AImageLab{% endblock %}
 
@@ -123,7 +124,18 @@ Get in touch with AImageLab - Find directions, contact information, and how to r
 </section>
 {% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'main/vendor/maplibre-gl-5.24.1/maplibre-gl.css' %}">
+{% endblock %}
+
 {% block extra_js %}
+{% comment %}
+MapLibre used to be loaded by base.html on every page, unpinned, from unpkg.
+6.x is ESM-only and no longer ships dist/maplibre-gl.js, so that URL began
+returning 404 and the map stopped rendering. 5.24.1 is the last release with
+the single-file build that defines the `maplibregl` global used below.
+{% endcomment %}
+<script src="{% static 'main/vendor/maplibre-gl-5.24.1/maplibre-gl.js' %}"></script>
 <script>
     const map = new maplibregl.Map({
         style: 'https://tiles.openfreemap.org/styles/positron',

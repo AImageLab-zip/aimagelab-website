@@ -1,3 +1,21 @@
+/* Inter, self-hosted (was https://rsms.me/inter/inter.css). The variable
+   font covers every weight, so one file per style replaces the static set.
+   Files: vendor/inter-4.1/, fetched by frontend/vendor.sh. */
+@font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("../vendor/inter-4.1/InterVariable.woff2") format("woff2");
+}
+@font-face {
+    font-family: "Inter";
+    font-style: italic;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("../vendor/inter-4.1/InterVariable-Italic.woff2") format("woff2");
+}
+
 :root {
     --font-sans: "Inter", sans-serif;
     font-family: var(--font-sans);
