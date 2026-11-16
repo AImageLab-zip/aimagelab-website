@@ -195,6 +195,12 @@
 
                         <!-- Publications Link -->
                         <div class="mt-4">
+                            {% if profile.personal_page_is_public %}
+                            <a href="{{ profile.get_absolute_url }}" class="btn btn-primary btn-sm">
+                                <i data-lucide="user" class="h-4 w-4"></i>
+                                Personal Page
+                            </a>
+                            {% endif %}
                             <a href="{% url 'publications' %}?author={{ profile.user }}" target="_blank" class="btn btn-primary btn-sm">
                                 <i data-lucide="book-open" class="h-4 w-4"></i>
                                 View Publications

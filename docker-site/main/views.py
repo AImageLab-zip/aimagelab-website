@@ -644,6 +644,10 @@ def post_form(request, slug=None):
     context = {'post': post, 'categories': categories}
     return render(request, template, context)
 
+# Publications listed on a personal page; the rest are one click away.
+PERSON_PAGE_PUBLICATIONS = 20
+
+
 def people(request):
     """People/Team page view."""
     # Get visible profiles grouped by role
@@ -666,6 +670,58 @@ def people(request):
     }
     
     return render(request, 'main/people.html', {'grouped_profiles': grouped_profiles})
+
+
+def person_page(request, slug):
+    """Public personal page of one person (issue #21).
+
+    404 unless the person switched the page on and their profile is visible:
+    an unpublished page must be indistinguishable from one that never existed.
+    """
+    profile = get_object_or_404(
+        UserProfile.objects.select_related('user'),
+        slug=slug, has_personal_page=True, is_visible=True,
+    )
+    publications_qs = order_publications(
+        PublicationIRIS.objects.filter(hidden=False, authors=profile))
+    return render(request, 'main/person_page.html', {
+        'profile': profile,
+        'publications': publications_qs[:PERSON_PAGE_PUBLICATIONS],
+        'publication_count': publications_qs.count(),
+        'can_edit': request.user.is_authenticated and request.user == profile.user,
+    })
+
+
+@intranet_required
+def edit_personal_page(request):
+    """Create, edit, unpublish or delete the logged-in person's own page."""
+    profile = UserProfile.objects.filter(user=request.user).first()
+    if profile is None or not profile.is_visible:
+        django_messages.error(
+            request,
+            'Your profile is not yet visible. Please contact an administrator to activate your account.'
+        )
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        action = request.POST.get('action', 'save')
+        if action == 'delete':
+            profile.has_personal_page = False
+            profile.page_content = ''
+            profile.save(update_fields=['has_personal_page', 'page_content', 'updated_at'])
+            django_messages.success(request, 'Your personal page has been deleted.')
+            return redirect('edit_personal_page')
+
+        profile.page_content = request.POST.get('page_content', '').strip()
+        profile.has_personal_page = request.POST.get('has_personal_page') == 'on'
+        profile.save(update_fields=['has_personal_page', 'page_content', 'updated_at'])
+        if profile.has_personal_page:
+            django_messages.success(request, 'Your personal page is published.')
+        else:
+            django_messages.success(request, 'Saved. Your personal page is not published.')
+        return redirect('edit_personal_page')
+
+    return render(request, 'main/person_page_edit.html', {'profile': profile})
 
 
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)

@@ -1,0 +1,120 @@
+{% extends "main/base_with_hero.html" %}
+{% load image_tags %}
+{% load markdownify %}
+
+{% block title %}{{ profile.get_full_name }} - AImageLab{% endblock %}
+
+{% block hero_title %}{{ profile.get_title }} {{ profile.get_full_name }}{% endblock %}
+
+{% block hero_description %}
+{% if profile.role == 'past_member' and profile.current_position %}{{ profile.current_position }}{% else %}{{ profile.get_role_display }}{% endif %}{% if profile.department %} · {{ profile.department }}{% endif %}
+{% endblock %}
+
+{% block page_content %}
+<div class="container mx-auto px-6 my-12 mt-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+        <!-- Photo and contacts -->
+        <aside class="lg:col-span-1">
+            <div class="card bg-base-200">
+                <div class="card-body items-center text-center">
+                    <div class="avatar mb-2">
+                        <div class="mask mask-squircle w-48">
+                            {% if profile.avatar %}
+                            {% derivative_url profile 'avatar_512' 'avatar' as img_src %}<img src="{{ img_src }}" alt="{{ profile.get_full_name }}" width="512" height="512" />
+                            {% elif profile.avatar_iris %}
+                            {% derivative_url profile 'avatar_iris_512' 'avatar_iris' as img_src %}<img src="{{ img_src }}" alt="{{ profile.get_full_name }}" width="512" height="512" />
+                            {% else %}
+                            {% include 'main/avatar_placeholder.html' with name=profile.get_full_name text_size='text-6xl' %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <ul class="text-sm space-y-2 text-left w-full">
+                        {% if profile.user.email %}
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="mail" class="h-4 w-4 text-primary shrink-0"></i>
+                            <a href="mailto:{{ profile.user.email }}" class="text-primary hover:text-secondary break-all">{{ profile.user.email }}</a>
+                        </li>
+                        {% endif %}
+                        {% if profile.phone_number %}
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="phone" class="h-4 w-4 text-primary shrink-0"></i>
+                            <span>{{ profile.phone_number }}</span>
+                        </li>
+                        {% endif %}
+                        {% if profile.website %}
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="globe" class="h-4 w-4 text-primary shrink-0"></i>
+                            <a href="{{ profile.website }}" target="_blank" rel="noopener" class="text-primary hover:text-secondary">Website</a>
+                        </li>
+                        {% endif %}
+                        {% if profile.google_scholar %}
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="graduation-cap" class="h-4 w-4 text-primary shrink-0"></i>
+                            <a href="{{ profile.google_scholar }}" target="_blank" rel="noopener" class="text-primary hover:text-secondary">Google Scholar</a>
+                        </li>
+                        {% endif %}
+                        {% if profile.github %}
+                        <li class="flex items-center gap-2 text-primary">
+                            {% include 'main/icons/github.html' with class='h-4 w-4 shrink-0' %}
+                            <a href="{{ profile.github }}" target="_blank" rel="noopener" class="hover:text-secondary">GitHub</a>
+                        </li>
+                        {% endif %}
+                        {% if profile.linkedin %}
+                        <li class="flex items-center gap-2 text-primary">
+                            {% include 'main/icons/linkedin.html' with class='h-4 w-4 shrink-0' %}
+                            <a href="{{ profile.linkedin }}" target="_blank" rel="noopener" class="hover:text-secondary">LinkedIn</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+
+                    {% if can_edit %}
+                    <a href="{% url 'edit_personal_page' %}" class="btn btn-primary btn-sm mt-4 w-full">
+                        <i data-lucide="pencil" class="h-4 w-4"></i>
+                        Edit this page
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </aside>
+
+        <!-- Page body -->
+        <div class="lg:col-span-3 space-y-8">
+            {% if profile.bio %}
+            <section>
+                <h2 class="h2-home">About</h2>
+                <p>{{ profile.bio|linebreaksbr }}</p>
+            </section>
+            {% endif %}
+
+            {% if profile.page_content %}
+            <section class="prose max-w-none">
+                {{ profile.page_content|markdownify }}
+            </section>
+            {% endif %}
+
+            {% if publication_count %}
+            <section>
+                <h2 class="h2-home">Publications</h2>
+                <ul class="space-y-4">
+                    {% for pub in publications %}
+                    <li class="border-l-4 border-primary pl-4">
+                        <p class="font-semibold">{{ pub.titolo }}</p>
+                        <p class="text-sm text-base-content/70">{{ pub.autori }}</p>
+                        <p class="text-sm text-base-content/70">
+                            {% if pub.venue_display %}<em>{{ pub.venue_display }}</em>, {% endif %}{{ pub.anno|default:'' }}
+                        </p>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <a href="{% url 'publications' %}?author={{ profile.user.username }}" class="btn btn-primary btn-sm mt-6">
+                    <i data-lucide="book-open" class="h-4 w-4"></i>
+                    {% if publication_count > publications|length %}All {{ publication_count }} publications{% else %}Search these publications{% endif %}
+                </a>
+            </section>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

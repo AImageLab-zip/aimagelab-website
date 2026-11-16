@@ -1,0 +1,84 @@
+{% extends "main/base_with_sidebar.html" %}
+{% load static %}
+
+{% block title %}Personal Page - AImageLab{% endblock %}
+
+{% block hero_title %}Your Personal Page{% endblock %}
+
+{% block hero_description %}
+A public page of your own on the AImageLab site. It is optional and you can take it down at any time.
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'main/vendor/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+<link rel="stylesheet" href="{% static 'main/vendor/easymde-2.21.0/easymde.min.css' %}">
+{% endblock %}
+
+{% block main_content %}
+    <form method="post" id="page-form">
+        {% csrf_token %}
+        <div class="card bg-base-200">
+            <div class="card-body">
+                <h2 class="card-title text-primary mb-2">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                    Page content
+                </h2>
+                <p class="text-sm text-base-content/70 mb-4">
+                    Your name, role, photo, biography, links and publications are added automatically
+                    from <a class="link" href="{% url 'edit_profile' %}">your profile</a>.
+                    Write here anything else you want on the page (Markdown).
+                </p>
+                <textarea id="page_content" name="page_content" rows="16" class="textarea w-full">{{ profile.page_content }}</textarea>
+
+                <label class="label cursor-pointer justify-start gap-3 mt-4">
+                    <input type="checkbox" name="has_personal_page" class="toggle toggle-primary" {% if profile.has_personal_page %}checked{% endif %}>
+                    <span>Publish my personal page</span>
+                </label>
+                <p class="text-sm text-base-content/70">
+                    {% if profile.has_personal_page %}
+                    Published at <a class="link" href="{{ profile.get_absolute_url }}">{{ request.scheme }}://{{ request.get_host }}{{ profile.get_absolute_url }}</a>
+                    {% else %}
+                    Not published. When switched on, the page will be at
+                    <code>{{ request.scheme }}://{{ request.get_host }}{{ profile.get_absolute_url }}</code>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="card bg-base-200 mt-6">
+            <div class="card-body">
+                <div class="flex flex-wrap gap-3 justify-end">
+                    <button type="submit" name="action" value="save" class="btn btn-primary w-full sm:w-auto">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        Save
+                    </button>
+                    {% if profile.has_personal_page or profile.page_content %}
+                    <button type="submit" name="action" value="delete" class="btn btn-error btn-outline w-full sm:w-auto"
+                            onclick="return confirm('Delete your personal page and its content? This cannot be undone.');">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        Delete page
+                    </button>
+                    {% endif %}
+                    <a href="{% url 'edit_profile' %}" class="btn btn-ghost w-full sm:w-auto">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        Back to profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'main/vendor/easymde-2.21.0/easymde.min.js' %}"></script>
+<script>
+    new EasyMDE({
+        autoDownloadFontAwesome: false,
+        element: document.getElementById('page_content'),
+        spellChecker: false,
+        forceSync: true,
+        status: false,
+        toolbar: ['bold', 'italic', 'heading', '|', 'quote', 'unordered-list', 'ordered-list', '|', 'link', 'table', '|', 'preview', 'guide'],
+    });
+</script>
+{% endblock %}

@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.utils.text import slugify
 from phonenumber_field.modelfields import PhoneNumberField
 
 from .images import spec
@@ -93,7 +94,23 @@ class UserProfile(models.Model):
         verbose_name="Legacy IRIS ID",
         help_text="Legacy field for backward compatibility"
     )
-    
+
+    # Personal page (issue #21). Opt-in: a profile has a page of its own at
+    # /people/<slug>/ only when its owner (or staff) switches it on.
+    slug = models.SlugField(
+        max_length=160, unique=True, null=True, blank=True,
+        help_text="URL of the personal page: /people/<slug>/. Filled in from the name.",
+    )
+    has_personal_page = models.BooleanField(
+        default=False, help_text="Publish a personal page for this person")
+    page_content = models.TextField(
+        blank=True, help_text="Body of the personal page (Markdown)")
+    legacy_person_id = models.PositiveIntegerField(
+        null=True, blank=True, unique=True,
+        verbose_name="Legacy person ID",
+        help_text="ID of this person on the old AImageLab site, so old links can be redirected",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -105,6 +122,29 @@ class UserProfile(models.Model):
     
     def get_full_name(self):
         return self.user.get_full_name() or self.user.username
+
+    def make_slug(self):
+        """A slug from the person's name that no other profile uses."""
+        base = slugify(self.user.get_full_name()) or slugify(self.user.username) or 'person'
+        base = base[:150]
+        slug, n = base, 2
+        while UserProfile.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+            slug, n = f'{base}-{n}', n + 1
+        return slug
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self.make_slug()
+            if kwargs.get('update_fields') is not None:
+                kwargs['update_fields'] = set(kwargs['update_fields']) | {'slug'}
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('person_page', args=[self.slug])
+
+    @property
+    def personal_page_is_public(self):
+        return bool(self.has_personal_page and self.is_visible and self.slug)
     
     def get_title(self):
         match self.role:

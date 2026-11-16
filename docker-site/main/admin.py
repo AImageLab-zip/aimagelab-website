@@ -32,6 +32,11 @@ class UserProfileAdmin(admin.ModelAdmin):
         ('Contact', {
             'fields': ('phone_number', 'website', 'google_scholar', 'github', 'linkedin')
         }),
+        ('Personal page', {
+            'fields': ('has_personal_page', 'slug', 'page_content', 'legacy_person_id'),
+            'classes': ('collapse',),
+            'description': 'Public page at /people/&lt;slug&gt;/, shown only when switched on and the profile is visible',
+        }),
         ('Metadata', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
