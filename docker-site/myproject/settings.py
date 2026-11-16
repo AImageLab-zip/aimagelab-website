@@ -417,6 +417,13 @@ MAILINGLIST_SMTP_PORT = int(os.environ.get('MAILINGLIST_SMTP_PORT', '587'))
 # Display name used in the From header of outgoing emails
 MAILINGLIST_FROM_NAME = os.environ.get('MAILINGLIST_FROM_NAME', 'AImageLab Mailing List')
 
+# What to do with a reply to a message the list has already distributed,
+# when the reply is itself addressed to the list:
+#   moderate  hold it for a moderator, whoever sent it (default)
+#   allow     treat it like any other message (trusted senders auto-approved)
+# "allow" brings back issue #29: one Reply All reaches every subscriber.
+MAILINGLIST_REPLY_POLICY = os.environ.get('MAILINGLIST_REPLY_POLICY', 'moderate')
+
 # Public-facing list address used for plus-addressing routing
 # e.g. aimagelab@unimore.it → aimagelab+staff@unimore.it
 MAILINGLIST_LIST_ADDRESS = os.environ.get('MAILINGLIST_LIST_ADDRESS', 'aimagelab@unimore.it')

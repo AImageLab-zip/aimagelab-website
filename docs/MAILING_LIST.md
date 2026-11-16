@@ -48,6 +48,11 @@ list address in Cc, so:
 - To write to the whole group again, address a new message (or add the list
   address by hand, e.g. `aimagelab+strutturati@unimore.it`).
 
+If a reply does reach the list address (added by hand, or sent from a copy
+delivered before this change), it is **held for moderation** even when the
+sender is trusted, and shown with a "Reply" badge. Set
+`MAILINGLIST_REPLY_POLICY=allow` to treat replies like any other message.
+
 Until November 2026 the list address was added in Cc, so Reply All sent the
 reply to every subscriber (issue #29).
 

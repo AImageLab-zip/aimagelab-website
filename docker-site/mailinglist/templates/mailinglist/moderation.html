@@ -36,6 +36,7 @@
                                 {% if email.matched_routes.all %}
                                 {% for route in email.matched_routes.all %}<span class="badge badge-info badge-sm">+{{ route.tag }}</span> {% endfor %}
                                 {% endif %}
+                                {% if email.is_reply %}<span class="badge badge-neutral badge-sm" title="Reply to a message this list already sent: approve only if everyone should get it">Reply</span>{% endif %}
                                 <span class="badge badge-warning badge-sm">Pending</span>
                                 <span class="text-xs text-base-content/50">
                                     {{ email.received_at|timesince }} ago

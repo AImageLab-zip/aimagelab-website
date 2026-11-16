@@ -6,6 +6,7 @@ Handles:
 - Resolving recipients based on subject-role routing
 - Progressive sending via SMTP
 """
+import re
 import email
 import imaplib
 import logging
@@ -105,6 +106,26 @@ def _is_direct_recipient(msg):
     return False
 
 
+_MESSAGE_ID = re.compile(r'<[^<>\s]+>')
+
+
+def _is_reply_to_list_mail(msg):
+    """True if msg answers a message this list has already distributed.
+
+    Every copy we send carries the original Message-ID in References (see
+    _build_outgoing_message), and mail clients copy References into a reply,
+    so the original's id shows up in the reply's References/In-Reply-To.
+    """
+    ids = set(_MESSAGE_ID.findall(
+        f"{msg.get('In-Reply-To', '') or ''} {msg.get('References', '') or ''}"
+    ))
+    if not ids:
+        return False
+    return IncomingEmail.objects.filter(
+        message_id__in=ids, status__in=('approved', 'auto_approved')
+    ).exists()
+
+
 def _persist_email(msg, raw_bytes):
     """Parse an email.message.Message and save as IncomingEmail."""
     message_id = msg.get('Message-ID', '')
@@ -189,6 +210,15 @@ def _persist_email(msg, raw_bytes):
     # Match route via plus-addressing in To/Cc headers
     routes = _match_routes(msg)
 
+    # A reply to list mail is not redistributed on the sender's trust alone:
+    # one careless Reply All would reach every subscriber (issue #29). It
+    # waits for a moderator unless the policy says otherwise.
+    is_reply = _is_reply_to_list_mail(msg)
+    if is_reply and getattr(settings, 'MAILINGLIST_REPLY_POLICY', 'moderate') != 'allow':
+        if is_trusted:
+            logger.info("Holding reply to list mail for moderation: %s from %s", subject, sender)
+        is_trusted = False
+
     incoming = IncomingEmail.objects.create(
         message_id=message_id,
         sender=sender,
@@ -199,6 +229,7 @@ def _persist_email(msg, raw_bytes):
         body_html=body_html,
         raw_headers=str(msg.items()),
         status='auto_approved' if is_trusted else 'pending',
+        is_reply=is_reply,
     )
     incoming.matched_routes.set(routes)
 
