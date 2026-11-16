@@ -16,6 +16,11 @@ mysqlclient==2.3.0
 PyYAML==6.0.3
 djangorestframework==3.18.3
 celery==5.6.3
+# celery only asks for kombu>=5.6.0, so kombu floated to 5.7.0, which moved
+# `packaging` (imported by kombu/transport/redis.py) into its "redis" extra.
+# Without the extra: ModuleNotFoundError on the first .delay(). Pin kombu and
+# request the extra explicitly; it also bounds redis to >=6.4,<9.
+kombu[redis]==5.7.0
 django-celery-beat==2.9.0
 redis==8.1.0
 django-redis==7.0.0
