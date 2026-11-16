@@ -144,17 +144,17 @@ Explore our research publications: papers, articles, and conference proceedings 
 
     {% if author_stats %}
     {% comment %}
-    Internal counters (issue #13), shown to logged-in users when an author is
-    selected. They follow every other active filter. Positions come from the
-    ordered IRIS author string, so papers that could not be placed are
-    reported instead of being silently left out.
+    Private counters (issue #13), shown only to a logged-in member who has
+    selected their own name as author. They follow every other active
+    filter. Positions come from the ordered IRIS author string, so papers
+    that could not be placed are reported instead of being silently left out.
     {% endcomment %}
     <div class="card bg-base-200 mb-4">
         <div class="card-body py-4 px-6">
             <h2 class="font-semibold flex items-center gap-2">
                 <i data-lucide="bar-chart-3" class="w-4 h-4 text-primary"></i>
                 {% if selected_author %}{{ selected_author.get_full_name }}{% else %}{{ author_username }}{% endif %}, in the current selection
-                <span class="badge badge-ghost badge-sm">internal</span>
+                <span class="badge badge-error badge-sm">only you can see this</span>
             </h2>
             <dl class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-3 mt-2">
                 <div><dt class="text-xs text-base-content/60">Publications</dt><dd class="text-2xl font-bold text-primary">{{ author_stats.total }}</dd></div>

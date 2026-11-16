@@ -339,10 +339,11 @@ def order_publications(qs):
 def author_statistics(publications_qs, username):
     """Counts for one lab member within an already filtered set (issue #13).
 
-    Internal use: only computed for logged-in users. First/last mean
-    first-listed and last-listed (IRIS has no equal-contribution flag), and
-    `unresolved` is how many papers could not be placed, so the reader can
-    see how far the other numbers can be trusted.
+    Private: only computed for the member themselves (see publications()).
+    First/last mean first-listed and last-listed (IRIS has no
+    equal-contribution flag), and `unresolved` is how many papers could not
+    be placed, so the reader can see how far the other numbers can be
+    trusted.
     """
     from . import authorship
     links = UserProfilePublicationIRIS.objects.filter(
@@ -497,8 +498,11 @@ def publications(request):
         except UserProfile.DoesNotExist:
             pass
     
+    # Authorship counters are private: shown only when a logged-in member
+    # selects their own name, never for someone else (staff included).
     author_stats = None
-    if author_username and request.user.is_authenticated:
+    if (author_username and request.user.is_authenticated
+            and request.user.get_username() == author_username):
         author_stats = author_statistics(publications_qs, author_username)
 
     return render(request, 'main/publications.html', {
