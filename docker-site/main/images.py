@@ -45,6 +45,51 @@ def spec(source, width, height=None, crop=False):
     )
 
 
+# Raster formats accepted from a browser upload. SVG is deliberately absent:
+# it is an XML document that can carry script, and media is served from the
+# site's own origin.
+UPLOAD_FORMATS = {'JPEG': '.jpg', 'PNG': '.png', 'GIF': '.gif', 'WEBP': '.webp'}
+# Refuse absurd dimensions before decoding them (decompression bombs).
+MAX_UPLOAD_PIXELS = 80_000_000
+
+
+def validate_image_upload(uploaded):
+    """Check that an upload really is a raster image; return it renamed.
+
+    The stored extension decides the Content-Type the file is later served
+    with, so a file called `x.html` must never be stored just because the
+    form field was meant for images. The content is verified with Pillow and
+    the extension is rewritten to match the detected format.
+
+    Raises ValidationError; the views turn that into a message for the user.
+    """
+    import os
+    from django.core.exceptions import ValidationError
+
+    try:
+        uploaded.seek(0)
+        with Image.open(uploaded) as img:
+            fmt = img.format
+            width, height = img.size
+            img.verify()
+    except Exception:
+        raise ValidationError('The uploaded file is not a valid image.')
+    finally:
+        try:
+            uploaded.seek(0)
+        except Exception:
+            pass
+
+    if fmt not in UPLOAD_FORMATS:
+        raise ValidationError('Unsupported image format: use JPEG, PNG, GIF or WebP.')
+    if width * height > MAX_UPLOAD_PIXELS:
+        raise ValidationError('The image is too large.')
+
+    stem = os.path.splitext(os.path.basename(uploaded.name or 'image'))[0] or 'image'
+    uploaded.name = stem + UPLOAD_FORMATS[fmt]
+    return uploaded
+
+
 def normalise_upload(uploaded, max_side=MAX_UPLOAD_SIDE):
     """Return an uploaded image with EXIF rotation applied and its longest
     side capped at `max_side`, as a ContentFile carrying the original name.

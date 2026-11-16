@@ -5,6 +5,10 @@ from django.contrib import messages as django_messages
 from django.http import JsonResponse, HttpResponse, Http404
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils import timezone
+from django.core.validators import URLValidator
+import mimetypes
+import posixpath
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
@@ -24,7 +28,7 @@ from django.http import FileResponse, Http404
 from django.conf import settings
 from django.utils.text import slugify
 import os
-from .images import normalise_upload
+from .images import normalise_upload, validate_image_upload
 from .tasks import sync_user_task, import_iris_publications, import_iris_profile_photos, is_import_running
 import os
 
@@ -38,8 +42,44 @@ PROJECTS_PER_PAGE = 20
 
 def _build_login_url(request):
     """Build a login URL that returns the user to the current page."""
-    next_path = quote(request.get_full_path(), safe='/:?=&')
+    # Encode '?', '&' and '=' too: left as-is, everything after the first
+    # '&' of the original URL became a separate parameter of the login URL
+    # and was lost on the way back.
+    next_path = quote(request.get_full_path(), safe='/')
     return f"{reverse('login')}?next={next_path}"
+
+
+_validate_http_url = URLValidator(schemes=['http', 'https'])
+
+
+def _http_url(value):
+    """Raise ValidationError unless `value` is an absolute http(s) URL.
+
+    Used for every user-supplied URL that ends up in an href or a redirect:
+    anything else (javascript:, data:, ...) would run in this site's origin.
+    """
+    _validate_http_url(value)
+    return value
+
+
+def _to_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_next(request, target):
+    """Return `target` if it is a same-site URL, else ''.
+
+    `next` comes from the query string, so following it unchecked would be
+    an open redirect.
+    """
+    if target and url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return target
+    return ''
 
 
 def intranet_required(view_func):
@@ -141,8 +181,9 @@ def news(request):
     search_query = request.GET.get('search', '')
     category_query = request.GET.get('category', '')
     
-    # Filter posts based on authentication
-    if request.user.is_authenticated:
+    # Drafts are listed for staff only, the same rule post_single applies:
+    # any other logged-in account used to see draft titles and summaries.
+    if request.user.is_authenticated and request.user.is_staff:
         posts = Post.objects.all()
     else:
         posts = Post.objects.filter(is_published=True)
@@ -302,7 +343,12 @@ def filter_publications(request):
             qs = qs.filter(keywords__contains=[keyword])
 
     if params['year']:
-        qs = qs.filter(anno=params['year'])
+        # A non-numeric year used to reach the IntegerField lookup and raise
+        # ValueError (HTTP 500); it is now ignored like any unknown filter.
+        try:
+            qs = qs.filter(anno=int(params['year']))
+        except (TypeError, ValueError):
+            params['year'] = ''
 
     if params['journal']:
         if mode == 'conference':
@@ -544,7 +590,7 @@ def privacy_policy(request):
 @is_staff_required
 def post_form(request, slug=None):
     """Add or edit a post."""
-    post = Post.objects.get(slug=slug) if slug else None
+    post = get_object_or_404(Post, slug=slug) if slug else None
     categories = Category.objects.all().order_by('name')
 
     def make_unique_post_slug(raw_slug, exclude_post_id=None):
@@ -571,19 +617,42 @@ def post_form(request, slug=None):
     
     if request.method == 'POST':
         action = request.POST.get('action')
-        title = request.POST.get('title')
+        title = (request.POST.get('title') or '').strip()
         submitted_slug = request.POST.get('slug', '').strip()
         description = request.POST.get('description', '')
-        content = request.POST.get('content')
+        content = request.POST.get('content') or ''
         cover = request.FILES.get('cover')
-        if cover:
-            # Apply EXIF rotation and cap very large originals (main/images.py).
-            cover = normalise_upload(cover)
         thumbnail = request.FILES.get('thumbnail')
-        category_ids = request.POST.getlist('categories')
+        # A missing title used to end in an IntegrityError (HTTP 500), and
+        # cover/thumbnail were stored whatever they contained - both live in
+        # publicly served directories.
+        form_error = None
+        if not title:
+            form_error = 'A title is required.'
+        elif len(title) > Post._meta.get_field('title').max_length:
+            form_error = 'The title is too long.'
+        if form_error:
+            django_messages.error(request, form_error)
+            return redirect(request.get_full_path())
+        # A rejected image is dropped with a warning instead of aborting, so
+        # the text of the post is never lost over a bad file.
+        try:
+            if cover:
+                # Apply EXIF rotation and cap very large originals (main/images.py).
+                cover = normalise_upload(validate_image_upload(cover))
+        except ValidationError as exc:
+            django_messages.warning(request, 'Cover image ignored. ' + ' '.join(exc.messages))
+            cover = None
+        try:
+            if thumbnail:
+                thumbnail = validate_image_upload(thumbnail)
+        except ValidationError as exc:
+            django_messages.warning(request, 'Thumbnail ignored. ' + ' '.join(exc.messages))
+            thumbnail = None
+        category_ids = [c for c in request.POST.getlist('categories') if c.isdigit()]
         attachment_names = request.POST.getlist('new_attachment_names')
         attachment_files = request.FILES.getlist('new_attachments')
-        remove_attachment_ids = request.POST.getlist('remove_attachment_ids')
+        remove_attachment_ids = [a for a in request.POST.getlist('remove_attachment_ids') if a.isdigit()]
         is_pinned = request.POST.get('is_pinned') == 'on'
         
         # Handle event_date
@@ -664,6 +733,8 @@ def post_form(request, slug=None):
             if not attachment_name:
                 attachment_name = os.path.splitext(attachment_file.name)[0]
 
+            # Keep only the base name: the client chooses this string.
+            attachment_file.name = os.path.basename(attachment_file.name.replace('\\', '/')) or 'attachment'
             PostAttachment.objects.create(
                 post=post,
                 name=attachment_name[:200],
@@ -774,12 +845,15 @@ def login_view(request):
         if user is not None:
             login(request, user)
             django_messages.success(request, 'Login successful!')
-            return redirect('home')
+            return redirect(_safe_next(request, request.POST.get('next')) or 'home')
         else:
             django_messages.error(request, 'Invalid credentials.')
     
     context = {
-        'OIDC_PROVIDER_NAME': getattr(settings, 'OIDC_PROVIDER_NAME', 'OIDC Provider')
+        'OIDC_PROVIDER_NAME': getattr(settings, 'OIDC_PROVIDER_NAME', 'OIDC Provider'),
+        # Where to go after signing in. Validated here so the template never
+        # echoes an off-site URL into the form or the OIDC link.
+        'next': _safe_next(request, request.POST.get('next') or request.GET.get('next')),
     }
     return render(request, 'main/login.html', context)
 
@@ -843,28 +917,58 @@ def edit_profile(request):
         profile.google_scholar = request.POST.get('google_scholar', '').strip()
         profile.github = request.POST.get('github', '').strip()
         profile.linkedin = request.POST.get('linkedin', '').strip()
-        profile.phone_number = request.POST.get('phone_number', '').strip()
+        profile.phone_number = request.POST.get('phone_number', '').strip() or None
+
+        # These values are printed as href="..." on the public People page.
+        # Saving them unchecked allowed a `javascript:` link there (stored
+        # XSS) and an unparsable phone number; run the model validators and
+        # refuse the whole edit if any of them fails.
+        checked = ['website', 'google_scholar', 'github', 'linkedin', 'phone_number']
+        try:
+            profile.clean_fields(exclude=[
+                f.name for f in profile._meta.fields if f.name not in checked])
+            for name in checked[:4]:
+                value = getattr(profile, name)
+                if value:
+                    _http_url(value)
+        except ValidationError as exc:
+            labels = {'website': 'Website', 'google_scholar': 'Google Scholar',
+                      'github': 'GitHub', 'linkedin': 'LinkedIn',
+                      'phone_number': 'Phone number'}
+            if hasattr(exc, 'message_dict'):
+                for name, errors in exc.message_dict.items():
+                    django_messages.error(request, f"{labels.get(name, name)}: {' '.join(errors)}")
+            else:
+                django_messages.error(request, ' '.join(exc.messages))
+            return redirect('edit_profile')
 
         # Handle avatar upload
         if 'avatar' in request.FILES and request.FILES['avatar']:
-            # Delete old avatar if exists
-            if profile.avatar:
-                profile.avatar.delete()
-            # Save new avatar
             avatar_file = request.FILES['avatar']
-            
-            # Open and resize image. 1024 px, not 256: the profile modal shows
-            # the photo at 256 CSS px, i.e. 512 device px on a 2x screen, and
-            # the pages serve resized copies anyway (UserProfile.avatar_192/512).
-            img = ImageOps.exif_transpose(Image.open(avatar_file))
-            img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
-            # Convert RGBA/P/LA images to RGB (JPEG doesn't support transparency)
-            if img.mode in ('RGBA', 'P', 'LA'):
-                img = img.convert('RGB')
-            img_io = BytesIO()
-            img.save(img_io, format='JPEG', quality=85)
-            img_io.seek(0)
-            profile.avatar.save(f"{request.user.username}_avatar.jpg", ContentFile(img_io.getvalue()))
+            # Decode first, delete second: an unreadable upload used to raise
+            # (HTTP 500) after the current photo had already been deleted.
+            try:
+                validate_image_upload(avatar_file)
+                # 1024 px, not 256: the profile modal shows the photo at 256
+                # CSS px, i.e. 512 device px on a 2x screen, and the pages
+                # serve resized copies anyway (UserProfile.avatar_192/512).
+                img = ImageOps.exif_transpose(Image.open(avatar_file))
+                img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
+                # JPEG has no alpha channel and no palette
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                img_io = BytesIO()
+                img.save(img_io, format='JPEG', quality=85)
+            except ValidationError as exc:
+                django_messages.error(request, ' '.join(exc.messages))
+                return redirect('edit_profile')
+            except Exception:
+                django_messages.error(request, 'The uploaded photo could not be read.')
+                return redirect('edit_profile')
+            if profile.avatar:
+                profile.avatar.delete(save=False)
+            profile.avatar.save(f"{request.user.username}_avatar.jpg",
+                                ContentFile(img_io.getvalue()), save=False)
 
         # Handle avatar removal
         if request.POST.get('remove_avatar') == 'on' and profile.avatar:
@@ -899,15 +1003,21 @@ def add_user(request):
             'github': request.POST.get('github', ''),
             'linkedin': request.POST.get('linkedin', ''),
             'phone_number': request.POST.get('phone_number', ''),
-            'display_order': int(request.POST.get('display_order', 0)),
+            'display_order': _to_int(request.POST.get('display_order'), 0),
             'is_visible': request.POST.get('is_visible', 'on') == 'on',
         }
         
         # Handle avatar upload - save file and pass path
         if 'avatar' in request.FILES:
-            avatar_file = request.FILES['avatar']
-            # Save temporarily and store the path
-            filename = f"avatars/{user_data['username']}_{avatar_file.name}"
+            # avatars/ is served without login, so only a verified raster
+            # image may be written there, under a name built from safe parts.
+            try:
+                avatar_file = validate_image_upload(request.FILES['avatar'])
+            except ValidationError as exc:
+                django_messages.error(request, ' '.join(exc.messages))
+                return redirect('add_user')
+            safe_user = slugify(user_data['username'] or '') or 'user'
+            filename = f"avatars/{safe_user}_{avatar_file.name}"
             path = default_storage.save(filename, ContentFile(avatar_file.read()))
             user_data['avatar_path'] = path
         
@@ -973,43 +1083,72 @@ def sync_ldap(request):
     ):
         next_url = 'home'
     return redirect(next_url)
+# Types a browser may render in place when they come from MEDIA_ROOT. Media
+# is served from the site's own origin, so anything that can carry script
+# (HTML, SVG, XML, ...) must be downloaded instead of displayed: otherwise an
+# uploaded file, or an attachment someone e-mailed to the list, runs with the
+# session of whoever opens its URL.
+INLINE_MEDIA_TYPES = {
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif',
+    'image/x-icon', 'image/vnd.microsoft.icon', 'application/pdf',
+}
+
+# Directories that are publicly visible (used on unauthenticated pages)
+PUBLIC_MEDIA_PREFIXES = (
+    'avatars/',
+    'blog_covers/',
+    'blog_thumbnails/',
+    'project_logos/',
+    # Resized copies of the above (imagekit writes CACHE/images/<source
+    # path>/<hash>.webp). Listed per directory, not as 'CACHE/', so the
+    # copies of login-only images (rooms, wiki) stay login-only.
+    'CACHE/images/avatars/',
+    'CACHE/images/blog_covers/',
+    'CACHE/images/blog_thumbnails/',
+    'CACHE/images/project_logos/',
+)
+# Raw attachments of inbound list mail, moderated or not: moderators only.
+STAFF_MEDIA_PREFIXES = ('mailinglist/',)
+
+
 def serve_media(request, path):
     """Serve media files with access control."""
-    # Directories that are publicly visible (used on unauthenticated pages)
-    PUBLIC_PREFIXES = (
-        'avatars/',
-        'blog_covers/',
-        'blog_thumbnails/',
-        'project_logos/',
-        # Resized copies of the above (imagekit writes CACHE/images/<source
-        # path>/<hash>.webp). Listed per directory, not as 'CACHE/', so the
-        # copies of login-only images (rooms, wiki) stay login-only.
-        'CACHE/images/avatars/',
-        'CACHE/images/blog_covers/',
-        'CACHE/images/blog_thumbnails/',
-        'CACHE/images/project_logos/',
-    )
+    # Resolve '.' and '..' BEFORE the prefix test. The test used to run on
+    # the raw path, so 'avatars/../wiki_images/x.png' counted as public and
+    # was then opened from the login-only directory.
+    path = posixpath.normpath(path.replace('\\', '/')).lstrip('/')
+    if path in ('', '.') or path.startswith('../') or path == '..' or '\x00' in path:
+        raise Http404("File not found")
 
-    # Allow public access only to explicitly public media directories;
-    # everything else requires authentication.
-    if not path.startswith(PUBLIC_PREFIXES):
+    if path.startswith(STAFF_MEDIA_PREFIXES):
+        if not (request.user.is_authenticated and request.user.is_staff):
+            raise Http404("File not found")
+    elif not path.startswith(PUBLIC_MEDIA_PREFIXES):
+        # Everything not explicitly public requires authentication.
         if not request.user.is_authenticated:
             raise Http404("File not found")
 
-    file_path = os.path.join(settings.MEDIA_ROOT, path)
+    media_root = os.path.realpath(settings.MEDIA_ROOT)
+    file_path = os.path.realpath(os.path.join(media_root, path))
 
-    # Security check: ensure the file is within MEDIA_ROOT
-    if not os.path.abspath(file_path).startswith(os.path.abspath(settings.MEDIA_ROOT)):
-        raise Http404("Invalid file path")
-
-    if not os.path.exists(file_path):
+    # Containment check on the resolved path. commonpath, not startswith:
+    # '/app/media_old' starts with '/app/media' but is not inside it.
+    if os.path.commonpath([media_root, file_path]) != media_root:
         raise Http404("File not found")
 
     if not os.path.isfile(file_path):
-        raise Http404("Not a file")
+        raise Http404("File not found")
 
-    # Serve the file
-    return FileResponse(open(file_path, 'rb'))
+    content_type = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
+    inline = content_type in INLINE_MEDIA_TYPES
+    response = FileResponse(
+        open(file_path, 'rb'),
+        as_attachment=not inline,
+        filename=os.path.basename(file_path),
+        content_type=content_type if inline else 'application/octet-stream',
+    )
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 @ratelimit(key='user', rate='3/h', method='POST', block=True)
@@ -1162,7 +1301,7 @@ def room_detail(request, room_id):
     room = get_object_or_404(MeetingRoom, pk=room_id, is_active=True)
     
     # Get upcoming reservations for this room
-    now = datetime.now()
+    now = timezone.now()
     upcoming_reservations = RoomReservation.objects.filter(
         room=room,
         end_time__gte=now
@@ -1185,7 +1324,7 @@ def create_reservation(request):
         end_time = request.POST.get('end_time')
         
         try:
-            room = MeetingRoom.objects.get(pk=room_id, is_active=True)
+            room = MeetingRoom.objects.get(pk=_to_int(room_id, 0), is_active=True)
             
             # Parse datetimes
             start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
@@ -1221,12 +1360,12 @@ def create_reservation(request):
             else:
                 error_list = [str(e)]
             return JsonResponse({'success': False, 'error': ' '.join(error_list)}, status=400)
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        except (TypeError, ValueError, AttributeError):
+            return JsonResponse({'success': False, 'error': 'Invalid or missing date/time.'}, status=400)
     
-    # GET request - show form
-    rooms = MeetingRoom.objects.filter(is_active=True).order_by('name')
-    return render(request, 'main/create_reservation.html', {'rooms': rooms})
+    # Reservations are made from the calendar dialog; there is no standalone
+    # form (the template this used to render does not exist: HTTP 500).
+    return redirect('rooms_calendar')
 
 
 @intranet_required
@@ -1273,15 +1412,11 @@ def edit_reservation(request, reservation_id):
             else:
                 error_list = [str(e)]
             return JsonResponse({'success': False, 'error': ' '.join(error_list)}, status=400)
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        except (TypeError, ValueError, AttributeError):
+            return JsonResponse({'success': False, 'error': 'Invalid or missing date/time.'}, status=400)
     
-    # GET request - show form
-    rooms = MeetingRoom.objects.filter(is_active=True).order_by('name')
-    return render(request, 'main/edit_reservation.html', {
-        'reservation': reservation,
-        'rooms': rooms,
-    })
+    # Edited from the calendar dialog; see create_reservation.
+    return redirect('rooms_calendar')
 
 
 @intranet_required
@@ -1315,6 +1450,24 @@ def go_redirect(request, src):
     return redirect(link.dest)
 
 
+def _short_link_dest_errors(dest):
+    """Problems with a short-link destination, as user-facing messages.
+
+    The destination is shown as a link to every staff member and followed by
+    /go/<code>; it was stored unchecked, so `javascript:...` became a
+    clickable link in the manager and other schemes failed at redirect time.
+    """
+    if not dest:
+        return []
+    if len(dest) > ShortLink._meta.get_field('dest').max_length:
+        return ['Destination URL is too long.']
+    try:
+        _http_url(dest)
+    except ValidationError:
+        return ['Destination must be a full http:// or https:// URL.']
+    return []
+
+
 def go_links(request):
     """Public landing page for unauthenticated users; full manager for authenticated ones."""
     import re as _re
@@ -1340,8 +1493,10 @@ def go_links(request):
                 errors.append('Destination URL is required.')
             if src and ShortLink.objects.filter(src=src).exists():
                 errors.append(f'Short code "{src}" is already taken.')
-            if src and not _re.match(r'^[a-z0-9][-a-z0-9_.]*[a-z0-9.]?$', src):
-                errors.append('Short code must contain only lowercase letters, numbers, hyphens, underscores and dots.')
+            if src and not _re.fullmatch(r'[a-z0-9][-a-z0-9_.]{0,99}', src):
+                errors.append('Short code must contain only lowercase letters, numbers, hyphens, underscores and dots (max 100).')
+            errors.extend(_short_link_dest_errors(dest))
+            description = description[:300]
 
             if errors:
                 for err in errors:
@@ -1368,8 +1523,10 @@ def go_links(request):
                 errors.append('Destination URL is required.')
             if src and ShortLink.objects.filter(src=src).exclude(pk=link.pk).exists():
                 errors.append(f'Short code "{src}" is already taken.')
-            if src and not _re.match(r'^[a-z0-9][-a-z0-9_.]*[a-z0-9.]?$', src):
-                errors.append('Short code must contain only lowercase letters, numbers, hyphens, underscores and dots.')
+            if src and not _re.fullmatch(r'[a-z0-9][-a-z0-9_.]{0,99}', src):
+                errors.append('Short code must contain only lowercase letters, numbers, hyphens, underscores and dots (max 100).')
+            errors.extend(_short_link_dest_errors(dest))
+            description = description[:300]
 
             if errors:
                 for err in errors:
@@ -1481,6 +1638,21 @@ def wiki_page(request, slug):
     })
 
 
+def _visible_wiki_page(request, slug):
+    """The page, or 404 if it is unpublished and not the user's to see.
+
+    wiki_page hides unpublished pages, but the edit form, the history and
+    the stored versions returned their full text to any logged-in user.
+    Staff and the page's creator keep access so a page can be worked on
+    before it is published.
+    """
+    page = get_object_or_404(WikiPage, slug=slug)
+    if not page.is_published and not (
+            request.user.is_staff or page.created_by_id == request.user.id):
+        raise Http404('No WikiPage matches the given query.')
+    return page
+
+
 @intranet_required
 def wiki_create(request):
     """Create a new wiki page"""
@@ -1517,8 +1689,11 @@ def wiki_create(request):
         if parent_id:
             try:
                 parent = WikiPage.objects.get(pk=parent_id)
-            except WikiPage.DoesNotExist:
+            except (WikiPage.DoesNotExist, ValueError):
                 pass
+        if len(title) > WikiPage._meta.get_field('title').max_length:
+            django_messages.error(request, 'The title is too long (200 characters at most).')
+            return redirect('wiki_create')
         
         page = WikiPage.objects.create(
             title=title,
@@ -1551,7 +1726,7 @@ def wiki_create(request):
 @intranet_required
 def wiki_edit(request, slug):
     """Edit a wiki page - direct edit or suggest changes"""
-    page = get_object_or_404(WikiPage, slug=slug)
+    page = _visible_wiki_page(request, slug)
     
     # Check if user can directly edit (staff or original creator)
     can_direct_edit = request.user.is_staff or page.created_by == request.user
@@ -1564,6 +1739,9 @@ def wiki_edit(request, slug):
         
         if not title or not content:
             django_messages.error(request, 'Title and content are required.')
+            return redirect('wiki_edit', slug=slug)
+        if len(title) > WikiPage._meta.get_field('title').max_length:
+            django_messages.error(request, 'The title is too long (200 characters at most).')
             return redirect('wiki_edit', slug=slug)
         
         if action == 'direct_edit' and can_direct_edit:
@@ -1598,7 +1776,7 @@ def wiki_edit(request, slug):
 @intranet_required
 def wiki_history(request, slug):
     """View version history of a wiki page"""
-    page = get_object_or_404(WikiPage, slug=slug)
+    page = _visible_wiki_page(request, slug)
     
     versions = page.versions.select_related('edited_by').order_by('-edited_at')
     
@@ -1621,7 +1799,7 @@ def wiki_history(request, slug):
 @intranet_required
 def wiki_version(request, slug, version_id):
     """View a specific version of a wiki page"""
-    page = get_object_or_404(WikiPage, slug=slug)
+    page = _visible_wiki_page(request, slug)
     version = get_object_or_404(WikiPageVersion, pk=version_id, page=page)
     
     return render(request, 'main/wiki_version.html', {
@@ -1709,6 +1887,12 @@ def wiki_change_request_detail(request, request_id):
         django_messages.error(request, 'You do not have permission to view this request.')
         return redirect('wiki_change_requests')
     
+    # Only a pending request can be decided. Posting 'approve' again to an
+    # old request used to overwrite the page with that stale proposal.
+    if request.method == 'POST' and can_review and change_request.status != 'pending':
+        django_messages.error(request, 'This change request has already been reviewed.')
+        return redirect('wiki_change_request_detail', request_id=change_request.pk)
+
     if request.method == 'POST' and can_review:
         action = request.POST.get('action')
         review_notes = request.POST.get('review_notes', '').strip()
@@ -1716,7 +1900,7 @@ def wiki_change_request_detail(request, request_id):
         if action == 'approve':
             change_request.status = 'approved'
             change_request.reviewed_by = request.user
-            change_request.reviewed_at = datetime.now()
+            change_request.reviewed_at = timezone.now()
             change_request.review_notes = review_notes
             change_request.save()
             
@@ -1729,7 +1913,7 @@ def wiki_change_request_detail(request, request_id):
         elif action == 'reject':
             change_request.status = 'rejected'
             change_request.reviewed_by = request.user
-            change_request.reviewed_at = datetime.now()
+            change_request.reviewed_at = timezone.now()
             change_request.review_notes = review_notes
             change_request.save()
             
@@ -1754,10 +1938,13 @@ def wiki_upload_image(request):
             # Create WikiImage instance
             # Wiki images are embedded by URL in Markdown, so there is no
             # place to swap in a derivative: cap the stored file instead.
+            # Any logged-in user can upload here and the file is then served
+            # from this origin: without this check `evil.html` was accepted
+            # and stored as-is.
             wiki_image = WikiImage.objects.create(
-                image=normalise_upload(image_file, max_side=1600),
+                image=normalise_upload(validate_image_upload(image_file), max_side=1600),
                 uploaded_by=request.user,
-                description=description
+                description=description[:200]
             )
             
             # Return image URL for markdown insertion
@@ -1767,10 +1954,16 @@ def wiki_upload_image(request):
                 'id': wiki_image.id,
                 'markdown': f'![{description or "Image"}]({wiki_image.image.url})'
             })
-        except Exception as e:
+        except ValidationError as e:
             return JsonResponse({
                 'success': False,
-                'error': str(e)
+                'error': ' '.join(e.messages)
+            }, status=400)
+        except Exception:
+            logger.exception('Wiki image upload failed')
+            return JsonResponse({
+                'success': False,
+                'error': 'The image could not be saved.'
             }, status=400)
     
     return JsonResponse({
@@ -1844,7 +2037,9 @@ def publications_export(request, fmt):
     header_bits = [f'{len(publications)} publications']
     for label in ('search', 'year', 'journal', 'type', 'author'):
         if params.get(label):
-            header_bits.append(f'{label}={params[label]}')
+            # One line only: a newline in a filter value would otherwise
+            # end the comment and inject entries into the .bib file.
+            header_bits.append(f'{label}=' + ' '.join(str(params[label]).split()))
     header = 'AImageLab publications export - ' + '; '.join(header_bits)
     if total > EXPORT_MAX:
         header += f' (truncated from {total}; narrow the filters for the rest)'

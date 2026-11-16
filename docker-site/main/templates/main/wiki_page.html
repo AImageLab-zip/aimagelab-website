@@ -155,19 +155,31 @@
             fetch('/mailinglist/api/tag-recipients/?tag=' + encodeURIComponent(tag))
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
+                    // Everything from the response is inserted as text, never
+                    // as HTML: the tag comes from the page's own Markdown
+                    // (data-ml-tag is an allowed attribute) and the
+                    // addresses are typed in by users, so building markup
+                    // from them let a wiki author or a subscriber run
+                    // script in the reader's session.
+                    function el(tag, cls, text) {
+                        var node = document.createElement(tag);
+                        node.className = cls;
+                        node.textContent = text;
+                        return node;
+                    }
                     if (data.error) {
                         title.textContent = 'Error';
-                        body.innerHTML = '<p class="text-error py-4">' + data.error + '</p>';
+                        body.replaceChildren(el('p', 'text-error py-4', data.error));
                         return;
                     }
-                    title.innerHTML = 'aimagelab+' + data.tag
-                        + ' <span class="badge badge-ghost ml-1 font-normal text-sm">'
-                        + data.count + ' recipients</span>';
+                    title.replaceChildren(
+                        document.createTextNode('aimagelab+' + data.tag + ' '),
+                        el('span', 'badge badge-ghost ml-1 font-normal text-sm', data.count + ' recipients'));
                     desc.textContent = data.description;
                     if (data.recipients.length > 0) {
-                        body.innerHTML = data.recipients.map(function(e) {
-                            return '<div class="text-sm font-mono bg-base-200 rounded px-3 py-1.5">' + e + '</div>';
-                        }).join('');
+                        body.replaceChildren.apply(body, data.recipients.map(function(e) {
+                            return el('div', 'text-sm font-mono bg-base-200 rounded px-3 py-1.5', e);
+                        }));
                     } else {
                         body.innerHTML = '<p class="italic text-base-content/40 py-4">No recipients found.</p>';
                     }

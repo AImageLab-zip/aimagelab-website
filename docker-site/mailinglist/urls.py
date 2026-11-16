@@ -15,7 +15,7 @@ urlpatterns = [
     path('api/tag-recipients/', views.tag_recipients_api, name='tag_recipients_api'),
 
     # Unsubscribe (public, token-based)
-    path('unsubscribe/<str:token>/', views.unsubscribe, name='unsubscribe'),
+    path('unsubscribe/<uuid:token>/', views.unsubscribe, name='unsubscribe'),
 
     # External subscription (public)
     path('subscribe/', views.external_subscribe, name='external_subscribe'),

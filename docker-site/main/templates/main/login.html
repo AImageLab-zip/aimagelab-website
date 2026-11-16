@@ -13,7 +13,7 @@ Welcome to AImageLab - Please sign in to continue
     <div class="card bg-base-200">
         <div class="card-body">
 
-            <a href="{% url 'oidc_authentication_init' %}" class="btn btn-primary w-full btn-lg">
+            <a href="{% url 'oidc_authentication_init' %}{% if next %}?next={{ next|urlencode:'' }}{% endif %}" class="btn btn-primary w-full btn-lg">
                 <i data-lucide="shield" class="w-4 h-4"></i>
                 Sign in with {{ OIDC_PROVIDER_NAME|default:"OIDC Provider" }}
             </a>
@@ -29,6 +29,7 @@ Welcome to AImageLab - Please sign in to continue
                 <div class="collapse-content">
                     <form method="post" action="{% url 'login' %}">
                         {% csrf_token %}
+                        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
 
                         <div class="form-control mb-4">
                             <label class="label" for="username">

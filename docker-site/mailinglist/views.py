@@ -2,6 +2,10 @@ import logging
 
 from django.contrib import messages as django_messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.views.decorators.csrf import csrf_exempt
+from django_ratelimit.decorators import ratelimit
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -27,6 +31,21 @@ logger = logging.getLogger(__name__)
 # User preferences (profile integration)
 # ---------------------------------------------------------------------------
 
+def _clean_address(value):
+    """A lower-cased, syntactically valid e-mail address, or ''.
+
+    Addresses typed into the forms below end up in the To: header of
+    outgoing mail and in pages shown to other users, and were stored
+    without any check.
+    """
+    value = (value or '').strip().lower()
+    try:
+        validate_email(value)
+    except ValidationError:
+        return ''
+    return value if len(value) <= 254 else ''
+
+
 @login_required
 def mailing_preferences(request):
     """Let a user manage their mailing-list subscription and extra emails."""
@@ -41,7 +60,7 @@ def mailing_preferences(request):
             django_messages.success(request, 'Mailing list preferences updated.')
 
         elif action == 'add_email':
-            new_email = request.POST.get('extra_email', '').strip().lower()
+            new_email = _clean_address(request.POST.get('extra_email'))
             if new_email:
                 _, created = UserExtraEmail.objects.get_or_create(
                     preference=pref, email=new_email
@@ -192,6 +211,13 @@ def tag_recipients_api(request):
 # Unsubscribe (public, token-based)
 # ---------------------------------------------------------------------------
 
+# csrf_exempt: RFC 8058 one-click unsubscribe. Every message advertises
+# `List-Unsubscribe-Post: List-Unsubscribe=One-Click`, which makes the mail
+# provider POST to this URL itself - without cookies, so the CSRF check
+# rejected it (403) and the "Unsubscribe" button of mail clients never
+# worked. The unguessable token in the URL is the credential here, and the
+# only thing it can do is unsubscribe its own address.
+@csrf_exempt
 def unsubscribe(request, token):
     """Handle unsubscribe requests via unique UUID token in email footer."""
 
@@ -236,11 +262,14 @@ def unsubscribe(request, token):
 # External recipient self-subscription (optional public page)
 # ---------------------------------------------------------------------------
 
+# Public and unauthenticated: without a limit one script could fill the
+# recipient table. The address is not confirmed by e-mail (no double opt-in).
+@ratelimit(key='ip', rate='10/h', method='POST', block=True)
 def external_subscribe(request):
     """Public form for external people to subscribe to the mailing list."""
     if request.method == 'POST':
-        email_addr = request.POST.get('email', '').strip().lower()
-        name = request.POST.get('name', '').strip()
+        email_addr = _clean_address(request.POST.get('email'))
+        name = request.POST.get('name', '').strip()[:200]
         if email_addr:
             obj, created = ExternalRecipient.objects.get_or_create(
                 email=email_addr,

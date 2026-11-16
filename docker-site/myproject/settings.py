@@ -87,6 +87,11 @@ if DEBUG:
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_TZ = True
 
+# Client address for rate limiting (django-ratelimit, key='ip'). Django sits
+# behind Apache, so REMOTE_ADDR is always the proxy: every visitor shared one
+# counter and five bad logins by anyone locked the login form for everybody.
+RATELIMIT_IP_META_KEY = 'main.ratelimit.client_ip'
+
 # Session and CSRF settings for HTTPS
 SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
@@ -351,6 +356,9 @@ OIDC_RP_SIGN_ALGO = os.environ.get('OIDC_RP_SIGN_ALGO', 'RS256')
 
 # Redirect URIs after authentication
 LOGIN_REDIRECT_URL = '/'
+# Where @login_required sends anonymous visitors. It was unset, so Django's
+# default '/accounts/login/' applied - a URL this site does not have (404).
+LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = '/'
 
 # OIDC-specific login/logout redirect URLs
@@ -440,6 +448,22 @@ MAILINGLIST_FROM_NAME = os.environ.get('MAILINGLIST_FROM_NAME', 'AImageLab Maili
 #   allow     treat it like any other message (trusted senders auto-approved)
 # "allow" brings back issue #29: one Reply All reaches every subscriber.
 MAILINGLIST_REPLY_POLICY = os.environ.get('MAILINGLIST_REPLY_POLICY', 'moderate')
+
+# How far the From: address of an inbound message is believed before a
+# trusted domain or a whitelisted sender is auto-approved. From: is free
+# text chosen by whoever sends the message, so on its own it proves nothing;
+# the receiving mail server records its SPF/DKIM/DMARC verdict in the
+# Authentication-Results header.
+#   lenient  (default) if that header is present it must show a pass for the
+#            From: domain, otherwise the message waits for a moderator; a
+#            message with no such header is trusted as before (mail that
+#            never left the provider may not carry one)
+#   strict   the header must be present and show a pass
+#   off      previous behaviour: From: alone decides
+MAILINGLIST_SENDER_AUTH = os.environ.get('MAILINGLIST_SENDER_AUTH', 'lenient')
+# Optional: only believe an Authentication-Results header written by this
+# server (its authserv-id, e.g. "mx.google.com"). Empty = the topmost one.
+MAILINGLIST_AUTHSERV_ID = os.environ.get('MAILINGLIST_AUTHSERV_ID', '')
 
 # Public-facing list address used for plus-addressing routing
 # e.g. aimagelab@unimore.it → aimagelab+staff@unimore.it

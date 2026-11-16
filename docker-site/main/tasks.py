@@ -40,15 +40,14 @@ def import_iris_publications(self):
     Uses a cache-based lock to prevent concurrent executions.
     """
     # Check if import is already running
-    if cache.get(IRIS_IMPORT_LOCK_KEY):
+    # Test-and-set in one step. get() followed by set() let two tasks that
+    # started together both see "no lock" and both run the import.
+    if not cache.add(IRIS_IMPORT_LOCK_KEY, True, IRIS_IMPORT_LOCK_TIMEOUT):
         logger.info("IRIS import already in progress, skipping...")
         return {
             'status': 'skipped',
             'message': 'Import already in progress'
         }
-    
-    # Acquire lock
-    cache.set(IRIS_IMPORT_LOCK_KEY, True, IRIS_IMPORT_LOCK_TIMEOUT)
     
     try:
         # Create import log entry
