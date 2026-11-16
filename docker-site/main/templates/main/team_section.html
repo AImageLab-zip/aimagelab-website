@@ -70,7 +70,7 @@
 
                         {% if profile.linkedin %}
                         <a href="{{ profile.linkedin }}" target="_blank" class="text-primary hover:text-secondary" title="LinkedIn" onclick="event.stopPropagation()">
-                            <i data-lucide="linkedin" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
+                            {% if card_size == 'small' %}{% include 'main/icons/linkedin.html' with class='h-3 w-3' %}{% else %}{% include 'main/icons/linkedin.html' with class='h-4 w-4' %}{% endif %}
                         </a>
                         {% endif %}
 
@@ -170,7 +170,7 @@
 
                                 {% if profile.github %}
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="github" class="h-4 w-4 text-primary"></i>
+                                    {% include 'main/icons/github.html' with class='h-4 w-4 text-primary' %}
                                     <a href="{{ profile.github }}" target="_blank" class="text-primary hover:text-secondary text-sm">
                                         GitHub Profile
                                     </a>
@@ -179,7 +179,7 @@
 
                                 {% if profile.linkedin %}
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="linkedin" class="h-4 w-4 text-primary"></i>
+                                    {% include 'main/icons/linkedin.html' with class='h-4 w-4 text-primary' %}
                                     <a href="{{ profile.linkedin }}" target="_blank" class="text-primary hover:text-secondary text-sm">
                                         LinkedIn Profile
                                     </a>
