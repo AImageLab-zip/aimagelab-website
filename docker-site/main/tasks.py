@@ -444,12 +444,21 @@ def process_publication_json(pub_data, user_profile, stats):
     # Save publication
     publication.save()
     
-    # Create/update user-profile-publication link
-    # Position is not available in the new API, set to 0
+    # Create/update user-profile-publication link. The API gives no author
+    # position, so it is derived from the ordered author string: we know
+    # whose publication this is, and only look for that one name in it
+    # (see main/authorship.py).
+    from main.authorship import find_position
+    posizione, n_authors, position_status = find_position(
+        publication.autori, user_profile.user.first_name, user_profile.user.last_name)
     link, link_created = UserProfilePublicationIRIS.objects.update_or_create(
         user_profile=user_profile,
         publication=publication,
-        defaults={'posizione': 0}
+        defaults={
+            'posizione': posizione,
+            'n_authors': n_authors,
+            'position_status': position_status,
+        }
     )
     
     if link_created:

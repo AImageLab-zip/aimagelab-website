@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from phonenumber_field.modelfields import PhoneNumberField
 
+from . import authorship
 from .images import spec
 
 
@@ -291,7 +292,29 @@ class UserProfilePublicationIRIS(models.Model):
         on_delete=models.CASCADE,
         related_name='staff_links'
     )
+    # Position of this person in the publication's author list, worked out
+    # from the ordered `autori` string (main/authorship.py). 0 = unresolved.
     posizione = models.IntegerField(default=0, verbose_name="Author Position")
+    n_authors = models.PositiveIntegerField(
+        default=0, verbose_name="Number of authors",
+        help_text="0 when unknown (author string truncated at import)")
+    position_status = models.CharField(
+        max_length=12, choices=authorship.STATUS_CHOICES, default=authorship.UNKNOWN,
+        verbose_name="Position match")
+
+    def compute_position(self):
+        """Fill posizione / n_authors / position_status. Does not save."""
+        user = self.user_profile.user
+        self.posizione, self.n_authors, self.position_status = authorship.find_position(
+            self.publication.autori, user.first_name, user.last_name)
+
+    @property
+    def is_first_author(self):
+        return self.posizione == 1
+
+    @property
+    def is_last_author(self):
+        return self.n_authors > 0 and self.posizione == self.n_authors
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -12,11 +12,11 @@ from functools import wraps
 from urllib.parse import quote
 from django_ratelimit.decorators import ratelimit
 import logging
-from .models import translate_publication_type, UserProfile, Post, PostAttachment, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage, IRISImportLog
+from .models import translate_publication_type, UserProfile, Post, PostAttachment, Category, Project, PublicationIRIS, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage, IRISImportLog, UserProfilePublicationIRIS
 
 logger = logging.getLogger(__name__)
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q, Case, When, IntegerField, F, CharField
+from django.db.models import Q, Case, Count, When, IntegerField, F, CharField
 from django.db.models.functions import MD5, Cast
 from datetime import datetime, timedelta
 
@@ -336,6 +336,36 @@ def order_publications(qs):
     ).order_by('-anno', 'shuffle')
 
 
+def author_statistics(publications_qs, username):
+    """Counts for one lab member within an already filtered set (issue #13).
+
+    Internal use: only computed for logged-in users. First/last mean
+    first-listed and last-listed (IRIS has no equal-contribution flag), and
+    `unresolved` is how many papers could not be placed, so the reader can
+    see how far the other numbers can be trusted.
+    """
+    from . import authorship
+    links = UserProfilePublicationIRIS.objects.filter(
+        user_profile__user__username=username,
+        publication__in=publications_qs.order_by().values('pk'),
+    )
+    resolved = links.filter(position_status__in=authorship.RESOLVED)
+    journal, conference = Q(publication__tipo__icontains='rivista'), Q(publication__tipo__icontains='convegno')
+    return links.aggregate(
+        total=Count('pk'),
+        journals=Count('pk', filter=journal),
+        conferences=Count('pk', filter=conference),
+    ) | {
+        # A sole author is counted under 'sole' only, not as first or last.
+        'first': resolved.filter(posizione=1).exclude(n_authors=1).count(),
+        # n_authors is 0 when the stored author list was truncated
+        'last': resolved.filter(n_authors__gt=1, posizione=F('n_authors')).count(),
+        'sole': resolved.filter(n_authors=1, posizione=1).count(),
+        'unresolved': links.exclude(position_status__in=authorship.RESOLVED).count(),
+        'last_unknown': resolved.filter(n_authors=0).count(),
+    }
+
+
 def publications(request):
     """Publications page view with pagination, search, and filters."""
     publications_qs, params = filter_publications(request)
@@ -467,8 +497,13 @@ def publications(request):
         except UserProfile.DoesNotExist:
             pass
     
+    author_stats = None
+    if author_username and request.user.is_authenticated:
+        author_stats = author_statistics(publications_qs, author_username)
+
     return render(request, 'main/publications.html', {
         'publications': publications_page,
+        'author_stats': author_stats,
         'search_query': search_query,
         'year_query': year_query,
         'journal_query': journal_query,
