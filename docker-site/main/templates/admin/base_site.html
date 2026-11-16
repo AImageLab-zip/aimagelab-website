@@ -3,173 +3,173 @@
 
 {% block extrahead %}
 {{ block.super }}
+<link rel="stylesheet" href="{% static 'main/css/admin-fonts.css' %}">
 
 <style>
+    /*
+     * AImageLab palette for the Django admin (issue #25).
+     *
+     * The admin is themed through its own CSS variables rather than by
+     * overriding selectors with !important: every component reads these
+     * (links, buttons, module headers, breadcrumbs, the theme and sidebar
+     * toggles, selected rows, filters), so nothing is left in Django's
+     * default teal and nothing has to be chased rule by rule.
+     *
+     * Every text/background pair below meets WCAG 2.1 AA (4.5:1). The
+     * previous values did not: dark-mode links were 2.5:1 on the page and
+     * 2.2:1 in the filter sidebar, the header gradient ended at 3.6:1
+     * (light) and 2.8:1 (dark) under white text, delete links were 3.6:1.
+     * Ratios are noted where the pair is not obvious.
+     */
     :root,
-    [data-theme="light"] {
-        --aimagelab-primary: #6b1d2a;      /* dark maroon from oklab primary */
-        --aimagelab-primary-light: #8a2a3a;
-        --aimagelab-primary-dark: #4e1420;
-        --aimagelab-secondary: #c4451a;    /* reddish-orange secondary */
-        --aimagelab-accent: #F04E22;       /* legacy red accent */
-        --aimagelab-neutral: #3a3a3a;
-        --aimagelab-bg: #fafafa;
-        --aimagelab-row-selected: #f5e6e9;
+    html[data-theme="light"] {
+        --primary: #6b1d2a;                 /* brand maroon */
+        --secondary: #4e1420;
+        --accent: #ffd9cf;
+        --primary-fg: #fff;
+
+        --header-bg: #6b1d2a;               /* white text 11.5:1 */
+        --header-bg-end: #a8321c;           /* gradient end, white text 6.7:1 */
+        --header-color: #f5e6e9;
+        --header-branding-color: #fff;
+        --header-link-color: #fff;
+
+        --breadcrumbs-bg: #4e1420;
+        --breadcrumbs-fg: #ecd3d8;          /* 10.3:1 */
+        --breadcrumbs-link-fg: #fff;
+
+        --link-fg: #8a1f33;                 /* 9.0:1 on white, 7.5:1 on a selected row */
+        --link-hover-color: #b23a12;        /* 6.0:1 */
+        --link-selected-fg: #6b1d2a;
+
+        --selected-row: #f5e6e9;
+
+        --button-fg: #fff;
+        --button-bg: #6b1d2a;
+        --button-hover-bg: #8a2a3a;         /* white text 8.5:1 */
+        --default-button-bg: #4e1420;
+        --default-button-hover-bg: #6b1d2a;
+        --object-tools-bg: #6b1d2a;
+        --object-tools-hover-bg: #8a2a3a;
+
+        /* Checkboxes, radios, range and progress: the "toggles". Without
+           this they stay in the browser's default blue. */
+        --aimagelab-control: #6b1d2a;
     }
 
+    /* Dark values, declared twice on purpose: once for "auto" following the
+       system setting, once for the explicit dark theme. Same pattern as
+       Django's own dark_mode.css. */
     @media (prefers-color-scheme: dark) {
-        :root {
-            --aimagelab-primary: #9b2a40;      /* lighter maroon for dark mode */
-            --aimagelab-primary-light: #bf3752;
-            --aimagelab-primary-dark: #6b1d2a;
-            --aimagelab-secondary: #e66033;
-            --aimagelab-accent: #ff6e45;
-            --aimagelab-neutral: #e0e0e0;
-            --aimagelab-bg: #121212;
-            --aimagelab-row-selected: #3a151d;
+        html[data-theme="auto"], :root:not([data-theme]) {
+            --primary: #8a2a3a;
+            --secondary: #6b1d2a;
+            --primary-fg: #fff;
+            --header-bg: #6b1d2a;
+            --header-bg-end: #a8321c;
+            --breadcrumbs-bg: #3a151d;
+            --breadcrumbs-fg: #ecd3d8;      /* 11.4:1 */
+            --breadcrumbs-link-fg: #fff;
+            --link-fg: #f2a0b0;             /* 9.3:1 on #121212, 8.0:1 on #212121 */
+            --link-hover-color: #ffc4ce;    /* 12.5:1 */
+            --link-selected-fg: #ff8fa3;    /* 7.5:1 in the filter sidebar */
+            --selected-row: #3a151d;        /* body text 13.9:1, links 8.0:1 */
+            --button-bg: #8a2a3a;           /* white text 8.5:1 */
+            --button-hover-bg: #a3344a;     /* white text 6.7:1 */
+            --default-button-bg: #a3344a;
+            --default-button-hover-bg: #8a2a3a;
+            --object-tools-bg: #8a2a3a;
+            --object-tools-hover-bg: #a3344a;
+            --error-fg: #ff8a80;            /* 8.2:1 */
+            --aimagelab-control: #e0788c;   /* 6.5:1 against the page: visible when checked */
         }
     }
 
-    [data-theme="dark"] {
-        --aimagelab-primary: #9b2a40;      /* lighter maroon for dark mode */
-        --aimagelab-primary-light: #bf3752;
-        --aimagelab-primary-dark: #6b1d2a;
-        --aimagelab-secondary: #e66033;
-        --aimagelab-accent: #ff6e45;
-        --aimagelab-neutral: #e0e0e0;
-        --aimagelab-bg: #121212;
-        --aimagelab-row-selected: #3a151d;
+    html[data-theme="dark"] {
+        --primary: #8a2a3a;
+        --secondary: #6b1d2a;
+        --primary-fg: #fff;
+        --header-bg: #6b1d2a;
+        --header-bg-end: #a8321c;
+        --breadcrumbs-bg: #3a151d;
+        --breadcrumbs-fg: #ecd3d8;
+        --breadcrumbs-link-fg: #fff;
+        --link-fg: #f2a0b0;
+        --link-hover-color: #ffc4ce;
+        --link-selected-fg: #ff8fa3;
+        --selected-row: #3a151d;
+        --button-bg: #8a2a3a;
+        --button-hover-bg: #a3344a;
+        --default-button-bg: #a3344a;
+        --default-button-hover-bg: #8a2a3a;
+        --object-tools-bg: #8a2a3a;
+        --object-tools-hover-bg: #a3344a;
+        --error-fg: #ff8a80;
+        --aimagelab-control: #e0788c;
     }
 
-/* Header */
-#header {
-    background: linear-gradient(135deg, var(--aimagelab-primary) 70%, var(--aimagelab-accent)) !important;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
+    /* The few things variables cannot express. */
 
-#header a:link, #header a:visited {
-    color: #fff;
-}
+    #header {
+        background: linear-gradient(135deg, var(--header-bg) 70%, var(--header-bg-end));
+    }
 
-/* Branding area */
-.aimagelab-branding {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #fff;
-    letter-spacing: 0.02em;
-}
+    input[type="checkbox"],
+    input[type="radio"],
+    input[type="range"],
+    progress {
+        accent-color: var(--aimagelab-control);
+    }
 
-.aimagelab-logo {
-    height: 28px;
-    width: auto;
-}
+    /* Keyboard focus in the brand colour instead of the default blue ring. */
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    summary:focus-visible {
+        outline: 2px solid var(--link-fg);
+        outline-offset: 2px;
+    }
 
-/* Links */
-a:link, a:visited {
-    color: var(--aimagelab-primary);
-}
+    /* The sidebar and theme toggles: a visible hover state. */
+    .toggle-nav-sidebar:hover,
+    .toggle-nav-sidebar:focus {
+        background-color: var(--selected-row);
+    }
 
-a:hover {
-    color: var(--aimagelab-secondary);
-}
+    .changelist-filter li.selected a,
+    #changelist-filter li.selected a {
+        font-weight: 600;
+    }
 
-/* Module headers */
-.module h2, .module caption {
-    background: var(--aimagelab-primary) !important;
-    color: #fff !important;
-    font-family: "Inter", sans-serif;
-}
+    .object-tools a:link,
+    .object-tools a:visited {
+        border-radius: 4px;
+    }
 
-/* Buttons */
-.submit-row input[type="submit"],
-input[type="submit"],
-.button,
-a.button {
-    background: var(--aimagelab-primary) !important;
-    border: none;
-    font-family: "Inter", sans-serif;
-}
+    body,
+    #header,
+    .module h2, .module caption,
+    div.breadcrumbs,
+    .button, input[type="submit"], input[type="button"] {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
 
-.submit-row input[type="submit"]:hover,
-input[type="submit"]:hover,
-.button:hover,
-a.button:hover {
-    background: var(--aimagelab-primary-light) !important;
-}
+    .aimagelab-branding {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--header-branding-color);
+        letter-spacing: 0.02em;
+    }
 
-input[type="submit"].default {
-    background: var(--aimagelab-primary) !important;
-}
-
-input[type="submit"].default:hover {
-    background: var(--aimagelab-primary-light) !important;
-}
-
-/* Delete / danger buttons keep their red but use our accent */
-.deletelink,
-.submit-row a.deletelink {
-    color: var(--aimagelab-accent) !important;
-}
-
-.submit-row a.deletelink:hover {
-    color: var(--aimagelab-secondary) !important;
-}
-
-/* Breadcrumbs */
-div.breadcrumbs {
-    background: var(--aimagelab-primary-dark) !important;
-    font-family: "Inter", sans-serif;
-}
-
-div.breadcrumbs a {
-    color: #e0c5ca !important;
-}
-
-div.breadcrumbs a:hover {
-    color: #fff !important;
-}
-
-/* Object tools */
-.object-tools a:link,
-.object-tools a:visited {
-    background: var(--aimagelab-primary) !important;
-    border-radius: 4px;
-}
-
-.object-tools a:hover {
-    background: var(--aimagelab-primary-light) !important;
-}
-
-/* Calendar & date shortcuts */
-.calendarbox .calendarnav-previous,
-.calendarbox .calendarnav-next {
-    background: var(--aimagelab-primary) !important;
-}
-
-/* Selected row highlight */
-.results table tbody tr.selected {
-    background: var(--aimagelab-row-selected);
-}
-
-/* General body font */
-body {
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-#content h1 {
-    font-family: "Inter", sans-serif;
-    color: var(--aimagelab-neutral);
-}
-
-/* Active filter highlight */
-.changelist-filter li.selected a {
-    color: var(--aimagelab-primary) !important;
-    font-weight: 600;
-}
-
+    .aimagelab-logo {
+        height: 28px;
+        width: auto;
+    }
 </style>
 
 
