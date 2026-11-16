@@ -185,6 +185,13 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
+# Compiled frontend assets (Tailwind + daisyUI, see frontend/build.sh). They
+# are written outside the project directory because ./docker-site is
+# bind-mounted over /app; collectstatic (production) and the staticfiles
+# finders (runserver) pick them up from here as css/app.css.
+FRONTEND_DIST = Path(os.environ.get("FRONTEND_DIST", "/opt/frontend/dist"))
+STATICFILES_DIRS = [FRONTEND_DIST] if FRONTEND_DIST.is_dir() else []
+
 # Media files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
