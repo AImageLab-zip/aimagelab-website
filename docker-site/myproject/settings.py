@@ -110,6 +110,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "mozilla_django_oidc",  # OIDC authentication
     'markdownify.apps.MarkdownifyConfig',
+    'imagekit',  # resized image derivatives, see main/images.py
 ]
 
 MIDDLEWARE = [

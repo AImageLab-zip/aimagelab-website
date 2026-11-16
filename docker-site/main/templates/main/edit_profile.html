@@ -1,4 +1,5 @@
 {% extends "main/base_with_sidebar.html" %}
+{% load image_tags %}
 
 {% block title %}Edit Profile - AImageLab{% endblock %}
 
@@ -133,11 +134,11 @@ Update your personal information and professional links
                             <div class="avatar mb-4">
                                 {% if profile.avatar %}
                                 <div class="mask mask-squircle w-32 ring ring-primary ring-offset-base-100 ring-offset-2">
-                                    <img src="{{ profile.avatar.url }}" alt="Your personal photo" />
+                                    {% derivative_url profile 'avatar_512' 'avatar' as img_src %}<img src="{{ img_src }}" alt="Your personal photo" width="512" height="512" loading="lazy" decoding="async" />
                                 </div>
                                 {% elif profile.avatar_iris %}
                                 <div class="mask mask-squircle w-32 ring ring-secondary ring-offset-base-100 ring-offset-2">
-                                    <img src="{{ profile.avatar_iris.url }}" alt="IRIS photo" />
+                                    {% derivative_url profile 'avatar_iris_512' 'avatar_iris' as img_src %}<img src="{{ img_src }}" alt="IRIS photo" width="512" height="512" loading="lazy" decoding="async" />
                                 </div>
                                 {% else %}
                                 <div class="mask mask-squircle w-32 bg-base-300 ring ring-base-300 ring-offset-base-100 ring-offset-2">

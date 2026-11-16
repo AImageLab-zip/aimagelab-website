@@ -1,4 +1,5 @@
 {% extends "main/base_with_sidebar.html" %}
+{% load image_tags %}
 {% load static %}
 {% block title %}News - AImageLab{% endblock %}
 
@@ -70,7 +71,12 @@ Stay updated with the latest research breakthroughs, events, and announcements f
                                 <!-- Image (thumbnail if exists, fallback to cover) -->
                                 {% if post.thumbnail or post.cover %}
                                 <figure class="w-full md:w-64 mb-4 md:pr-4">
-                                    <img src="{% if post.thumbnail %}{{ post.thumbnail.url }}{% else %}{{ post.cover.url }}{% endif %}" alt="{{ post.title }}" class="rounded-lg w-full md:h-auto object-cover" style="aspect-ratio: 2 / 1;" />
+                                    {% if post.thumbnail %}
+                                    <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}" loading="lazy" decoding="async" class="rounded-lg w-full md:h-auto object-cover" style="aspect-ratio: 2 / 1;" />
+                                    {% else %}
+                                    {% derivative_url post 'cover_list' 'cover' as img_src %}
+                                    <img src="{{ img_src }}" alt="{{ post.title }}" width="768" height="384" loading="lazy" decoding="async" class="rounded-lg w-full md:h-auto object-cover" style="aspect-ratio: 2 / 1;" />
+                                    {% endif %}
                                 </figure>
                                 {% endif %}
                             </div>

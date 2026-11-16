@@ -1,4 +1,5 @@
 {% extends 'main/base.html' %}
+{% load image_tags %}
 {% load static %}
 
 {% block title %}AImageLab - AI Vision Research Laboratory{% endblock %}
@@ -44,13 +45,13 @@
                             {% if profile.avatar %}
                             <div class="avatar border-3">
                                 <div class="w-8">
-                                    <img src="{{ profile.avatar.url }}" alt="{{ profile.get_full_name }}" />
+                                    {% derivative_url profile 'avatar_192' 'avatar' as img_src %}<img src="{{ img_src }}" alt="{{ profile.get_full_name }}" width="192" height="192" loading="lazy" decoding="async" />
                                 </div>
                             </div>
                             {% elif profile.avatar_iris %}
                             <div class="avatar border-3">
                                 <div class="w-8">
-                                    <img src="{{ profile.avatar_iris.url }}" alt="{{ profile.get_full_name }}" />
+                                    {% derivative_url profile 'avatar_iris_192' 'avatar_iris' as img_src %}<img src="{{ img_src }}" alt="{{ profile.get_full_name }}" width="192" height="192" loading="lazy" decoding="async" />
                                 </div>
                             </div>
                             {% endif %}

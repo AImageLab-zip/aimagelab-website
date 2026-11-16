@@ -22,6 +22,7 @@ django-redis==7.0.0
 pytz==2026.5
 requests==2.34.2
 Pillow==12.3.0
+django-imagekit==6.1.1
 django-phonenumber-field[phonenumbers]==8.5.0
 python-ldap==3.4.8
 django-sass==1.1.0

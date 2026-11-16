@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from phonenumber_field.modelfields import PhoneNumberField
 
+from .images import spec
+
 
 class UserProfile(models.Model):
     """Extended user profile for team members"""
@@ -31,6 +33,12 @@ class UserProfile(models.Model):
     website = models.URLField(blank=True, help_text="Personal website or homepage")
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     avatar_iris = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    # Resized copies (see main/images.py). 192 px covers the 96 px cards at 2x,
+    # 512 px the 256 px photo in the profile modal.
+    avatar_192 = spec('avatar', 192, 192, crop=True)
+    avatar_512 = spec('avatar', 512, 512, crop=True)
+    avatar_iris_192 = spec('avatar_iris', 192, 192, crop=True)
+    avatar_iris_512 = spec('avatar_iris', 512, 512, crop=True)
     display_order = models.IntegerField(default=0, help_text="Order in team listing (lower first)")
     is_visible = models.BooleanField(default=True, help_text="Show on People page")
     
@@ -303,6 +311,7 @@ class MeetingRoom(models.Model):
     capacity = models.IntegerField(help_text="Maximum number of people")
     description = models.TextField(blank=True, help_text="Room features and equipment")
     image = models.ImageField(upload_to='room_images/', blank=True, null=True, help_text="Room photo or icon")
+    image_card = spec('image', 1000, 1000)
     is_active = models.BooleanField(default=True, help_text="Is the room available for booking?")
     color = models.CharField(max_length=7, default="#3b82f6", help_text="Color for calendar display (hex format)")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -378,6 +387,11 @@ class Post(models.Model):
     description = models.TextField(blank=True)
     cover = models.ImageField(upload_to='blog_covers/', blank=True, null=True)
     thumbnail = models.ImageField(upload_to='blog_thumbnails/', blank=True, null=True, help_text="Cropped thumbnail for news listings (480x200)")
+    # News list, used when no hand-cropped thumbnail was uploaded: 256 px
+    # wide on desktop, full width on a phone, 2:1.
+    cover_list = spec('cover', 768, 384, crop=True)
+    # Article page: the cover spans the text column.
+    cover_page = spec('cover', 1600)
     slug = models.SlugField(unique=True)
     
     
@@ -459,6 +473,7 @@ class Project(models.Model):
     title = models.CharField(max_length=300)
     description = models.TextField(blank=True)
     logo = models.ImageField(upload_to='project_logos/', blank=True, null=True, help_text="Project logo or icon")
+    logo_224 = spec('logo', 224, 224)
     website = models.URLField(blank=True, help_text="Project website or homepage URL")
     founding_by = models.CharField(max_length=200, blank=True)
     project_type = models.CharField(max_length=100, blank=True)

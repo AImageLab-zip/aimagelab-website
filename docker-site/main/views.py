@@ -24,10 +24,11 @@ from django.http import FileResponse, Http404
 from django.conf import settings
 from django.utils.text import slugify
 import os
+from .images import normalise_upload
 from .tasks import sync_user_task, import_iris_publications, import_iris_profile_photos, is_import_running
 import os
 
-from PIL import Image
+from PIL import Image, ImageOps
 from io import BytesIO
 
 POST_PER_PAGE = 10
@@ -536,6 +537,9 @@ def post_form(request, slug=None):
         description = request.POST.get('description', '')
         content = request.POST.get('content')
         cover = request.FILES.get('cover')
+        if cover:
+            # Apply EXIF rotation and cap very large originals (main/images.py).
+            cover = normalise_upload(cover)
         thumbnail = request.FILES.get('thumbnail')
         category_ids = request.POST.getlist('categories')
         attachment_names = request.POST.getlist('new_attachment_names')
@@ -753,9 +757,11 @@ def edit_profile(request):
             # Save new avatar
             avatar_file = request.FILES['avatar']
             
-            # Open and resize image
-            img = Image.open(avatar_file)
-            img.thumbnail((256, 256), Image.Resampling.LANCZOS)
+            # Open and resize image. 1024 px, not 256: the profile modal shows
+            # the photo at 256 CSS px, i.e. 512 device px on a 2x screen, and
+            # the pages serve resized copies anyway (UserProfile.avatar_192/512).
+            img = ImageOps.exif_transpose(Image.open(avatar_file))
+            img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
             # Convert RGBA/P/LA images to RGB (JPEG doesn't support transparency)
             if img.mode in ('RGBA', 'P', 'LA'):
                 img = img.convert('RGB')
@@ -878,6 +884,13 @@ def serve_media(request, path):
         'blog_covers/',
         'blog_thumbnails/',
         'project_logos/',
+        # Resized copies of the above (imagekit writes CACHE/images/<source
+        # path>/<hash>.webp). Listed per directory, not as 'CACHE/', so the
+        # copies of login-only images (rooms, wiki) stay login-only.
+        'CACHE/images/avatars/',
+        'CACHE/images/blog_covers/',
+        'CACHE/images/blog_thumbnails/',
+        'CACHE/images/project_logos/',
     )
 
     # Allow public access only to explicitly public media directories;
@@ -1642,8 +1655,10 @@ def wiki_upload_image(request):
             description = request.POST.get('description', '')
             
             # Create WikiImage instance
+            # Wiki images are embedded by URL in Markdown, so there is no
+            # place to swap in a derivative: cap the stored file instead.
             wiki_image = WikiImage.objects.create(
-                image=image_file,
+                image=normalise_upload(image_file, max_side=1600),
                 uploaded_by=request.user,
                 description=description
             )
