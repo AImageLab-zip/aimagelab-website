@@ -382,18 +382,34 @@ OIDC_PROVIDER_NAME = os.environ.get('OIDC_PROVIDER_NAME', 'OIDC Provider')
 # Allow images and other HTML tags in markdown rendering
 MARKDOWNIFY = {
     "default": {
+        # Everything else is stripped (the text is kept). The second and
+        # third rows were missing, so <sub>, <kbd>, <details>, definition
+        # lists and ~~strikethrough~~ lost their markup on wiki pages.
         "WHITELIST_TAGS": [
             'a', 'abbr', 'acronym', 'b', 'blockquote', 'br', 'button', 'code', 'div',
             'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img', 'li', 'ol',
-            'p', 'pre', 'span', 'strong', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul'
+            'p', 'pre', 'span', 'strong', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul',
+            'del', 's', 'sub', 'sup', 'kbd', 'mark', 'small',
+            'details', 'summary', 'dl', 'dt', 'dd', 'caption', 'tfoot',
         ],
+        # `style` is allowed only so that table column alignment survives:
+        # Python-Markdown writes `|:--:|` as style="text-align: center", and
+        # WHITELIST_STYLES below drops every other CSS property.
         "WHITELIST_ATTRS": [
-            'href', 'src', 'alt', 'title', 'class', 'id', 'data-ml-tag'
+            'href', 'src', 'alt', 'title', 'class', 'id', 'data-ml-tag',
+            'style', 'colspan', 'rowspan', 'open',
         ],
+        "WHITELIST_STYLES": ['text-align'],
         "MARKDOWN_EXTENSIONS": [
             'markdown.extensions.fenced_code',
             'markdown.extensions.tables',
             'markdown.extensions.nl2br',
+            # Without sane_lists a bullet list written right after a numbered
+            # one is absorbed into it as extra numbered items.
+            'markdown.extensions.sane_lists',
+            'markdown.extensions.def_list',
+            # ~~strikethrough~~ and task lists, as the editor preview shows them.
+            'main.markdown_ext',
         ],
     }
 }
