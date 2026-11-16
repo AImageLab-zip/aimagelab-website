@@ -9,8 +9,8 @@ admin.site.index_title = "Site Management"
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'role', 'display_order', 'is_visible', 'created_at')
-    list_filter = ('role', 'is_visible')
-    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'bio')
+    list_filter = ('role', 'is_visible', 'department')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'bio', 'department')
     list_editable = ('display_order', 'is_visible')
     autocomplete_fields = ['user']
     
@@ -24,7 +24,7 @@ class UserProfileAdmin(admin.ModelAdmin):
             'description': 'IRIS identifiers cached from API using Codice Fiscale'
         }),
         ('Role & Position', {
-            'fields': ('role', 'current_position', 'display_order', 'is_visible')
+            'fields': ('role', 'department', 'current_position', 'display_order', 'is_visible')
         }),
         ('About', {
             'fields': ('bio', 'avatar', 'avatar_iris')

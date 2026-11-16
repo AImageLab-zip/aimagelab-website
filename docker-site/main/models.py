@@ -44,6 +44,10 @@ class UserProfile(models.Model):
     
     # Alumni-specific fields
     current_position = models.CharField(max_length=200, blank=True, help_text="Current position (for alumni)")
+    department = models.CharField(
+        max_length=200, blank=True,
+        help_text="Department or unit of affiliation, e.g. 'Department of Engineering \"Enzo Ferrari\"'",
+    )
     
     # Additional info
     google_scholar = models.URLField(blank=True)

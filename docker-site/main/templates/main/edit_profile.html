@@ -45,6 +45,13 @@ Update your personal information and professional links
                             <p class="label form-copy">A short description of your background and interests</p>
                         </fieldset>
 
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend form-legend">Department</legend>
+                            <input class="input w-full" id="department" name="department" maxlength="200"
+                                   value="{{ profile.department|default:'' }}" placeholder='Department of Engineering "Enzo Ferrari"'>
+                            <p class="label form-copy">Your department or unit of affiliation</p>
+                        </fieldset>
+
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend form-legend">Phone Number</legend>
                             <input class="input w-full" id="phone_number" name="phone_number" maxlength="32"

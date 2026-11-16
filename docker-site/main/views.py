@@ -743,6 +743,7 @@ def edit_profile(request):
     if request.method == 'POST':
         # Update profile fields
         profile.bio = request.POST.get('bio', '').strip()
+        profile.department = request.POST.get('department', '').strip()[:200]
         profile.website = request.POST.get('website', '').strip()
         profile.google_scholar = request.POST.get('google_scholar', '').strip()
         profile.github = request.POST.get('github', '').strip()
@@ -797,6 +798,7 @@ def add_user(request):
             'password': request.POST.get('password', ''),
             'role': request.POST.get('role', 'phd'),
             'bio': request.POST.get('bio', ''),
+            'department': request.POST.get('department', '').strip(),
             'website': request.POST.get('website', ''),
             'google_scholar': request.POST.get('google_scholar', ''),
             'github': request.POST.get('github', ''),
