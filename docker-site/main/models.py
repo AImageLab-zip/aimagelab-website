@@ -9,6 +9,19 @@ from . import authorship
 from .images import spec
 
 
+def username_slug(username):
+    """Default personal-page slug: the username, made URL-safe.
+
+    Characters a slug cannot hold ('.', '@', '+') become '-', so
+    'mario.rossi' gives 'mario-rossi' rather than 'mariorossi'. Usernames are
+    unique, so the caller only has to deal with the rare collision this
+    rewriting can create. Duplicated in migration 0018.
+    """
+    for char in '.@+':
+        username = (username or '').replace(char, '-')
+    return (slugify(username) or 'person')[:150]
+
+
 class UserProfile(models.Model):
     """Extended user profile for team members"""
     
@@ -100,7 +113,7 @@ class UserProfile(models.Model):
     # /people/<slug>/ only when its owner (or staff) switches it on.
     slug = models.SlugField(
         max_length=160, unique=True, null=True, blank=True,
-        help_text="URL of the personal page: /people/<slug>/. Filled in from the name.",
+        help_text="URL of the personal page: /people/<slug>/. Filled in from the username.",
     )
     has_personal_page = models.BooleanField(
         default=False, help_text="Publish a personal page for this person")
@@ -125,9 +138,8 @@ class UserProfile(models.Model):
         return self.user.get_full_name() or self.user.username
 
     def make_slug(self):
-        """A slug from the person's name that no other profile uses."""
-        base = slugify(self.user.get_full_name()) or slugify(self.user.username) or 'person'
-        base = base[:150]
+        """A slug from the username that no other profile uses."""
+        base = username_slug(self.user.username)
         slug, n = base, 2
         while UserProfile.objects.filter(slug=slug).exclude(pk=self.pk).exists():
             slug, n = f'{base}-{n}', n + 1
@@ -661,7 +673,7 @@ class ExternalRedirects(models.Model):
         return f"/{self.src_slug}"
 
     def get_absolute_url(self):
-        return reverse('dashboard_redirect', kwargs={'src_slug': self.src_slug})
+        return reverse('external_redirects', kwargs={'src_slug': self.src_slug})
 
 
 class DashboardCard(models.Model):
@@ -788,8 +800,12 @@ class WikiPage(models.Model):
     def get_breadcrumbs(self):
         """Return list of parent pages from root to current"""
         breadcrumbs = []
+        seen = set()
         current = self
-        while current:
+        # `seen` stops at a parent cycle (A -> B -> A, possible from the
+        # admin), which used to loop forever and hang the worker.
+        while current and current.pk not in seen:
+            seen.add(current.pk)
             breadcrumbs.insert(0, current)
             current = current.parent
         return breadcrumbs
