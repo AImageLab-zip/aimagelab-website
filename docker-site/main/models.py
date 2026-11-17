@@ -2,7 +2,24 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.utils.text import slugify
 from phonenumber_field.modelfields import PhoneNumberField
+
+from . import authorship
+from .images import spec
+
+
+def username_slug(username):
+    """Default personal-page slug: the username, made URL-safe.
+
+    Characters a slug cannot hold ('.', '@', '+') become '-', so
+    'mario.rossi' gives 'mario-rossi' rather than 'mariorossi'. Usernames are
+    unique, so the caller only has to deal with the rare collision this
+    rewriting can create. Duplicated in migration 0018.
+    """
+    for char in '.@+':
+        username = (username or '').replace(char, '-')
+    return (slugify(username) or 'person')[:150]
 
 
 class UserProfile(models.Model):
@@ -31,11 +48,21 @@ class UserProfile(models.Model):
     website = models.URLField(blank=True, help_text="Personal website or homepage")
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     avatar_iris = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    # Resized copies (see main/images.py). 192 px covers the 96 px cards at 2x,
+    # 512 px the 256 px photo in the profile modal.
+    avatar_192 = spec('avatar', 192, 192, crop=True)
+    avatar_512 = spec('avatar', 512, 512, crop=True)
+    avatar_iris_192 = spec('avatar_iris', 192, 192, crop=True)
+    avatar_iris_512 = spec('avatar_iris', 512, 512, crop=True)
     display_order = models.IntegerField(default=0, help_text="Order in team listing (lower first)")
     is_visible = models.BooleanField(default=True, help_text="Show on People page")
     
     # Alumni-specific fields
     current_position = models.CharField(max_length=200, blank=True, help_text="Current position (for alumni)")
+    department = models.CharField(
+        max_length=200, blank=True,
+        help_text="Department or unit of affiliation, e.g. 'Department of Engineering \"Enzo Ferrari\"'",
+    )
     
     # Additional info
     google_scholar = models.URLField(blank=True)
@@ -81,7 +108,23 @@ class UserProfile(models.Model):
         verbose_name="Legacy IRIS ID",
         help_text="Legacy field for backward compatibility"
     )
-    
+
+    # Personal page (issue #21). Opt-in: a profile has a page of its own at
+    # /people/<slug>/ only when its owner (or staff) switches it on.
+    slug = models.SlugField(
+        max_length=160, unique=True, null=True, blank=True,
+        help_text="URL of the personal page: /people/<slug>/. Filled in from the username.",
+    )
+    has_personal_page = models.BooleanField(
+        default=False, help_text="Publish a personal page for this person")
+    page_content = models.TextField(
+        blank=True, help_text="Body of the personal page (Markdown)")
+    legacy_person_id = models.PositiveIntegerField(
+        null=True, blank=True, unique=True,
+        verbose_name="Legacy person ID",
+        help_text="ID of this person on the old AImageLab site, so old links can be redirected",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -93,6 +136,28 @@ class UserProfile(models.Model):
     
     def get_full_name(self):
         return self.user.get_full_name() or self.user.username
+
+    def make_slug(self):
+        """A slug from the username that no other profile uses."""
+        base = username_slug(self.user.username)
+        slug, n = base, 2
+        while UserProfile.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+            slug, n = f'{base}-{n}', n + 1
+        return slug
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self.make_slug()
+            if kwargs.get('update_fields') is not None:
+                kwargs['update_fields'] = set(kwargs['update_fields']) | {'slug'}
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('person_page', args=[self.slug])
+
+    @property
+    def personal_page_is_public(self):
+        return bool(self.has_personal_page and self.is_visible and self.slug)
     
     def get_title(self):
         match self.role:
@@ -239,7 +304,29 @@ class UserProfilePublicationIRIS(models.Model):
         on_delete=models.CASCADE,
         related_name='staff_links'
     )
+    # Position of this person in the publication's author list, worked out
+    # from the ordered `autori` string (main/authorship.py). 0 = unresolved.
     posizione = models.IntegerField(default=0, verbose_name="Author Position")
+    n_authors = models.PositiveIntegerField(
+        default=0, verbose_name="Number of authors",
+        help_text="0 when unknown (author string truncated at import)")
+    position_status = models.CharField(
+        max_length=12, choices=authorship.STATUS_CHOICES, default=authorship.UNKNOWN,
+        verbose_name="Position match")
+
+    def compute_position(self):
+        """Fill posizione / n_authors / position_status. Does not save."""
+        user = self.user_profile.user
+        self.posizione, self.n_authors, self.position_status = authorship.find_position(
+            self.publication.autori, user.first_name, user.last_name)
+
+    @property
+    def is_first_author(self):
+        return self.posizione == 1
+
+    @property
+    def is_last_author(self):
+        return self.n_authors > 0 and self.posizione == self.n_authors
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -303,6 +390,7 @@ class MeetingRoom(models.Model):
     capacity = models.IntegerField(help_text="Maximum number of people")
     description = models.TextField(blank=True, help_text="Room features and equipment")
     image = models.ImageField(upload_to='room_images/', blank=True, null=True, help_text="Room photo or icon")
+    image_card = spec('image', 1000, 1000)
     is_active = models.BooleanField(default=True, help_text="Is the room available for booking?")
     color = models.CharField(max_length=7, default="#3b82f6", help_text="Color for calendar display (hex format)")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -378,6 +466,11 @@ class Post(models.Model):
     description = models.TextField(blank=True)
     cover = models.ImageField(upload_to='blog_covers/', blank=True, null=True)
     thumbnail = models.ImageField(upload_to='blog_thumbnails/', blank=True, null=True, help_text="Cropped thumbnail for news listings (480x200)")
+    # News list, used when no hand-cropped thumbnail was uploaded: 256 px
+    # wide on desktop, full width on a phone, 2:1.
+    cover_list = spec('cover', 768, 384, crop=True)
+    # Article page: the cover spans the text column.
+    cover_page = spec('cover', 1600)
     slug = models.SlugField(unique=True)
     
     
@@ -459,6 +552,7 @@ class Project(models.Model):
     title = models.CharField(max_length=300)
     description = models.TextField(blank=True)
     logo = models.ImageField(upload_to='project_logos/', blank=True, null=True, help_text="Project logo or icon")
+    logo_224 = spec('logo', 224, 224)
     website = models.URLField(blank=True, help_text="Project website or homepage URL")
     founding_by = models.CharField(max_length=200, blank=True)
     project_type = models.CharField(max_length=100, blank=True)
@@ -579,7 +673,7 @@ class ExternalRedirects(models.Model):
         return f"/{self.src_slug}"
 
     def get_absolute_url(self):
-        return reverse('dashboard_redirect', kwargs={'src_slug': self.src_slug})
+        return reverse('external_redirects', kwargs={'src_slug': self.src_slug})
 
 
 class DashboardCard(models.Model):
@@ -706,8 +800,12 @@ class WikiPage(models.Model):
     def get_breadcrumbs(self):
         """Return list of parent pages from root to current"""
         breadcrumbs = []
+        seen = set()
         current = self
-        while current:
+        # `seen` stops at a parent cycle (A -> B -> A, possible from the
+        # admin), which used to loop forever and hang the worker.
+        while current and current.pk not in seen:
+            seen.add(current.pk)
             breadcrumbs.insert(0, current)
             current = current.parent
         return breadcrumbs

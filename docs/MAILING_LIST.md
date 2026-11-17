@@ -41,10 +41,20 @@ If the email is sent to `aimagelab@unimore.it` (without a `+suffix`), the messag
 
 ### Replying
 
-Every forwarded email includes the list address(es) in Cc:
+Forwarded emails carry `Reply-To: <original sender>` and do **not** list the
+list address in Cc, so:
 
-- **Reply** — goes to the original sender only.
-- **Reply All** — goes to the original sender **and** back to the list (e.g. `aimagelab+strutturati@unimore.it`), so the reply is redistributed to the same group.
+- **Reply** and **Reply All** — go to the original sender only.
+- To write to the whole group again, address a new message (or add the list
+  address by hand, e.g. `aimagelab+strutturati@unimore.it`).
+
+If a reply does reach the list address (added by hand, or sent from a copy
+delivered before this change), it is **held for moderation** even when the
+sender is trusted, and shown with a "Reply" badge. Set
+`MAILINGLIST_REPLY_POLICY=allow` to treat replies like any other message.
+
+Until November 2026 the list address was added in Cc, so Reply All sent the
+reply to every subscriber (issue #29).
 
 ---
 

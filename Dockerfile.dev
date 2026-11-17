@@ -25,6 +25,39 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y --no-install-recommends libldap2-dev libsasl2-dev libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Frontend toolchain: Tailwind CSS standalone CLI + daisyUI plugin files.
+# No Node.js. Method: https://daisyui.com/docs/install/django/
+#
+# Versions are pinned and every download is checked against its sha256, for
+# the same reason requirements.txt pins exact versions: "latest" is whatever
+# upstream published at build time. To upgrade, change the version and the
+# hash together (sha256sum the new release asset), rebuild, look at the site.
+#
+# Lives in /opt, not /app: ./docker-site is bind-mounted over /app at run
+# time and would hide anything installed there. The CSS itself is compiled by
+# the entrypoint (frontend/build.sh), so it always matches the mounted
+# templates rather than the ones baked into the image.
+ARG TAILWIND_VERSION=4.3.5
+ARG TAILWIND_SHA256=e47695cee3f0d90623a91f3939b08bdee610eb5ad99340adff9d4145b284d6cc
+ARG DAISYUI_VERSION=5.7.50
+ARG DAISYUI_SHA256=d69de07c7463bb1f41548e2688f88ee105cdadf9779fce5b3c47b3bfaa6be472
+ARG DAISYUI_THEME_SHA256=e48a35d8326d650181ca600560e8520cf6b44cf9242bbd9d45825607e641f251
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /opt/tailwind /opt/frontend/dist \
+    && cd /opt/tailwind \
+    && curl -fsSL -o tailwindcss \
+       "https://github.com/tailwindlabs/tailwindcss/releases/download/v${TAILWIND_VERSION}/tailwindcss-linux-x64" \
+    && curl -fsSL -o daisyui.mjs \
+       "https://github.com/saadeghi/daisyui/releases/download/v${DAISYUI_VERSION}/daisyui.mjs" \
+    && curl -fsSL -o daisyui-theme.mjs \
+       "https://github.com/saadeghi/daisyui/releases/download/v${DAISYUI_VERSION}/daisyui-theme.mjs" \
+    && printf '%s  %s\n' \
+       "${TAILWIND_SHA256}" tailwindcss \
+       "${DAISYUI_SHA256}" daisyui.mjs \
+       "${DAISYUI_THEME_SHA256}" daisyui-theme.mjs | sha256sum -c - \
+    && chmod +x tailwindcss
+
 # Create virtual environment
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"

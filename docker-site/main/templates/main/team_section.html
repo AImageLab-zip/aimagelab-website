@@ -1,4 +1,4 @@
-{% comment %}
+{% load image_tags %}{% comment %}
     Reusable team section component
     
     Parameters:
@@ -24,15 +24,15 @@
                     <div class="avatar">
                         {% if profile.avatar %}
                         <div class="mask mask-squircle {% if card_size == 'large' %}w-24{% elif card_size == 'small' %}w-16{% else %}w-24{% endif %}">
-                            <img src="{{ profile.avatar.url }}" alt="{{ profile.get_full_name }}" />
+                            {% derivative_url profile 'avatar_192' 'avatar' as img_src %}<img src="{{ img_src }}" alt="{{ profile.get_full_name }}" width="192" height="192" loading="lazy" decoding="async" />
                         </div>
                         {% elif profile.avatar_iris %}
                         <div class="mask mask-squircle {% if card_size == 'large' %}w-24{% elif card_size == 'small' %}w-16{% else %}w-24{% endif %}">
-                            <img src="{{ profile.avatar_iris.url }}" alt="{{ profile.get_full_name }}" />
+                            {% derivative_url profile 'avatar_iris_192' 'avatar_iris' as img_src %}<img src="{{ img_src }}" alt="{{ profile.get_full_name }}" width="192" height="192" loading="lazy" decoding="async" />
                         </div>
                         {% else %}
                         <div class="mask mask-squircle {% if card_size == 'large' %}w-24{% elif card_size == 'small' %}w-16{% else %}w-24{% endif %} bg-base-300">
-                            <img id="dicebear-avatar-img" data-seed="{{ profile.get_full_name|default:profile.user.username|urlencode }}" alt="Default avatar" />
+                            {% include 'main/avatar_placeholder.html' with name=profile.get_full_name|default:profile.user.username text_size='text-2xl' %}
                         </div>
                         {% endif %}
                     </div>
@@ -70,7 +70,7 @@
 
                         {% if profile.linkedin %}
                         <a href="{{ profile.linkedin }}" target="_blank" class="text-primary hover:text-secondary" title="LinkedIn" onclick="event.stopPropagation()">
-                            <i data-lucide="linkedin" class="{% if card_size == 'small' %}h-3 w-3{% else %}h-4 w-4{% endif %}"></i>
+                            {% if card_size == 'small' %}{% include 'main/icons/linkedin.html' with class='h-3 w-3' %}{% else %}{% include 'main/icons/linkedin.html' with class='h-4 w-4' %}{% endif %}
                         </a>
                         {% endif %}
 
@@ -104,15 +104,15 @@
                         <div class="avatar">
                             {% if profile.avatar %}
                             <div class="mask mask-squircle w-48 md:w-64">
-                                <img src="{{ profile.avatar.url }}" alt="{{ profile.get_full_name }}" />
+                                {% derivative_url profile 'avatar_512' 'avatar' as img_src %}<img src="{{ img_src }}" alt="{{ profile.get_full_name }}" width="512" height="512" loading="lazy" decoding="async" />
                             </div>
                             {% elif profile.avatar_iris %}
                             <div class="mask mask-squircle w-48 md:w-64">
-                                <img src="{{ profile.avatar_iris.url }}" alt="{{ profile.get_full_name }}" />
+                                {% derivative_url profile 'avatar_iris_512' 'avatar_iris' as img_src %}<img src="{{ img_src }}" alt="{{ profile.get_full_name }}" width="512" height="512" loading="lazy" decoding="async" />
                             </div>
                             {% else %}
                             <div class="mask mask-squircle w-48 md:w-64 bg-base-300">
-                                <img id="dicebear-avatar-img" data-seed="{{ profile.get_full_name|default:profile.user.username|urlencode }}" alt="Default avatar" />
+                                {% include 'main/avatar_placeholder.html' with name=profile.get_full_name|default:profile.user.username text_size='text-6xl' %}
                             </div>
                             {% endif %}
                         </div>
@@ -121,13 +121,16 @@
                     <!-- Details -->
                     <div class="flex-1">
                         <h3 class="text-2xl font-bold text-base-content">{{profile.get_title}} {{ profile.get_full_name }}</h3>
-                        <p class="text-sm text-base-content/60 mb-4">
+                        <p class="text-sm text-base-content/60 {% if profile.department %}mb-1{% else %}mb-4{% endif %}">
                             {% if is_alumni and profile.current_position %}
                                 {{ profile.current_position }}
                             {% else %}
                                 {{ profile.get_role_display }}
                             {% endif %}
                         </p>
+                        {% if profile.department %}
+                        <p class="text-sm text-base-content/60 mb-4">{{ profile.department }}</p>
+                        {% endif %}
 
                         <!-- Full Bio -->
                         {% if profile.bio %}
@@ -170,7 +173,7 @@
 
                                 {% if profile.github %}
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="github" class="h-4 w-4 text-primary"></i>
+                                    {% include 'main/icons/github.html' with class='h-4 w-4 text-primary' %}
                                     <a href="{{ profile.github }}" target="_blank" class="text-primary hover:text-secondary text-sm">
                                         GitHub Profile
                                     </a>
@@ -179,7 +182,7 @@
 
                                 {% if profile.linkedin %}
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="linkedin" class="h-4 w-4 text-primary"></i>
+                                    {% include 'main/icons/linkedin.html' with class='h-4 w-4 text-primary' %}
                                     <a href="{{ profile.linkedin }}" target="_blank" class="text-primary hover:text-secondary text-sm">
                                         LinkedIn Profile
                                     </a>
@@ -192,6 +195,12 @@
 
                         <!-- Publications Link -->
                         <div class="mt-4">
+                            {% if profile.personal_page_is_public %}
+                            <a href="{{ profile.get_absolute_url }}" class="btn btn-primary btn-sm">
+                                <i data-lucide="user" class="h-4 w-4"></i>
+                                Personal Page
+                            </a>
+                            {% endif %}
                             <a href="{% url 'publications' %}?author={{ profile.user }}" target="_blank" class="btn btn-primary btn-sm">
                                 <i data-lucide="book-open" class="h-4 w-4"></i>
                                 View Publications

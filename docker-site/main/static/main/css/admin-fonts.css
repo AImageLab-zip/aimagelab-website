@@ -1,0 +1,8 @@
+/* Inter for the Django admin (the public site declares it in styles.css). */
+@font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("../vendor/inter-4.1/InterVariable.woff2") format("woff2");
+}

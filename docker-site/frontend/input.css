@@ -1,0 +1,70 @@
+/*
+ * Tailwind CSS + daisyUI entry point, compiled by the Tailwind standalone CLI
+ * (no Node.js). See https://daisyui.com/docs/install/django/
+ *
+ * Build:  frontend/build.sh            (one-off, used by the entrypoint)
+ *         frontend/build.sh --watch    (development)
+ *
+ * The CLI binary and the two daisyUI plugin files are NOT in the repository:
+ * the Dockerfiles download pinned releases into /opt/tailwind and verify
+ * their sha256. build.sh copies this file next to them before compiling, so
+ * the relative @plugin paths below resolve there, and replaces @APP@ with
+ * the project directory.
+ */
+@import "tailwindcss" source(none);
+
+/* Where class names are looked for. source(none) above disables automatic
+   detection, so nothing outside these paths is scanned. */
+@source "@APP@/main/templates";
+@source "@APP@/mailinglist/templates";
+@source "@APP@/main/*.py";
+@source "@APP@/main/templatetags";
+@source "@APP@/mailinglist/*.py";
+
+/* Class names assembled at render time are invisible to the scanner:
+     team_section.html   2xl:grid-cols-{{ grid_cols }}
+     research_area.html  bg-{{ color }}/10, text-{{ color }}   (ResearchArea.COLOR_CHOICES)
+     base.html           alert-{{ message.tags }}              (Django message levels)
+   Keep these lists in step with the code that produces the names. */
+@source inline("2xl:grid-cols-{2,3,4,5,6}");
+@source inline("{bg,text}-{primary,secondary,success,warning,error}");
+@source inline("bg-{primary,secondary,success,warning,error}/10");
+@source inline("alert-{info,success,warning,error,debug}");
+
+@plugin "./daisyui.mjs" {
+  themes: false;
+}
+
+@plugin "./daisyui-theme.mjs" {
+  name: "aimagelab-theme";
+  default: true;
+  color-scheme: light;
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(98% 0 0);
+  --color-base-300: oklch(88% 0 0);
+  --color-base-content: oklch(21% 0.006 285.885);
+  --color-primary: oklab(42.107% 0.15764 0.06234);
+  --color-primary-content: oklch(98% 0.002 247.839);
+  --color-secondary: oklch(50.542% 0.20712 28.8);
+  --color-secondary-content: oklch(98% 0.003 247.858);
+  --color-accent: oklch(63.016% 0.25215 9.207);
+  --color-accent-content: oklch(37% 0 0);
+  --color-neutral: oklch(37% 0 0);
+  --color-neutral-content: oklch(92% 0.004 286.32);
+  --color-info: oklch(70.226% 0.10721 236.458);
+  --color-info-content: oklch(29% 0.066 243.157);
+  --color-success: oklch(66.755% 0.18358 131.872);
+  --color-success-content: oklch(27% 0.072 132.109);
+  --color-warning: oklch(82% 0.189 84.429);
+  --color-warning-content: oklch(41% 0.112 45.904);
+  --color-error: oklch(60.252% 0.24326 28.576);
+  --color-error-content: oklch(25% 0.092 26.042);
+  --radius-selector: 0.8rem;
+  --radius-field: 0.8rem;
+  --radius-box: 0.8rem;
+  --size-selector: 0.28125rem;
+  --size-field: 0.28125rem;
+  --border: 1.5px;
+  --depth: 0;
+  --noise: 0;
+}

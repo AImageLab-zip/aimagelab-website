@@ -1,0 +1,8 @@
+{% comment %}
+Placeholder for a profile without a photo: the person's initials.
+
+Replaces the DiceBear "shapes" avatar, which was generated in the browser by
+an ES module graph loaded from esm.sh on every People page view.
+
+Usage: {% include 'main/avatar_placeholder.html' with name=profile.get_full_name text_size='text-2xl' %}
+{% endcomment %}{% load people_tags %}<div class="w-full h-full aspect-square flex items-center justify-center bg-primary/10 text-primary font-semibold select-none {{ text_size|default:'text-2xl' }}" role="img" aria-label="No photo">{{ name|initials }}</div>

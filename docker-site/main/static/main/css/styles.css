@@ -1,37 +1,19 @@
-
-:root:has(input.theme-controller[value=aimagelab-theme]:checked),
-[data-theme="aimagelab-theme"] {
-  color-scheme: "light";
-  --color-base-100: oklch(100% 0 0);
-  --color-base-200: oklch(98% 0 0);
-  --color-base-300: oklch(88% 0 0);
-  --color-base-content: oklch(21% 0.006 285.885);
-  --color-primary: oklab(42.107% 0.15764 0.06234);
-  --color-primary-content: oklch(98% 0.002 247.839);
-  --color-secondary: oklch(50.542% 0.20712 28.8);
-  --color-secondary-content: oklch(98% 0.003 247.858);
-  --color-accent: oklch(63.016% 0.25215 9.207);
-  --color-accent-content: oklch(37% 0 0);
-  --color-neutral: oklch(37% 0 0);
-  --color-neutral-content: oklch(92% 0.004 286.32);
-  --color-info: oklch(70.226% 0.10721 236.458);
-  --color-info-content: oklch(29% 0.066 243.157);
-  --color-success: oklch(66.755% 0.18358 131.872);
-  --color-success-content: oklch(27% 0.072 132.109);
-  --color-warning: oklch(82% 0.189 84.429);
-  --color-warning-content: oklch(41% 0.112 45.904);
-  --color-error: oklch(60.252% 0.24326 28.576);
-  --color-error-content: oklch(25% 0.092 26.042);
-  --radius-selector: 0.8rem;
-  --radius-field: 0.8rem;
-  --radius-box: 0.8rem;
-  --size-selector: 0.28125rem;
-  --size-field: 0.28125rem;
-  --border: 1.5px;
-  --depth: 0;
-  --noise: 0;
-
-  
+/* Inter, self-hosted (was https://rsms.me/inter/inter.css). The variable
+   font covers every weight, so one file per style replaces the static set.
+   Files: vendor/inter-4.1/, fetched by frontend/vendor.sh. */
+@font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("../vendor/inter-4.1/InterVariable.woff2") format("woff2");
+}
+@font-face {
+    font-family: "Inter";
+    font-style: italic;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("../vendor/inter-4.1/InterVariable-Italic.woff2") format("woff2");
 }
 
 :root {
@@ -222,9 +204,59 @@
     border: 1px solid var(--color-base-300);
 }
 
+/* Striping from base-300: wiki content sits on a base-200 card, where the
+   previous base-200 stripe was the same colour as its background. */
 .prose tbody tr:nth-child(even) {
-    background: color-mix(in oklch, var(--color-base-200), transparent 40%);
+    background: color-mix(in oklch, var(--color-base-300), transparent 65%);
 }
+
+.prose del,
+.prose s {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.prose sub { vertical-align: sub; font-size: 0.75em; }
+.prose sup { vertical-align: super; font-size: 0.75em; }
+
+.prose kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8em;
+    padding: 0.1em 0.4em;
+    border: 1px solid var(--color-base-300);
+    border-bottom-width: 2px;
+    border-radius: 0.3em;
+    background: var(--color-base-100);
+}
+
+.prose mark {
+    background: color-mix(in oklch, var(--color-warning), transparent 60%);
+    padding: 0 0.15em;
+}
+
+.prose dt { font-weight: 600; margin-top: 0.75em; }
+.prose dd { margin: 0.15em 0 0.5em 1.75em; }
+
+.prose details {
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    border: 1px solid var(--color-base-300);
+    border-radius: 0.5em;
+}
+.prose summary { cursor: pointer; font-weight: 600; }
+
+/* Task lists: the box replaces the bullet. */
+.prose li.task-item { list-style: none; margin-left: -1.25em; }
+
+/* .prose-sm is used by the change-request comparison and was never defined. */
+.prose.prose-sm { font-size: 0.875rem; line-height: 1.6; }
+.prose.prose-sm h1 { font-size: 1.5rem; }
+.prose.prose-sm h2 { font-size: 1.25rem; }
+.prose.prose-sm h3 { font-size: 1.1rem; }
+.prose.prose-sm h4 { font-size: 1rem; }
+
+/* Long words and URLs must not push the page sideways. */
+.prose { overflow-wrap: anywhere; }
 
 .prose hr {
     border: none;

@@ -1,4 +1,5 @@
 {% extends 'main/base_with_hero.html' %}
+{% load image_tags %}
 
 {% block title %}{{ post.title }} - AImageLab{% endblock %}
 
@@ -19,7 +20,8 @@
                 {% if post.cover %}
                 <div class="order-1">
                     <figure class="sticky top-24">
-                        <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="w-full rounded-lg">
+                        {% derivative_url post 'cover_page' 'cover' as img_src %}
+                        <img src="{{ img_src }}" alt="{{ post.title }}" class="w-full rounded-lg">
                     </figure>
                 </div>
                 {% endif %}

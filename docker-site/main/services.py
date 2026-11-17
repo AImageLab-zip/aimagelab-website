@@ -23,6 +23,7 @@ def add_or_update_user(user_data):
             - display_order (int, optional): Display order (default: 0)
             - is_visible (bool, optional): Visibility on People page (default: True)
             - current_position (str, optional): Current position (for alumni)
+            - department (str, optional): Department or unit of affiliation
             - google_scholar (str, optional): Google Scholar URL
             - github (str, optional): GitHub URL
             - linkedin (str, optional): LinkedIn URL
@@ -81,7 +82,7 @@ def add_or_update_user(user_data):
     # Update profile fields
     profile_fields = [
         'role', 'bio', 'website', 'display_order', 'is_visible',
-        'current_position', 'google_scholar', 'github', 'linkedin', 'phone_number'
+        'current_position', 'department', 'google_scholar', 'github', 'linkedin', 'phone_number'
     ]
     
     for field in profile_fields:

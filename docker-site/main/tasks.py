@@ -40,15 +40,14 @@ def import_iris_publications(self):
     Uses a cache-based lock to prevent concurrent executions.
     """
     # Check if import is already running
-    if cache.get(IRIS_IMPORT_LOCK_KEY):
+    # Test-and-set in one step. get() followed by set() let two tasks that
+    # started together both see "no lock" and both run the import.
+    if not cache.add(IRIS_IMPORT_LOCK_KEY, True, IRIS_IMPORT_LOCK_TIMEOUT):
         logger.info("IRIS import already in progress, skipping...")
         return {
             'status': 'skipped',
             'message': 'Import already in progress'
         }
-    
-    # Acquire lock
-    cache.set(IRIS_IMPORT_LOCK_KEY, True, IRIS_IMPORT_LOCK_TIMEOUT)
     
     try:
         # Create import log entry
@@ -400,16 +399,29 @@ def process_publication_json(pub_data, user_profile, stats):
     # Conference venue. IRIS exposes no conference field on /products, so for
     # proceedings the venue is recovered from the citation's last
     # parenthetical group (see main/venue_parser.py).
+    #
+    # Proceedings only, the same test backfill_conference_venues uses. The
+    # parser takes the last long parenthetical it finds, so on a journal
+    # article or a thesis it would pick one out of the title - "(Extended
+    # Abstract)" - and file the paper under that as if it were a conference.
     from main.venue_parser import extract_venue, short_name
-    venue = extract_venue(publication.citation)
-    if venue:
-        publication.conferenza = venue[:500]
-        publication.conferenza_nome = short_name(venue)[:200]
-        # Give proceedings a venue in `rivista` too, so existing views and
-        # exports that read it keep working for conference papers.
-        if not publication.rivista:
-            publication.rivista = (publication.conferenza_nome or venue)[:500]
-    
+    if 'convegno' in (publication.tipo or '').lower():
+        venue = extract_venue(publication.citation)
+        if venue:
+            publication.conferenza = venue[:500]
+            publication.conferenza_nome = short_name(venue)[:200]
+            # Give proceedings a venue in `rivista` too, so existing views and
+            # exports that read it keep working for conference papers.
+            if not publication.rivista:
+                publication.rivista = (publication.conferenza_nome or venue)[:500]
+    else:
+        # Undo what earlier imports stored on non-proceedings.
+        if publication.conferenza and publication.rivista in (
+                publication.conferenza, publication.conferenza_nome):
+            publication.rivista = ''
+        publication.conferenza = ''
+        publication.conferenza_nome = ''
+
     # State/status
     publication.stato = pub_data.get('stato', '')[:100]
     
@@ -431,12 +443,21 @@ def process_publication_json(pub_data, user_profile, stats):
     # Save publication
     publication.save()
     
-    # Create/update user-profile-publication link
-    # Position is not available in the new API, set to 0
+    # Create/update user-profile-publication link. The API gives no author
+    # position, so it is derived from the ordered author string: we know
+    # whose publication this is, and only look for that one name in it
+    # (see main/authorship.py).
+    from main.authorship import find_position
+    posizione, n_authors, position_status = find_position(
+        publication.autori, user_profile.user.first_name, user_profile.user.last_name)
     link, link_created = UserProfilePublicationIRIS.objects.update_or_create(
         user_profile=user_profile,
         publication=publication,
-        defaults={'posizione': 0}
+        defaults={
+            'posizione': posizione,
+            'n_authors': n_authors,
+            'position_status': position_status,
+        }
     )
     
     if link_created:

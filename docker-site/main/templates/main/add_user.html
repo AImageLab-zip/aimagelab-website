@@ -122,6 +122,13 @@ Create a new user or update an existing one using Celery background task
                 </div>
                 
                 <div class="form-control mb-4">
+                    <label class="label" for="department">
+                        <span class="label-text font-semibold">Department</span>
+                    </label>
+                    <input type="text" id="department" name="department" maxlength="200" placeholder='Department of Engineering "Enzo Ferrari"' class="input input-bordered">
+                </div>
+
+                <div class="form-control mb-4">
                     <label class="label" for="linkedin">
                         <span class="label-text font-semibold">LinkedIn</span>
                     </label>
@@ -169,170 +176,4 @@ Create a new user or update an existing one using Celery background task
         </div>
     </form>
 </div>
-{% endblock %}
-
-<style>
-    .form-container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 2rem;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    .form-container h1 {
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
-    }
-    
-    .subtitle {
-        color: #7f8c8d;
-        margin-bottom: 2rem;
-    }
-    
-    .messages {
-        margin-bottom: 2rem;
-    }
-    
-    .message {
-        padding: 1rem;
-        border-radius: 4px;
-        margin-bottom: 1rem;
-    }
-    
-    .message.success {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-    
-    .message.error {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-    
-    .form-section {
-        margin-bottom: 2rem;
-        padding-bottom: 2rem;
-        border-bottom: 1px solid #e9ecef;
-    }
-    
-    .form-section:last-of-type {
-        border-bottom: none;
-    }
-    
-    .form-section h2 {
-        color: #34495e;
-        font-size: 1.3rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: #2c3e50;
-        font-weight: 500;
-    }
-    
-    .form-group input[type="text"],
-    .form-group input[type="email"],
-    .form-group input[type="password"],
-    .form-group input[type="url"],
-    .form-group input[type="tel"],
-    .form-group input[type="number"],
-    .form-group input[type="file"],
-    .form-group select,
-    .form-group textarea {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-        font-family: inherit;
-    }
-    
-    .form-group textarea {
-        resize: vertical;
-    }
-    
-    .form-group small {
-        display: block;
-        margin-top: 0.25rem;
-        color: #6c757d;
-        font-size: 0.875rem;
-    }
-    
-    .checkbox-group label {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-    }
-    
-    .checkbox-group input[type="checkbox"] {
-        margin-right: 0.5rem;
-        width: auto;
-    }
-    
-    .form-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 2rem;
-    }
-    
-    .btn {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 1rem;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-        transition: background-color 0.3s;
-    }
-    
-    .btn-primary {
-        background-color: #3498db;
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        background-color: #2980b9;
-    }
-    
-    .btn-secondary {
-        background-color: #95a5a6;
-        color: white;
-    }
-    
-    .btn-secondary:hover {
-        background-color: #7f8c8d;
-    }
-    
-    @media (max-width: 768px) {
-        .form-container {
-            margin: 1rem;
-            padding: 1rem;
-        }
-        
-        .form-row {
-            grid-template-columns: 1fr;
-        }
-        
-        .form-actions {
-            flex-direction: column;
-        }
-    }
-</style>
 {% endblock %}

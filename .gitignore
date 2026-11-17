@@ -26,13 +26,14 @@ db.sqlite3-journal
 /media/
 celerybeat-schedule.db
 
-# Environment
+# Environment: ignore every env file, keep only the *.example templates
 .env
-.env.local
-.env.oidc
 .env.*
+*.env
+*.env.*
 !.env.example
-!.env.oidc.example
+!.env.*.example
+!*.env.example
 secrets.yml
 
 # IDE

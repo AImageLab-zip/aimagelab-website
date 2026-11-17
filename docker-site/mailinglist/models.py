@@ -100,6 +100,10 @@ class IncomingEmail(models.Model):
     body_html = models.TextField(blank=True)
     raw_headers = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    is_reply = models.BooleanField(
+        default=False,
+        help_text="Answers a message this list already distributed (see MAILINGLIST_REPLY_POLICY)",
+    )
     moderated_by = models.ForeignKey(
         User, null=True, blank=True, on_delete=models.SET_NULL, related_name='moderated_emails'
     )

@@ -5,14 +5,21 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from main.models import UserProfile
 import logging
+from main.text_utils import name_case, repair_mojibake
 
 logger = logging.getLogger(__name__)
 
 
 def to_camel_case(s):
-    if not s:
-        return ''
-    return ' '.join(word.capitalize() for word in s.split())
+    """Clean up a name read from LDAP.
+
+    A name that arrives double-encoded ("NICCOLÃ²" for "NICCOLÒ") is
+    repaired *before* its case is changed: lowercasing the stray "Ã" is
+    what turns it into "Niccolã²" (issue #28). Names that are stored
+    correctly pass through repair_mojibake() unchanged.
+    """
+    return name_case(repair_mojibake(s))
+
 
 class Command(BaseCommand):
     help = 'Populate the database with users from LDAP server'

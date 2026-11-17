@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import UserProfile, Category, Post, PostAttachment, Project, PublicationIRIS, UserProfilePublicationIRIS, IRISImportLog, MeetingRoom, RoomReservation, ShortLink, HistoryMilestone, ResearchArea, DashboardCard, ExternalRedirects, WikiPage, WikiPageVersion, WikiPageChangeRequest, WikiImage
 
 admin.site.site_header = "AImageLab Admin"
@@ -9,8 +10,8 @@ admin.site.index_title = "Site Management"
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'role', 'display_order', 'is_visible', 'created_at')
-    list_filter = ('role', 'is_visible')
-    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'bio')
+    list_filter = ('role', 'is_visible', 'department')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'bio', 'department')
     list_editable = ('display_order', 'is_visible')
     autocomplete_fields = ['user']
     
@@ -24,13 +25,18 @@ class UserProfileAdmin(admin.ModelAdmin):
             'description': 'IRIS identifiers cached from API using Codice Fiscale'
         }),
         ('Role & Position', {
-            'fields': ('role', 'current_position', 'display_order', 'is_visible')
+            'fields': ('role', 'department', 'current_position', 'display_order', 'is_visible')
         }),
         ('About', {
             'fields': ('bio', 'avatar', 'avatar_iris')
         }),
         ('Contact', {
             'fields': ('phone_number', 'website', 'google_scholar', 'github', 'linkedin')
+        }),
+        ('Personal page', {
+            'fields': ('has_personal_page', 'slug', 'page_content', 'legacy_person_id'),
+            'classes': ('collapse',),
+            'description': 'Public page at /people/&lt;slug&gt;/, shown only when switched on and the profile is visible',
         }),
         ('Metadata', {
             'fields': ('created_at', 'updated_at'),
@@ -462,14 +468,12 @@ class WikiImageAdmin(admin.ModelAdmin):
     
     def image_thumbnail(self, obj):
         if obj.image:
-            return f'<img src="{obj.image.url}" style="max-height: 50px; max-width: 100px;" />'
+            return format_html('<img src="{}" style="max-height: 50px; max-width: 100px;" />', obj.image.url)
         return '-'
     image_thumbnail.short_description = 'Thumbnail'
-    image_thumbnail.allow_tags = True
     
     def image_preview(self, obj):
         if obj.image:
-            return f'<img src="{obj.image.url}" style="max-height: 300px; max-width: 500px;" />'
+            return format_html('<img src="{}" style="max-height: 300px; max-width: 500px;" />', obj.image.url)
         return '-'
     image_preview.short_description = 'Preview'
-    image_preview.allow_tags = True

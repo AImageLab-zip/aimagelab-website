@@ -1,4 +1,5 @@
 {% extends "main/base_with_sidebar.html" %}
+{% load image_tags %}
 
 {% block title %}Edit Profile - AImageLab{% endblock %}
 
@@ -44,6 +45,13 @@ Update your personal information and professional links
                             <p class="label form-copy">A short description of your background and interests</p>
                         </fieldset>
 
+                        <fieldset class="fieldset mb-4">
+                            <legend class="fieldset-legend form-legend">Department</legend>
+                            <input class="input w-full" id="department" name="department" maxlength="200"
+                                   value="{{ profile.department|default:'' }}" placeholder='Department of Engineering "Enzo Ferrari"'>
+                            <p class="label form-copy">Your department or unit of affiliation</p>
+                        </fieldset>
+
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend form-legend">Phone Number</legend>
                             <input class="input w-full" id="phone_number" name="phone_number" maxlength="32"
@@ -81,7 +89,7 @@ Update your personal information and professional links
 
                         <fieldset class="fieldset mb-4">
                             <legend class="fieldset-legend">
-                                <i data-lucide="github" class="w-4 h-4 inline mr-2"></i>
+                                {% include 'main/icons/github.html' with class='w-4 h-4 inline mr-2' %}
                                 GitHub
                             </legend>
                             <input type="url" class="input w-full" id="github" name="github" maxlength="200"
@@ -90,7 +98,7 @@ Update your personal information and professional links
 
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">
-                                <i data-lucide="linkedin" class="w-4 h-4 inline mr-2"></i>
+                                {% include 'main/icons/linkedin.html' with class='w-4 h-4 inline mr-2' %}
                                 LinkedIn
                             </legend>
                             <input type="url" class="input w-full" id="linkedin" name="linkedin" maxlength="200"
@@ -133,15 +141,15 @@ Update your personal information and professional links
                             <div class="avatar mb-4">
                                 {% if profile.avatar %}
                                 <div class="mask mask-squircle w-32 ring ring-primary ring-offset-base-100 ring-offset-2">
-                                    <img src="{{ profile.avatar.url }}" alt="Your personal photo" />
+                                    {% derivative_url profile 'avatar_512' 'avatar' as img_src %}<img src="{{ img_src }}" alt="Your personal photo" width="512" height="512" loading="lazy" decoding="async" />
                                 </div>
                                 {% elif profile.avatar_iris %}
                                 <div class="mask mask-squircle w-32 ring ring-secondary ring-offset-base-100 ring-offset-2">
-                                    <img src="{{ profile.avatar_iris.url }}" alt="IRIS photo" />
+                                    {% derivative_url profile 'avatar_iris_512' 'avatar_iris' as img_src %}<img src="{{ img_src }}" alt="IRIS photo" width="512" height="512" loading="lazy" decoding="async" />
                                 </div>
                                 {% else %}
                                 <div class="mask mask-squircle w-32 bg-base-300 ring ring-base-300 ring-offset-base-100 ring-offset-2">
-                                    <img id="dicebear-avatar-img" data-seed="{{ user.get_full_name|default:user.username|urlencode }}" alt="Default avatar" />
+                                    {% include 'main/avatar_placeholder.html' with name=user.get_full_name|default:user.username text_size='text-3xl' %}
                                 </div>
                                 {% endif %}
                             </div>
@@ -195,6 +203,10 @@ Update your personal information and professional links
                         <i data-lucide="save" class="w-4 h-4"></i>
                         Save Changes
                     </button>
+                    <a href="{% url 'edit_personal_page' %}" class="btn btn-outline w-full sm:w-auto">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        Personal Page
+                    </a>
                     <a href="{% url 'people' %}" class="btn btn-ghost w-full sm:w-auto">
                         <i data-lucide="arrow-left" class="w-4 h-4"></i>
                         Back to Team
@@ -203,23 +215,4 @@ Update your personal information and professional links
             </div>
         </div>
     </form>
-<script type="module">
-    import { createAvatar } from 'https://esm.sh/@dicebear/core@9';
-    import { shapes } from 'https://esm.sh/@dicebear/collection@9';
-
-    const dicebearImgs = document.querySelectorAll('[id^="dicebear-avatar-img"]');
-    dicebearImgs.forEach(dicebearImg => {
-        const seed = dicebearImg.dataset.seed || 'ailb';
-        const avatar = createAvatar(shapes, {
-            seed,
-            backgroundColor: ['transparent'],
-            shape1Color: ['BF0004'],
-            shape2Color: ['ff4455'],
-            shape3Color: ['801518'],
-        });
-        const svg = avatar.toString();
-        const encoded = encodeURIComponent(svg);
-        dicebearImg.src = `data:image/svg+xml,${encoded}`;
-    });
-</script>
 {% endblock %}

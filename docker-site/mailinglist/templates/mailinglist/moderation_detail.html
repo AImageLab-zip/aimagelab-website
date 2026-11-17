@@ -23,6 +23,9 @@
                         </p>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
+                        {% if email.is_reply %}
+                        <span class="badge badge-neutral" title="Reply to a message this list already sent">Reply to list mail</span>
+                        {% endif %}
                         {% if email.status == 'pending' %}
                         <span class="badge badge-warning">Pending</span>
                         {% elif email.status == 'approved' %}

@@ -396,3 +396,24 @@ Each stack gets:
 ## Support
 
 For issues or questions, contact the development team.
+
+## Frontend assets (no Node.js)
+
+Nothing is loaded from a CDN.
+
+- **CSS**: Tailwind CSS + daisyUI, compiled by the Tailwind standalone CLI
+  following <https://daisyui.com/docs/install/django/>. The Dockerfiles
+  download pinned, checksummed releases into `/opt/tailwind`; the entrypoint
+  runs `docker-site/frontend/build.sh`, which writes `css/app.css` to
+  `/opt/frontend/dist` (a `STATICFILES_DIRS` entry). In development the
+  entrypoint also starts the watcher. The source is
+  `docker-site/frontend/input.css`: class names built at render time must be
+  safelisted there.
+- **JS libraries and fonts**: committed under
+  `docker-site/main/static/main/vendor/<name>-<version>/`.
+  `docker-site/frontend/vendor.sh` lists every file with its URL and sha256;
+  edit it and re-run it to upgrade a library.
+
+After pulling a change to the Dockerfiles, rebuild the Django image
+(`docker compose ... build`), otherwise the entrypoint warns that the
+Tailwind CLI is missing and pages render unstyled.
